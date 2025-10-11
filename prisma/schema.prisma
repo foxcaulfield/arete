@@ -5,11 +5,39 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-    provider = "prisma-client-js"
+    provider        = "prisma-client-js"
+    previewFeatures = ["postgresqlExtensions"]
     //   output   = "../generated/prisma"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+    provider   = "postgresql"
+    url        = env("DATABASE_URL")
+    extensions = [citext(), pgcrypto()]
+}
+
+enum UserRole {
+    USER
+    ADMIN
+    MODERATOR
+
+    @@map("user_role")
+}
+
+model User {
+    id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    email           String    @unique @db.Citext
+    passwordHash    String    @map("password_hash")
+    role            UserRole  @default(USER)
+    permissions     String[]  @default([])
+    isActive        Boolean   @default(true) @map("is_active")
+    isEmailVerified Boolean   @default(false) @map("is_email_verified")
+    lastLogin       DateTime? @map("last_login_at")
+    createdAt       DateTime  @default(now()) @map("created_at")
+    updatedAt       DateTime  @updatedAt @map("updated_at")
+
+    @@index([role], name: "user_role_idx")
+    @@index([createdAt], name: "user_created_at_idx")
+    @@index([isActive], name: "user_is_active_idx")
+    @@map("users")
 }
