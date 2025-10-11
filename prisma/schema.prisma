@@ -25,19 +25,36 @@ enum UserRole {
 }
 
 model User {
-    id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    email           String    @unique @db.Citext
-    passwordHash    String    @map("password_hash")
-    role            UserRole  @default(USER)
-    permissions     String[]  @default([])
-    isActive        Boolean   @default(true) @map("is_active")
-    isEmailVerified Boolean   @default(false) @map("is_email_verified")
-    lastLogin       DateTime? @map("last_login_at")
-    createdAt       DateTime  @default(now()) @map("created_at")
-    updatedAt       DateTime  @updatedAt @map("updated_at")
+    id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    email           String         @unique @db.Citext
+    passwordHash    String         @map("password_hash")
+    role            UserRole       @default(USER)
+    permissions     String[]       @default([])
+    isActive        Boolean        @default(true) @map("is_active")
+    isEmailVerified Boolean        @default(false) @map("is_email_verified")
+    lastLogin       DateTime?      @map("last_login_at")
+    createdAt       DateTime       @default(now()) @map("created_at")
+    updatedAt       DateTime       @updatedAt @map("updated_at")
+    tokenVersion    Int            @default(0) @map("token_version")
+    RefreshToken    RefreshToken[]
 
     @@index([role], name: "user_role_idx")
     @@index([createdAt], name: "user_created_at_idx")
     @@index([isActive], name: "user_is_active_idx")
+    @@index([tokenVersion], name: "user_token_version_idx")
     @@map("users")
+}
+
+model RefreshToken {
+    id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    userId    String   @db.Uuid
+    user      User     @relation(fields: [userId], references: [id])
+    tokenHash String   @map("token_hash")
+    revoked   Boolean  @default(false)
+    expiresAt DateTime @map("expires_at")
+    createdAt DateTime @default(now()) @map("created_at")
+
+    @@index([userId])
+    @@index([expiresAt])
+    @@map("refresh_tokens")
 }
