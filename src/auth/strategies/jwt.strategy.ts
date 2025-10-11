@@ -1,6 +1,6 @@
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy as PassportJwtStrategy } from "passport-jwt";
-import { UnauthorizedException } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JWTPayload } from "../interfaces/jwt-payload.interface";
 
 /**
@@ -8,6 +8,7 @@ import { JWTPayload } from "../interfaces/jwt-payload.interface";
  * It only validates signature/expiration (no DB calls) — downstream guards should
  * hydrate the user from the DB and enforce isActive/tokenVersion/roles.
  */
+@Injectable()
 export class JwtStrategy extends PassportStrategy(PassportJwtStrategy, "jwt") {
 	public constructor() {
 		if (!process.env.JWT_SECRET) {

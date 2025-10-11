@@ -5,7 +5,6 @@ import { RegisterDto } from "./dto/register.dto";
 import { RefreshTokenDto } from "./dto/refresh-token.dto";
 import { AuthResponseDto } from "./dto/auth-response.dto";
 import { TokensResponseDto } from "./dto/tokens-response.dto";
-import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { type JWTPayload } from "./interfaces/jwt-payload.interface";
 import { CurrentAuthUser, CurrentUser } from "./decorators/current-user.decorator";
 import { RolesGuard } from "./guards/roles.guard";
@@ -25,7 +24,6 @@ export class AuthController {
 	}
 
 	@HttpCode(HttpStatus.OK)
-	@UseGuards(LocalAuthGuard)
 	@Public()
 	@Post("login")
 	public async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
@@ -33,6 +31,7 @@ export class AuthController {
 	}
 
 	@Post("refresh")
+	@Public()
 	@HttpCode(HttpStatus.OK)
 	public async refresh(@Body() dto: RefreshTokenDto): Promise<TokensResponseDto> {
 		return this.authService.refreshTokens(dto);
