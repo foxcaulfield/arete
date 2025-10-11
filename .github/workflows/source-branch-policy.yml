@@ -1,0 +1,25 @@
+name: PR source branch policy
+
+on:
+    pull_request_target:
+        types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+    contents: read
+
+jobs:
+    check-source-branch:
+        if: ${{ github.event.pull_request.base.ref == 'main' }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check PR source branch
+              run: |
+                  set -euo pipefail
+                  SOURCE="${{ github.event.pull_request.head.ref }}"
+                  echo "PR source branch: $SOURCE"
+                  if [[ "$SOURCE" == "develop" || "$SOURCE" == release/* ]]; then
+                    echo "Source branch allowed."
+                    exit 0
+                  fi
+                  echo "::error::Pull requests to main are only allowed from 'develop' or 'release/*' branches."
+                  exit 1
