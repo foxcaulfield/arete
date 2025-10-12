@@ -1,10 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/unbound-method */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import { Test, TestingModule } from "@nestjs/testing";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
