@@ -3,8 +3,6 @@ import { Prisma, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ResponseUserDto } from "./dto/response-user.dto";
 import { plainToInstance } from "class-transformer";
-import { CreateUserDto } from "./dto/create-user.dto";
-import * as argon2 from "argon2";
 
 @Injectable()
 export class UsersService {
@@ -17,7 +15,6 @@ export class UsersService {
 		email: true,
 		role: true,
 		isActive: true,
-		tokenVersion: true,
 		permissions: true,
 	};
 
@@ -36,7 +33,6 @@ export class UsersService {
 			email: user.email,
 			role: user.role,
 			isActive: user.isActive,
-			tokenVersion: user.tokenVersion,
 			permissions: user.permissions,
 		});
 	}
@@ -58,57 +54,56 @@ export class UsersService {
 		return user && this.toResponseDto(user);
 	}
 
-	public async create(data: CreateUserDto): Promise<ResponseUserDto> {
-		// Hash password
-		const passwordHash = await argon2.hash(data.password);
+	// public async create(data: CreateUserDto): Promise<ResponseUserDto> {
+	// 	// Hash password
+	// 	const passwordHash = await argon2.hash(data.password);
 
-		const user = await this.prismaService.user.create({
-			data: {
-				email: data.email,
-				passwordHash: passwordHash,
-				isActive: data.isActive ?? true,
-				isEmailVerified: data.isEmailVerified ?? false,
-				permissions: data.permissions ?? [],
-			},
-		});
+	// 	const user = await this.prismaService.user.create({
+	// 		data: {
+	// 			email: data.email,
+	// 			passwordHash: passwordHash,
+	// 			isActive: data.isActive ?? true,
+	// 			permissions: data.permissions ?? [],
+	// 		},
+	// 	});
 
-		return this.toResponseDto(user);
-	}
+	// 	return this.toResponseDto(user);
+	// }
 
-	public async validateUser(email: string, password: string): Promise<ResponseUserDto | null> {
-		const user = await this.prismaService.user.findUnique({
-			where: { email },
-			select: {
-				...this.defaultUserSelect,
-				passwordHash: true,
-			},
-		});
+	// public async validateUser(email: string, password: string): Promise<ResponseUserDto | null> {
+	// 	const user = await this.prismaService.user.findUnique({
+	// 		where: { email },
+	// 		select: {
+	// 			...this.defaultUserSelect,
+	// 			passwordHash: true,
+	// 		},
+	// 	});
 
-		if (!user || !user.isActive) {
-			return null;
-		}
+	// 	if (!user || !user.isActive) {
+	// 		return null;
+	// 	}
 
-		const isPasswordValid = await this.verifyPassword(user.passwordHash, password);
-		if (!isPasswordValid) {
-			return null;
-		}
+	// 	const isPasswordValid = await this.verifyPassword(user.passwordHash, password);
+	// 	if (!isPasswordValid) {
+	// 		return null;
+	// 	}
 
-		// Remove passwordHash before converting to DTO
-		return this.toResponseDto(user);
-	}
+	// 	// Remove passwordHash before converting to DTO
+	// 	return this.toResponseDto(user);
+	// }
 
-	public async verifyPasswordForUser(userId: string, password: string): Promise<boolean> {
-		const user = await this.prismaService.user.findUniqueOrThrow({
-			where: { id: userId },
-			select: { passwordHash: true },
-		});
+	// public async verifyPasswordForUser(userId: string, password: string): Promise<boolean> {
+	// 	const user = await this.prismaService.user.findUniqueOrThrow({
+	// 		where: { id: userId },
+	// 		select: { passwordHash: true },
+	// 	});
 
-		return this.verifyPassword(user.passwordHash, password);
-	}
+	// 	return this.verifyPassword(user.passwordHash, password);
+	// }
 
-	private async verifyPassword(passwordHash: string, password: string): Promise<boolean> {
-		return argon2.verify(passwordHash, password);
-	}
+	// private async verifyPassword(passwordHash: string, password: string): Promise<boolean> {
+	// 	return argon2.verify(passwordHash, password);
+	// }
 
 	public async updateLastLogin(userId: string): Promise<void> {
 		await this.prismaService.user.update({
