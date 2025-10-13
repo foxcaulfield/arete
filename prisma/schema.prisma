@@ -25,29 +25,24 @@ enum UserRole {
 }
 
 model User {
-    id           String    @id @default(cuid())
-    email        String    @unique @db.Citext
-    // passwordHash String    @map("password_hash")
-    role         UserRole  @default(USER)
-    permissions  String[]  @default([])
-    isActive     Boolean   @default(true) @map("is_active")
-    // isEmailVerified Boolean        @default(false) @map("is_email_verified")
-    lastLogin    DateTime? @map("last_login_at")
-    createdAt    DateTime  @default(now()) @map("created_at")
-    updatedAt    DateTime  @updatedAt @map("updated_at")
-    // tokenVersion    Int            @default(0) @map("token_version")
-    // RefreshToken    RefreshToken[]
-
-    name          String    @default("default name")
-    emailVerified Boolean   @default(false)
+    id            String       @id @default(cuid())
+    email         String       @unique @db.Citext
+    name          String       @default("default name")
     image         String?
+    role          UserRole     @default(USER)
+    permissions   String[]     @default([])
+    isActive      Boolean      @default(true) @map("is_active")
+    emailVerified Boolean      @default(false)
+    lastLogin     DateTime?    @map("last_login_at")
+    createdAt     DateTime     @default(now()) @map("created_at")
+    updatedAt     DateTime     @updatedAt @map("updated_at")
     sessions      Session[]
     accounts      Account[]
+    collections   Collection[]
 
     @@index([role], name: "user_role_idx")
     @@index([createdAt], name: "user_created_at_idx")
     @@index([isActive], name: "user_is_active_idx")
-    // @@index([tokenVersion], name: "user_token_version_idx")
     @@map("users")
 }
 
@@ -94,4 +89,30 @@ model Verification {
     updatedAt  DateTime @default(now()) @updatedAt
 
     @@map("verification")
+}
+
+model Collection {
+    id          String   @id @default(cuid())
+    name        String
+    description String?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    userId      String
+    user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    exercises Exercise[]
+
+    @@map("collections")
+}
+
+model Exercise {
+    id           String     @id @default(cuid())
+    title        String
+    description  String?
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+    collectionId String
+    collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+    @@map("exercises")
 }
