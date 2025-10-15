@@ -11,6 +11,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { CollectionsModule } from "./collections/collections.module";
 import { PermissionsGuard } from "./guards/permissions.guard";
 import { RolesGuard } from "./guards/roles.guard";
+import { SignUpHook } from "./hooks/auth.hook";
 
 @Module({
 	imports: [
@@ -39,6 +40,7 @@ import { RolesGuard } from "./guards/roles.guard";
 			provide: APP_GUARD,
 			useClass: PermissionsGuard,
 		},
+		SignUpHook,
 	],
 })
 export class AppModule {}
