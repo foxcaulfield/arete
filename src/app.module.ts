@@ -8,8 +8,9 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { AuthGuard, AuthModule } from "@thallesp/nestjs-better-auth";
 import { auth } from "./auth";
 import { APP_GUARD } from "@nestjs/core";
-import { RolesGuard } from "./guards/roles.guard";
 import { CollectionsModule } from "./collections/collections.module";
+import { PermissionsGuard } from "./guards/permissions.guard";
+import { RolesGuard } from "./guards/roles.guard";
 
 @Module({
 	imports: [
@@ -33,6 +34,10 @@ import { CollectionsModule } from "./collections/collections.module";
 		{
 			provide: APP_GUARD,
 			useClass: RolesGuard,
+		},
+		{
+			provide: APP_GUARD,
+			useClass: PermissionsGuard,
 		},
 	],
 })

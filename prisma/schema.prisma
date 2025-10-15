@@ -16,13 +16,13 @@ datasource db {
     extensions = [citext()]
 }
 
-// enum UserRole {
-//     USER
-//     ADMIN
-//     MODERATOR
+enum UserRole {
+    USER
+    ADMIN
+    MODERATOR
 
-//     @@map("user_role")
-// }
+    @@map("user_role")
+}
 
 enum UserPermission {
     create_collection
@@ -46,6 +46,7 @@ model User {
     id            String        @id @default(cuid())
     email         String        @unique @db.Citext
     name          String        @default("default name")
+    role          UserRole      @default(USER)
     isActive      Boolean       @default(true) @map("is_active")
     lastLogin     DateTime?     @map("last_login_at")
     createdAt     DateTime      @default(now()) @map("created_at")
@@ -57,6 +58,7 @@ model User {
     collections   Collection[]
     permissions   Permissions[]
 
+    @@index([role], name: "user_role_idx")
     @@index([createdAt], name: "user_created_at_idx")
     @@index([isActive], name: "user_is_active_idx")
     @@map("users")
