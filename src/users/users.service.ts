@@ -13,9 +13,7 @@ export class UsersService {
 	private readonly defaultUserSelect: Prisma.UserSelect = {
 		id: true,
 		email: true,
-		role: true,
 		isActive: true,
-		permissions: true,
 	};
 
 	private toResponseDto(entity: User): ResponseUserDto;
@@ -31,19 +29,23 @@ export class UsersService {
 		return plainToInstance(ResponseUserDto, {
 			id: user.id,
 			email: user.email,
-			role: user.role,
 			isActive: user.isActive,
-			permissions: user.permissions,
 		});
 	}
 
-	public async findById(id: string): Promise<ResponseUserDto | null> {
+	public async findByIdWithPermissions(
+		id: string
+	): Promise<Prisma.UserGetPayload<{ select: { id: true; email: true; isActive: true; permissions: true } }> | null> {
 		const user = await this.prismaService.user.findUnique({
 			where: { id },
-			select: this.defaultUserSelect,
+			select: {
+				id: true,
+				email: true,
+				isActive: true,
+				permissions: true,
+			},
 		});
-
-		return user && this.toResponseDto(user);
+		return user;
 	}
 
 	public async findByEmail(email: string): Promise<ResponseUserDto | null> {
