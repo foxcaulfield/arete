@@ -1,4 +1,4 @@
-import { IsEmail, IsString, IsOptional, IsBoolean, IsArray } from "class-validator";
+import { IsEmail, IsString } from "class-validator";
 
 export class CreateUserDto {
 	@IsEmail()
@@ -11,16 +11,16 @@ export class CreateUserDto {
 	// @IsEnum(UserRole)
 	// public role?: UserRole;
 
-	@IsOptional()
-	@IsArray()
-	@IsString({ each: true })
-	public permissions?: string[];
+	// @IsOptional()
+	// @IsArray()
+	// @IsString({ each: true })
+	// public permissions?: string[];
 
-	@IsOptional()
-	@IsBoolean()
-	public isActive?: boolean;
+	// @IsOptional()
+	// @IsBoolean()
+	// public isActive?: boolean;
 
-	@IsOptional()
-	@IsBoolean()
-	public isEmailVerified?: boolean;
+	// @IsOptional()
+	// @IsBoolean()
+	// public isEmailVerified?: boolean;
 }
