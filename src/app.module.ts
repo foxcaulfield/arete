@@ -9,6 +9,7 @@ import { AuthGuard, AuthModule } from "@thallesp/nestjs-better-auth";
 import { auth } from "./auth";
 import { APP_GUARD } from "@nestjs/core";
 import { RolesGuard } from "./guards/roles.guard";
+import { CollectionsModule } from "./collections/collections.module";
 
 @Module({
 	imports: [
@@ -19,6 +20,7 @@ import { RolesGuard } from "./guards/roles.guard";
 		}),
 		UsersModule,
 		PrismaModule,
+		CollectionsModule,
 	],
 	controllers: [AppController],
 	providers: [
