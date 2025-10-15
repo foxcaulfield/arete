@@ -16,31 +16,47 @@ datasource db {
     extensions = [citext()]
 }
 
-enum UserRole {
-    USER
-    ADMIN
-    MODERATOR
+// enum UserRole {
+//     USER
+//     ADMIN
+//     MODERATOR
 
-    @@map("user_role")
+//     @@map("user_role")
+// }
+
+enum UserPermission {
+    create_collection
+    read_own_collections
+    update_own_collections
+    delete_own_collections
+
+    read_all_collections
+}
+
+model Permissions {
+    id          String         @id @default(cuid())
+    name        UserPermission @unique
+    description String?
+    users       User[]
+
+    @@map("permissions")
 }
 
 model User {
-    id            String       @id @default(cuid())
-    email         String       @unique @db.Citext
-    name          String       @default("default name")
+    id            String        @id @default(cuid())
+    email         String        @unique @db.Citext
+    name          String        @default("default name")
+    isActive      Boolean       @default(true) @map("is_active")
+    lastLogin     DateTime?     @map("last_login_at")
+    createdAt     DateTime      @default(now()) @map("created_at")
+    updatedAt     DateTime      @updatedAt @map("updated_at")
+    emailVerified Boolean       @default(false)
     image         String?
-    role          UserRole     @default(USER)
-    permissions   String[]     @default([])
-    isActive      Boolean      @default(true) @map("is_active")
-    emailVerified Boolean      @default(false)
-    lastLogin     DateTime?    @map("last_login_at")
-    createdAt     DateTime     @default(now()) @map("created_at")
-    updatedAt     DateTime     @updatedAt @map("updated_at")
     sessions      Session[]
     accounts      Account[]
     collections   Collection[]
+    permissions   Permissions[]
 
-    @@index([role], name: "user_role_idx")
     @@index([createdAt], name: "user_created_at_idx")
     @@index([isActive], name: "user_is_active_idx")
     @@map("users")
