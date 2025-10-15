@@ -33,15 +33,16 @@ export class UsersService {
 		});
 	}
 
-	public async findByIdWithPermissions(
-		id: string
-	): Promise<Prisma.UserGetPayload<{ select: { id: true; email: true; isActive: true; permissions: true } }> | null> {
+	public async findByIdWithPermissions(id: string): Promise<Prisma.UserGetPayload<{
+		select: { id: true; email: true; isActive: true; permissions: true; role: true };
+	}> | null> {
 		const user = await this.prismaService.user.findUnique({
 			where: { id },
 			select: {
 				id: true,
 				email: true,
 				isActive: true,
+				role: true,
 				permissions: true,
 			},
 		});
