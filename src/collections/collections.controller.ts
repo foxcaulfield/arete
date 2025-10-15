@@ -21,6 +21,14 @@ export class CollectionsController {
 		return this.collectionsService.getCollectionsByUserId(session.user.id);
 	}
 
+	@Get("get_by_id/:id")
+	public getById(
+		@Param("id") id: string,
+		@Session() currentUserSession: UserSession
+	): Promise<ResponseCollectionDto> {
+		return this.collectionsService.getCollectionById(id, currentUserSession.user.id);
+	}
+
 	@Roles(UserRole.ADMIN)
 	@Get("all")
 	public getAllCollections(): Promise<ResponseCollectionDto[]> {
