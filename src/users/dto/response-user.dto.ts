@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEmail, IsBoolean } from "class-validator";
+import { IsNotEmpty, IsEmail } from "class-validator";
 import { Expose } from "class-transformer";
 
 export class ResponseUserDto {
@@ -9,21 +9,4 @@ export class ResponseUserDto {
 	@Expose()
 	@IsEmail()
 	public email!: string;
-
-	// @Expose()
-	// @IsEnum(UserRole)
-	// public readonly role!: UserRole;
-
-	@Expose()
-	@IsBoolean()
-	public isActive!: boolean;
-
-	// @Expose()
-	// @IsArray()
-	// @IsString({ each: true })
-	// public permissions!: string[];
-
-	// @Expose()
-	// @IsNumber()
-	// public tokenVersion!: number;
 }
