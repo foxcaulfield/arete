@@ -4,6 +4,7 @@ import { ROLES_KEY } from "../decorators/roles.decorator";
 import { UserSession } from "@thallesp/nestjs-better-auth";
 import { UserRole } from "@prisma/client";
 import { IncomingMessage } from "node:http";
+import { UsersService } from "src/users/users.service";
 // import { Request } from "express";
 
 interface AuthenticatedRequest extends UserSession, IncomingMessage {
@@ -14,9 +15,12 @@ interface AuthenticatedRequest extends UserSession, IncomingMessage {
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-	public constructor(private reflector: Reflector) {}
+	public constructor(
+		private reflector: Reflector,
+		private readonly usersService: UsersService
+	) {}
 
-	public canActivate(context: ExecutionContext): boolean {
+	public async canActivate(context: ExecutionContext): Promise<boolean> {
 		const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
 			context.getHandler(),
 			context.getClass(),
@@ -27,11 +31,12 @@ export class RolesGuard implements CanActivate {
 		}
 
 		const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-		const user = request.user;
 
-		if (!user) {
+		if (!request.user) {
 			throw new ForbiddenException("User is not authenticated");
 		}
+		const userId = request.user.id;
+		const user = await this.usersService.findByIdWithPermissions(userId);
 
 		const hasRole = user?.role && requiredRoles.includes(user?.role);
 		if (!hasRole) {
