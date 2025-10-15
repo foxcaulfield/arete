@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { Collection } from "@prisma/client";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { Collection, UserRole } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateCollectionDto } from "./dto/create-collection.dto";
 import { ResponseCollectionDto } from "./dto/response-collection.dto";
@@ -49,13 +49,32 @@ export class CollectionsService {
 		return this.toResponseDto(collections);
 	}
 
-	public async getCollectionById(id: string): Promise<ResponseCollectionDto | null> {
+	public async getCollectionById(id: string, currentUserId: string): Promise<ResponseCollectionDto> {
 		const collection = await this.prisma.collection.findUnique({
 			where: { id },
+			select: {
+				id: true,
+				name: true,
+				description: true,
+				userId: true,
+				createdAt: true,
+				updatedAt: true,
+			},
 		});
+
 		if (!collection) {
 			throw new NotFoundException(`Collection with ID ${id} not found.`);
 		}
+
+		const user = await this.prisma.user.findUnique({ where: { id: currentUserId } });
+
+		const isOwner = collection.userId === currentUserId;
+		const isAdmin = user?.role === UserRole.ADMIN;
+
+		if (!isOwner && !isAdmin) {
+			throw new ForbiddenException("You are not allowed to access this collection.");
+		}
+
 		return this.toResponseDto(collection);
 	}
 
