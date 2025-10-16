@@ -36,7 +36,12 @@ export class CollectionsService {
 	}
 
 	private async getCollectionOrThrow(id: string): Promise<Collection> {
-		return this.prisma.collection.findUniqueOrThrow({ where: { id }, include: this.withUser });
+		const collection = await this.prisma.collection.findUniqueOrThrow({
+			where: { id },
+			include: this.withUser,
+		});
+
+		return collection;
 	}
 
 	private async getUserOrThrow(userId: string): Promise<User> {
@@ -54,6 +59,17 @@ export class CollectionsService {
 	public constructor(private readonly prisma: PrismaService) {}
 
 	public async createCollection(dto: CreateCollectionDto, userId: string): Promise<ResponseCollectionDto> {
+		const duplicate = await this.prisma.collection.findFirst({
+			where: {
+				userId: userId,
+				name: { equals: dto.name.trim(), mode: "insensitive" },
+			},
+			select: { id: true },
+		});
+		if (duplicate) {
+			throw new ConflictException("User already has a collection with this name.");
+		}
+
 		const collection = await this.prisma.collection.create({ data: { ...dto, userId } });
 		return this.toResponseDto(collection);
 	}
@@ -74,10 +90,25 @@ export class CollectionsService {
 		return this.toResponseDto(collection);
 	}
 
-	public async deleteCollection(id: string): Promise<void> {
-		await this.prisma.collection.delete({
-			where: { id },
+	public async deleteCollection(collectionId: string, currentUserId: string): Promise<ResponseCollectionDto> {
+		const collection = await this.getCollectionOrThrow(collectionId);
+		const user = await this.getUserOrThrow(currentUserId);
+
+		if (!this.hasCollectionAccess(collection, user)) {
+			throw new ForbiddenException("You are not allowed to delete this collection.");
+		}
+
+		const deleteResult = await this.prisma.collection.delete({
+			where: { id: collectionId },
+			include: this.withUser,
 		});
+
+		if (!deleteResult) {
+			throw new BadRequestException("Failed to delete the collection.");
+		}
+
+		return this.toResponseDto(deleteResult);
+		// return { success: true };
 	}
 
 	public async updateCollection(
@@ -108,7 +139,7 @@ export class CollectionsService {
 		if (this.notEmptyString(dto.name) && dto.name.trim() !== fetchedCollection.name) {
 			const duplicate = await this.prisma.collection.findFirst({
 				where: {
-					userId: fetchedCollection.id,
+					userId: fetchedCollection.userId,
 					id: { not: collectionId },
 					name: { equals: dto.name.trim(), mode: "insensitive" },
 				},

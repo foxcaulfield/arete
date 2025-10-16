@@ -46,7 +46,10 @@ export class CollectionsController {
 	}
 
 	@Delete("delete/:id")
-	public delete(@Param("id") id: string): Promise<void> {
-		return this.collectionsService.deleteCollection(id);
+	public async delete(
+		@Param("id") collectionId: string,
+		@Session() currentUserSession: UserSession
+	): Promise<ResponseCollectionDto> {
+		return await this.collectionsService.deleteCollection(collectionId, currentUserSession.user.id);
 	}
 }
