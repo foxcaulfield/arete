@@ -11,6 +11,7 @@ import { UserRole } from "@prisma/client";
 export class CollectionsController {
 	public constructor(private readonly collectionsService: CollectionsService) {}
 
+	// @Roles(UserRole.ADMIN)
 	@Post("create")
 	public create(@Body() dto: CreateCollectionDto, @Session() session: UserSession): Promise<ResponseCollectionDto> {
 		return this.collectionsService.createCollection(dto, session.user.id);
@@ -36,8 +37,12 @@ export class CollectionsController {
 	}
 
 	@Patch("update/:id")
-	public update(@Param("id") id: string, @Body() dto: UpdateCollectionDto): Promise<ResponseCollectionDto | null> {
-		return this.collectionsService.updateCollection(id, dto);
+	public update(
+		@Param("id") id: string,
+		@Body() dto: UpdateCollectionDto,
+		@Session() currentUserSession: UserSession
+	): Promise<ResponseCollectionDto | null> {
+		return this.collectionsService.updateCollection(id, dto, currentUserSession.user.id);
 	}
 
 	@Delete("delete/:id")
