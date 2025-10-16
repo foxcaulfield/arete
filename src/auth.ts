@@ -39,7 +39,7 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
-
+	advanced: { cookiePrefix: "arete" },
 	/* Settings that will be added to session data (client-side) */
 	// user: {
 	// 	additionalFields: {
