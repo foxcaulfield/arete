@@ -1,10 +1,17 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable } from "@nestjs/common";
+import {
+	BadRequestException,
+	ConflictException,
+	ForbiddenException,
+	Injectable,
+	NotFoundException,
+} from "@nestjs/common";
 import { Collection, User, UserRole } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateCollectionDto } from "./dto/create-collection.dto";
 import { ResponseCollectionDto } from "./dto/response-collection.dto";
 import { plainToInstance } from "class-transformer";
 import { UpdateCollectionDto } from "./dto/update-collection.dto";
+import { PaginatedResponseDto, PaginationMetaDto } from "./dto/pagination.dto";
 
 type CollectionWithUser = Collection & { user?: Pick<User, "id" | "name"> };
 type OneOrMany<T> = T | T[];
@@ -35,11 +42,15 @@ export class CollectionsService {
 		});
 	}
 
-	private async getCollectionOrThrow(id: string): Promise<Collection> {
-		const collection = await this.prisma.collection.findUniqueOrThrow({
+	private async getCollection(id: string): Promise<Collection> {
+		const collection = await this.prisma.collection.findUnique({
 			where: { id },
 			include: this.withUser,
 		});
+
+		if (!collection) {
+			throw new NotFoundException("Collection not found");
+		}
 
 		return collection;
 	}
@@ -53,6 +64,18 @@ export class CollectionsService {
 		const isAdmin = user.role === UserRole.ADMIN;
 
 		return isOwner || isAdmin;
+	}
+
+	private createPaginationMeta(total: number, page: number, limit: number): PaginationMetaDto {
+		const totalPages = Math.ceil(total / limit);
+		return {
+			page,
+			limit,
+			totalItems: total,
+			totalPages,
+			hasNextPage: page < totalPages,
+			hasPreviousPage: page > 1,
+		};
 	}
 
 	/* Public methods */
@@ -74,13 +97,21 @@ export class CollectionsService {
 		return this.toResponseDto(collection);
 	}
 
-	public async getAllCollections(skip = 0, take = 100): Promise<ResponseCollectionDto[]> {
-		const collections = await this.prisma.collection.findMany({ skip, take, include: this.withUser });
-		return this.toResponseDto(collections);
+	public async getAllCollections(page = 1, limit = 10): Promise<PaginatedResponseDto<ResponseCollectionDto>> {
+		const skip = (page - 1) * limit;
+		const [collections, total] = await Promise.all([
+			this.prisma.collection.findMany({ skip, take: limit, include: this.withUser }),
+			this.prisma.collection.count(),
+		]);
+
+		return {
+			data: this.toResponseDto(collections),
+			pagination: this.createPaginationMeta(total, page, limit),
+		};
 	}
 
 	public async getCollectionById(id: string, currentUserId: string): Promise<ResponseCollectionDto> {
-		const collection = await this.getCollectionOrThrow(id);
+		const collection = await this.getCollection(id);
 		const user = await this.getUserOrThrow(currentUserId);
 
 		if (!this.hasCollectionAccess(collection, user)) {
@@ -91,7 +122,7 @@ export class CollectionsService {
 	}
 
 	public async deleteCollection(collectionId: string, currentUserId: string): Promise<ResponseCollectionDto> {
-		const collection = await this.getCollectionOrThrow(collectionId);
+		const collection = await this.getCollection(collectionId);
 		const user = await this.getUserOrThrow(currentUserId);
 
 		if (!this.hasCollectionAccess(collection, user)) {
@@ -117,7 +148,7 @@ export class CollectionsService {
 		currentUserId: string
 	): Promise<ResponseCollectionDto> {
 		// 1) Ensure the collection exists
-		const fetchedCollection = await this.getCollectionOrThrow(collectionId);
+		const fetchedCollection = await this.getCollection(collectionId);
 
 		// 2) Get fresh current user data, relying on database data
 		const currentUser = await this.getUserOrThrow(currentUserId);
@@ -167,12 +198,26 @@ export class CollectionsService {
 		return this.toResponseDto(updated);
 	}
 
-	public async getCollectionsByUserId(targetUserId: string): Promise<ResponseCollectionDto[]> {
-		const collections = await this.prisma.collection.findMany({
-			where: { userId: targetUserId },
-			include: this.withUser,
-		});
-		return this.toResponseDto(collections);
+	public async getCollectionsByUserId(
+		targetUserId: string,
+		page = 1,
+		limit = 10
+	): Promise<PaginatedResponseDto<ResponseCollectionDto>> {
+		const skip = (page - 1) * limit;
+		const [collections, total] = await Promise.all([
+			this.prisma.collection.findMany({
+				where: { userId: targetUserId },
+				skip,
+				take: limit,
+				include: this.withUser,
+			}),
+			this.prisma.collection.count({ where: { userId: targetUserId } }),
+		]);
+
+		return {
+			data: this.toResponseDto(collections),
+			pagination: this.createPaginationMeta(total, page, limit),
+		};
 	}
 
 	public async countCollections(userId?: string): Promise<number> {
