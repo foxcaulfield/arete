@@ -57,6 +57,7 @@ model User {
     accounts      Account[]
     collections   Collection[]
     permissions   Permissions[]
+    Attempt       Attempt[]
 
     @@index([role], name: "user_role_idx")
     @@index([createdAt], name: "user_created_at_idx")
@@ -124,13 +125,43 @@ model Collection {
 }
 
 model Exercise {
-    id           String     @id @default(cuid())
-    title        String
-    description  String?
-    createdAt    DateTime   @default(now())
-    updatedAt    DateTime   @updatedAt
-    collectionId String
-    collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+    id                  String     @id @default(cuid())
+    collectionId        String
+    collection          Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+    // Exercise content
+    question            String     @db.Text
+    placeholderSequence String?    @default("***") @map("placeholder_sequence")
+    correctAnswer       String     @map("correct_answer")
+    alternativeAnswers  String[]   @default([]) @map("alternative_answers")
+    // Metadata
+    tags                String[]   @default([])
+    // Rich content
+    // audioUrl           String?
+    // imageUrl           String?
+    explanation         String?    @db.Text
+    // State
+    isActive            Boolean    @default(true)
+    createdAt           DateTime   @default(now())
+    updatedAt           DateTime   @updatedAt
+    // Relations
+    // attempts           Attempt[]
+    Attempt             Attempt[]
 
+    @@index([collectionId])
     @@map("exercises")
+}
+
+model Attempt {
+    id         String   @id @default(cuid())
+    exerciseId String
+    exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+    userId     String
+    user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    // userAnswer String
+    isCorrect  Boolean
+    createdAt  DateTime @default(now())
+
+    @@index([userId, exerciseId])
+    @@index([createdAt])
+    @@map("attemps")
 }
