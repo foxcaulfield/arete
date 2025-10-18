@@ -6,6 +6,7 @@ import { ResponseExerciseDto } from "./dto/response-exercise.dto";
 import { FilterExerciseDto } from "./dto/filter-exercise.dto";
 import { PaginatedResponseDto } from "src/common/types";
 import { UpdateExerciseDto } from "./dto/update-exercise.dto";
+import { DrillIncomingAnswerDto, ResponseDrillQuestionDto, ResponseDrillResultDto } from "./dto/quiz.dto";
 
 @Controller("exercises")
 export class ExercisesController {
@@ -48,5 +49,22 @@ export class ExercisesController {
 		@Session() session: UserSession
 	): Promise<ResponseExerciseDto> {
 		return this.exercisesService.delete(session.user.id, exerciseId);
+	}
+
+	@Get("drill/:collectionId")
+	public async getDrillExercise(
+		@Param("collectionId") collectionId: string,
+		@Session() session: UserSession
+	): Promise<ResponseDrillQuestionDto> {
+		return this.exercisesService.getDrillExercise(session.user.id, collectionId);
+	}
+
+	@Post("drill/:collectionId/submit")
+	public async submitDrillAnswer(
+		@Param("collectionId") collectionId: string,
+		@Session() session: UserSession,
+		@Body() dto: DrillIncomingAnswerDto
+	): Promise<ResponseDrillResultDto> {
+		return this.exercisesService.submitDrillAnswer(session.user.id, collectionId, dto);
 	}
 }

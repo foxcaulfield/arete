@@ -8,12 +8,14 @@ import { BaseService } from "src/base/base.service";
 import { CollectionsService } from "src/collections/collections.service";
 import { UsersService } from "src/users/users.service";
 import { PaginatedResponseDto } from "src/common/types";
+import { DrillIncomingAnswerDto, ResponseDrillQuestionDto, ResponseDrillResultDto } from "./dto/quiz.dto";
+import { Exercise } from "@prisma/client";
 
 @Injectable()
 export class ExercisesService extends BaseService {
 	/* Private helpers */
 
-	private async getExercise(id: string): Promise<ResponseExerciseDto> {
+	private async findExercise(id: string): Promise<Exercise> {
 		const exercise = await this.prismaService.exercise.findFirst({
 			where: { id },
 			// include
@@ -23,7 +25,7 @@ export class ExercisesService extends BaseService {
 			throw new NotFoundException("Exercise not found");
 		}
 
-		return this.toResponseDto(ResponseExerciseDto, exercise);
+		return exercise;
 	}
 
 	public constructor(
@@ -87,7 +89,7 @@ export class ExercisesService extends BaseService {
 	}
 
 	public async findOne(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
-		const exercise = await this.getExercise(exerciseId);
+		const exercise = await this.findExercise(exerciseId);
 		const currentUser = await this.usersService.findUser(currentUserId);
 		const collection = await this.collectionsService.findCollection(exercise.collectionId);
 
@@ -103,7 +105,7 @@ export class ExercisesService extends BaseService {
 		exerciseId: string,
 		dto: UpdateExerciseDto
 	): Promise<ResponseExerciseDto> {
-		const exercise = await this.getExercise(exerciseId);
+		const exercise = await this.findExercise(exerciseId);
 		const currentUser = await this.usersService.findUser(currentUserId);
 		const collection = await this.collectionsService.findCollection(exercise.collectionId);
 
@@ -126,7 +128,7 @@ export class ExercisesService extends BaseService {
 	}
 
 	public async delete(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
-		const exercise = await this.getExercise(exerciseId);
+		const exercise = await this.findExercise(exerciseId);
 		const currentUser = await this.usersService.findUser(currentUserId);
 		const collection = await this.collectionsService.findCollection(exercise.collectionId);
 
@@ -144,5 +146,92 @@ export class ExercisesService extends BaseService {
 		});
 
 		return this.toResponseDto(ResponseExerciseDto, deleted);
+	}
+
+	public async getDrillExercise(currentUserId: string, collectionId: string): Promise<ResponseDrillQuestionDto> {
+		const currentUser = await this.usersService.findUser(currentUserId);
+		const collection = await this.collectionsService.findCollection(collectionId);
+
+		if (!this.collectionsService.canAccessCollection(collection, currentUser)) {
+			throw new ForbiddenException("User is not allowed to access this collection");
+		}
+
+		const count = await this.prismaService.exercise.count({
+			where: { collectionId: collectionId, isActive: true },
+		});
+
+		if (!count) {
+			throw new NotFoundException("No exercises available in this collection");
+		}
+
+		const offset = Math.floor(Math.random() * count);
+
+		const exercise = await this.prismaService.exercise.findFirst({
+			where: {
+				collectionId: collectionId,
+				isActive: true,
+			},
+			skip: offset,
+			take: 1,
+		});
+
+		if (!exercise) {
+			throw new NotFoundException("Exercise not found");
+		}
+
+		return this.toResponseDto(ResponseDrillQuestionDto, exercise);
+	}
+
+	public async submitDrillAnswer(
+		currentUserId: string,
+		collectionId: string,
+		dto: DrillIncomingAnswerDto
+	): Promise<ResponseDrillResultDto> {
+		const collection = await this.collectionsService.findCollection(collectionId);
+		const currentUser = await this.usersService.findUser(currentUserId);
+
+		if (!this.collectionsService.canAccessCollection(collection, currentUser)) {
+			throw new ForbiddenException("User is not allowed to access this collection");
+		}
+
+		const exercise = await this.findExercise(dto.exerciseId);
+
+		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
+
+		// await this.prismaService.attempt.create({
+		// 	data: {
+		// 		exerciseId: exercise.id,
+		// 		userId: currentUser.id,
+		// 		isCorrect: isCorrect,
+		// 	},
+		// });
+
+		const nextExercise = await this.getDrillExercise(currentUserId, collectionId);
+
+		return {
+			isCorrect: isCorrect,
+			correctAnswer: exercise.correctAnswer,
+			explanation: exercise.explanation || undefined,
+			nextExerciseId: nextExercise.exerciseId,
+		};
+	}
+
+	private normalize(answer: string): string {
+		return answer.trim().toLowerCase();
+	}
+
+	private checkAnswer(userAnswer: string, { correctAnswer, alternativeAnswers }: Exercise): boolean {
+		const normalizedUserAnswer = this.normalize(userAnswer);
+		const normalizedCorrectAnswer = this.normalize(correctAnswer);
+
+		if (normalizedUserAnswer === normalizedCorrectAnswer) {
+			return true;
+		}
+
+		if (alternativeAnswers?.length) {
+			return alternativeAnswers.some((alt): boolean => normalizedUserAnswer === this.normalize(alt));
+		}
+
+		return false;
 	}
 }
