@@ -18,20 +18,20 @@ export class ExercisesController {
 	}
 
 	@Get("by_collection/:collectionId")
-	public async findByCollection(
+	public async getExercisesForCollection(
 		@Param("collectionId") collectionId: string,
 		@Session() session: UserSession,
 		@Query() filter: FilterExerciseDto
 	): Promise<PaginatedResponseDto<ResponseExerciseDto>> {
-		return this.exercisesService.getByCollection(session.user.id, collectionId, filter);
+		return this.exercisesService.getExercisesInCollection(session.user.id, collectionId, filter);
 	}
 
 	@Get("get_by_id/:id")
-	public async findOne(
+	public async getExerciseById(
 		@Param("id") exerciseId: string,
 		@Session() session: UserSession
 	): Promise<ResponseExerciseDto> {
-		return this.exercisesService.findOne(session.user.id, exerciseId);
+		return this.exercisesService.getExerciseById(session.user.id, exerciseId);
 	}
 
 	@Patch("update/:id")
@@ -51,6 +51,7 @@ export class ExercisesController {
 		return this.exercisesService.delete(session.user.id, exerciseId);
 	}
 
+	/* Drill endpoints */
 	@Get("drill/:collectionId")
 	public async getDrillExercise(
 		@Param("collectionId") collectionId: string,

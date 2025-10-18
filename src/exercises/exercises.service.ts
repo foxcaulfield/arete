@@ -14,6 +14,9 @@ import { Exercise } from "@prisma/client";
 @Injectable()
 export class ExercisesService extends BaseService {
 	/* Private helpers */
+	private normalize(answer: string): string {
+		return answer.trim().toLowerCase();
+	}
 
 	private async findExercise(id: string): Promise<Exercise> {
 		const exercise = await this.prismaService.exercise.findFirst({
@@ -58,7 +61,7 @@ export class ExercisesService extends BaseService {
 		return this.toResponseDto(ResponseExerciseDto, exercise);
 	}
 
-	public async getByCollection(
+	public async getExercisesInCollection(
 		currentUserId: string,
 		collectionId: string,
 		filter: FilterExerciseDto
@@ -88,7 +91,7 @@ export class ExercisesService extends BaseService {
 		};
 	}
 
-	public async findOne(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
+	public async getExerciseById(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
 		const exercise = await this.findExercise(exerciseId);
 		const currentUser = await this.usersService.findUser(currentUserId);
 		const collection = await this.collectionsService.findCollection(exercise.collectionId);
@@ -148,6 +151,7 @@ export class ExercisesService extends BaseService {
 		return this.toResponseDto(ResponseExerciseDto, deleted);
 	}
 
+	/* Drill methods */
 	public async getDrillExercise(currentUserId: string, collectionId: string): Promise<ResponseDrillQuestionDto> {
 		const currentUser = await this.usersService.findUser(currentUserId);
 		const collection = await this.collectionsService.findCollection(collectionId);
@@ -214,10 +218,6 @@ export class ExercisesService extends BaseService {
 			explanation: exercise.explanation || undefined,
 			nextExerciseId: nextExercise.exerciseId,
 		};
-	}
-
-	private normalize(answer: string): string {
-		return answer.trim().toLowerCase();
 	}
 
 	private checkAnswer(userAnswer: string, { correctAnswer, alternativeAnswers }: Exercise): boolean {
