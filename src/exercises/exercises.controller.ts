@@ -1,0 +1,52 @@
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { ExercisesService } from "./exercises.service";
+import { CreateExerciseDto } from "./dto/create-exercise.dto";
+import { Session, type UserSession } from "@thallesp/nestjs-better-auth";
+import { ResponseExerciseDto } from "./dto/response-exercise.dto";
+import { FilterExerciseDto } from "./dto/filter-exercise.dto";
+import { PaginatedResponseDto } from "src/common/types";
+import { UpdateExerciseDto } from "./dto/update-exercise.dto";
+
+@Controller("exercises")
+export class ExercisesController {
+	public constructor(private readonly exercisesService: ExercisesService) {}
+
+	@Post("create")
+	public async create(@Body() dto: CreateExerciseDto, @Session() session: UserSession): Promise<ResponseExerciseDto> {
+		return this.exercisesService.create(session.user.id, dto);
+	}
+
+	@Get("by_collection/:collectionId")
+	public async findByCollection(
+		@Param("collectionId") collectionId: string,
+		@Session() session: UserSession,
+		@Query() filter: FilterExerciseDto
+	): Promise<PaginatedResponseDto<ResponseExerciseDto>> {
+		return this.exercisesService.getByCollection(session.user.id, collectionId, filter);
+	}
+
+	@Get("get_by_id/:id")
+	public async findOne(
+		@Param("id") exerciseId: string,
+		@Session() session: UserSession
+	): Promise<ResponseExerciseDto> {
+		return this.exercisesService.findOne(session.user.id, exerciseId);
+	}
+
+	@Patch("update/:id")
+	public async update(
+		@Param("id") exerciseId: string,
+		@Session() session: UserSession,
+		@Body() dto: UpdateExerciseDto
+	): Promise<ResponseExerciseDto> {
+		return this.exercisesService.update(session.user.id, exerciseId, dto);
+	}
+
+	@Delete("delete/:id")
+	public async delete(
+		@Param("id") exerciseId: string,
+		@Session() session: UserSession
+	): Promise<ResponseExerciseDto> {
+		return this.exercisesService.delete(session.user.id, exerciseId);
+	}
+}
