@@ -1,0 +1,14 @@
+name: Deploy Release Candidate to Render
+
+on:
+    push:
+        branches:
+            - release/**
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Deploy to Render (rc)
+              run: |
+                  curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
