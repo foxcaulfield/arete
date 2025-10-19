@@ -1,8 +1,8 @@
 {
   "branches": [
     "main",
-    { "name": "develop", "channel": "beta", "prerelease": "beta" },
-    { "name": "release/*", "channel": "rc", "prerelease": "rc" }
+    { "name": "release", "channel": "rc", "prerelease": "rc" },
+    { "name": "develop", "channel": "beta", "prerelease": "beta", "publish": false }
   ],
   "tagFormat": "v${version}",
   "plugins": [
