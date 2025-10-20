@@ -2,6 +2,7 @@
 	"branches": [
 		"main",
 		{ "name": "develop", "channel": "beta", "prerelease": "beta" },
+		{ "name": "release", "channel": "rc", "prerelease": "rc" },
 		{ "name": "release/*", "channel": "rc", "prerelease": "rc" }
 	],
 	"tagFormat": "v${version}",
