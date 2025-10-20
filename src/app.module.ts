@@ -12,7 +12,7 @@ import { CollectionsModule } from "./collections/collections.module";
 import { PermissionsGuard } from "./guards/permissions.guard";
 import { RolesGuard } from "./guards/roles.guard";
 import { SignUpHook } from "./hooks/auth.hook";
-import { ExercisesModule } from './exercises/exercises.module';
+import { ExercisesModule } from "./exercises/exercises.module";
 
 @Module({
 	imports: [
