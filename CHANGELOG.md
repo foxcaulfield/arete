@@ -1,3 +1,7 @@
+## 1.1.0-beta.7 (2025-10-20)
+
+* fix: add CORS configuration to bootstrap function ([ac8eb2e](https://github.com/foxcaulfield/arete/commit/ac8eb2e))
+
 ## 1.1.0-beta.6 (2025-10-20)
 
 * fix: update Dockerfile to ensure prisma migrations are verified ([aaf0cee](https://github.com/foxcaulfield/arete/commit/aaf0cee))
