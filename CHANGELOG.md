@@ -1,3 +1,7 @@
+## 1.1.0-beta.2 (2025-10-20)
+
+* fix: add condition to build step for release branches (#41) ([2ccf219](https://github.com/foxcaulfield/arete/commit/2ccf219)), closes [#41](https://github.com/foxcaulfield/arete/issues/41)
+
 ## 1.1.0-beta.1 (2025-10-20)
 
 * Merge branch 'release' into develop ([4667799](https://github.com/foxcaulfield/arete/commit/4667799))
