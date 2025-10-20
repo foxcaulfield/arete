@@ -9,9 +9,11 @@ async function bootstrap(): Promise<void> {
 
 	app.enableCors({
 		origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
-		credentials: true,
+		credentials: true, // CRITICAL: allows cookies
 		methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
+		exposedHeaders: ["Content-Type", "Authorization"],
+		maxAge: 3600, // Preflight cache
 	});
 
 	app.useGlobalPipes(

@@ -25,14 +25,19 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
-	advanced: { cookiePrefix: process.env.COOKIE_PREFIX || "arete" },
-	// user: {
-	// 	additionalFields: {
-	// 		role: {
-	// 			fieldName: "role",
-	// 			type: "string",
-	// 		},
-	// 	},
-	// },
+	advanced: {
+		cookiePrefix: process.env.COOKIE_PREFIX || "arete",
+		crossSubDomainCookies: {
+			enabled: true, // Allow cookies across subdomains
+		},
+	},
+	session: {
+		expiresIn: 60 * 60 * 24 * 7, // 7 days
+		updateAge: 60 * 60 * 24, // Update every day
+		cookieCache: {
+			enabled: true,
+			maxAge: 5 * 60, // 5 minutes
+		},
+	},
 	trustedOrigins: [process.env.FRONTEND_ORIGIN || "http://localhost:5173"],
 });
