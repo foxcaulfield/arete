@@ -1,3 +1,7 @@
+## 1.1.0-beta.8 (2025-10-20)
+
+* fix: enhance CORS configuration to support cookie handling and preflight caching ([1142fb9](https://github.com/foxcaulfield/arete/commit/1142fb9))
+
 ## 1.1.0-beta.7 (2025-10-20)
 
 * fix: add CORS configuration to bootstrap function ([ac8eb2e](https://github.com/foxcaulfield/arete/commit/ac8eb2e))
