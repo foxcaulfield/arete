@@ -1,3 +1,7 @@
+## 1.0.0-beta.5 (2025-10-20)
+
+* fix: remove direct reference to 'release' branch in workflow triggers ([687b149](https://github.com/foxcaulfield/arete/commit/687b149))
+
 ## 1.0.0-beta.4 (2025-10-20)
 
 * feat: add release branch support to release workflow and configuration (#38) ([61ca8aa](https://github.com/foxcaulfield/arete/commit/61ca8aa)), closes [#38](https://github.com/foxcaulfield/arete/issues/38)
