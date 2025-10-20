@@ -25,6 +25,7 @@ jobs:
             - name: Install dependencies
               run: npm ci
             - name: Build
+              if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
               run: npm run build
             - name: Release
               env:
