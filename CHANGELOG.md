@@ -1,3 +1,7 @@
+## 1.1.0-beta.6 (2025-10-20)
+
+* fix: update Dockerfile to ensure prisma migrations are verified ([aaf0cee](https://github.com/foxcaulfield/arete/commit/aaf0cee))
+
 ## 1.1.0-beta.5 (2025-10-20)
 
 * fix: update Dockerfile command to use npm script for migration and start ([367fa8a](https://github.com/foxcaulfield/arete/commit/367fa8a))
