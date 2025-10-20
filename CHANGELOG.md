@@ -1,3 +1,7 @@
+## 1.0.0-beta.3 (2025-10-20)
+
+* feat: update environment configuration and improve auth settings (#37) ([6311b2e](https://github.com/foxcaulfield/arete/commit/6311b2e)), closes [#37](https://github.com/foxcaulfield/arete/issues/37)
+
 ## 1.0.0-beta.2 (2025-10-20)
 
 * feat: prepare for next release ([95f5f82](https://github.com/foxcaulfield/arete/commit/95f5f82))
