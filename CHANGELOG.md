@@ -1,3 +1,7 @@
+## 1.1.0-beta.4 (2025-10-20)
+
+* fix: update Dockerfile to handle prisma generation errors ([e81324a](https://github.com/foxcaulfield/arete/commit/e81324a))
+
 ## 1.1.0-beta.3 (2025-10-20)
 
 * fix: update .env.example; add hooks to auth configuration; update Dockerfile layers ([9e882ae](https://github.com/foxcaulfield/arete/commit/9e882ae))
