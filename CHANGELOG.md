@@ -1,3 +1,17 @@
+## 1.0.0-beta.2 (2025-10-20)
+
+* feat: prepare for next release ([95f5f82](https://github.com/foxcaulfield/arete/commit/95f5f82))
+* chore: remove obsolete CI and release workflows; add new release workflow ([7e73c40](https://github.com/foxcaulfield/arete/commit/7e73c40))
+* chore: trigger release ([75f31e8](https://github.com/foxcaulfield/arete/commit/75f31e8))
+* chore: update base image to Node.js 22-alpine ([4a48012](https://github.com/foxcaulfield/arete/commit/4a48012))
+* chore: update base image to Node.js 24.10-alpine3.22 ([3070839](https://github.com/foxcaulfield/arete/commit/3070839))
+* chore: update Dockerfile to install all dependencies and generate Prisma client; ([95b2769](https://github.com/foxcaulfield/arete/commit/95b2769))
+* chore: update Node.js version to 24.x and adjust npm install command ([75d8384](https://github.com/foxcaulfield/arete/commit/75d8384))
+* Merge pull request #32 from foxcaulfield/feature/dockerfile-update-node-ver-22 ([bb2b815](https://github.com/foxcaulfield/arete/commit/bb2b815)), closes [#32](https://github.com/foxcaulfield/arete/issues/32)
+* Merge pull request #34 from foxcaulfield/feature/husky-update ([a851c41](https://github.com/foxcaulfield/arete/commit/a851c41)), closes [#34](https://github.com/foxcaulfield/arete/issues/34)
+* Merge pull request #35 from foxcaulfield/feature/workflows-update ([a0090a1](https://github.com/foxcaulfield/arete/commit/a0090a1)), closes [#35](https://github.com/foxcaulfield/arete/issues/35)
+* Merge pull request #36 from foxcaulfield/feature/update-workflow-packages ([9ee5fc1](https://github.com/foxcaulfield/arete/commit/9ee5fc1)), closes [#36](https://github.com/foxcaulfield/arete/issues/36)
+
 ## 1.0.0-beta.1 (2025-10-20)
 
 * Feature/basic structure (#2) ([48ce01a](https://github.com/foxcaulfield/arete/commit/48ce01a)), closes [#2](https://github.com/foxcaulfield/arete/issues/2)
