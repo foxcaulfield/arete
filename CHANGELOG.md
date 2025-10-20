@@ -1,4 +1,9 @@
-## 1.0.0-beta.1 (2025-10-20)
+## 1.0.0-beta.2 (2025-10-19)
+
+* Merge pull request #27 from foxcaulfield/feature/update-workflows-branch-name-semantic-clarity ([647317f](https://github.com/foxcaulfield/arete/commit/647317f)), closes [#27](https://github.com/foxcaulfield/arete/issues/27)
+* fix: update release branch patterns and versioning ([eda5cf0](https://github.com/foxcaulfield/arete/commit/eda5cf0))
+
+## 1.0.0-beta.1 (2025-10-19)
 
 * Feature/basic structure (#2) ([48ce01a](https://github.com/foxcaulfield/arete/commit/48ce01a)), closes [#2](https://github.com/foxcaulfield/arete/issues/2)
 * Feature/nestjs init (#1) ([e93ef95](https://github.com/foxcaulfield/arete/commit/e93ef95)), closes [#1](https://github.com/foxcaulfield/arete/issues/1)
