@@ -1,3 +1,7 @@
+## 1.0.0-rc.2 (2025-10-20)
+
+* fix: simplify GitHub plugin configuration in release settings ([578b240](https://github.com/foxcaulfield/arete/commit/578b240))
+
 ## 1.0.0-rc.1 (2025-10-20)
 
 * fix: add missing advanced configuration for cookie prefix ([265f685](https://github.com/foxcaulfield/arete/commit/265f685))
