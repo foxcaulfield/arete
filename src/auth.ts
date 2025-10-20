@@ -20,6 +20,7 @@ export const auth = betterAuth({
 	database: prismaAdapter(prismaClient, {
 		provider: "postgresql",
 	}),
+	baseURL: process.env.API_URL || "http://localhost:3000",
 	hooks: {},
 
 	emailAndPassword: {
@@ -28,7 +29,7 @@ export const auth = betterAuth({
 	advanced: {
 		cookiePrefix: process.env.COOKIE_PREFIX || "arete",
 		crossSubDomainCookies: {
-			enabled: true, // Allow cookies across subdomains
+			enabled: true, // Allows cookies across *.onrender.com subdomains
 		},
 	},
 	session: {
@@ -39,5 +40,8 @@ export const auth = betterAuth({
 			maxAge: 5 * 60, // 5 minutes
 		},
 	},
-	trustedOrigins: [process.env.FRONTEND_ORIGIN || "http://localhost:5173"],
+	trustedOrigins: [
+		process.env.FRONTEND_ORIGIN || "http://localhost:5173",
+		process.env.API_URL || "http://localhost:3000",
+	],
 });
