@@ -1,3 +1,7 @@
+## 1.1.0-beta.3 (2025-10-20)
+
+* fix: update .env.example; add hooks to auth configuration; update Dockerfile layers ([9e882ae](https://github.com/foxcaulfield/arete/commit/9e882ae))
+
 ## 1.1.0-beta.2 (2025-10-20)
 
 * fix: add condition to build step for release branches (#41) ([2ccf219](https://github.com/foxcaulfield/arete/commit/2ccf219)), closes [#41](https://github.com/foxcaulfield/arete/issues/41)
