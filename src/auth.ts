@@ -29,7 +29,8 @@ export const auth = betterAuth({
 	advanced: {
 		cookiePrefix: process.env.COOKIE_PREFIX || "arete",
 		crossSubDomainCookies: {
-			enabled: true, // Allows cookies across *.onrender.com subdomains
+			enabled: true,
+			domain: process.env.CROSS_SUBDOMAIN_COOKIE_DOMAIN, // Allows cookies across *.onrender.com subdomains
 		},
 	},
 	session: {
