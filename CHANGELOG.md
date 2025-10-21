@@ -1,3 +1,7 @@
+## 1.1.0-beta.14 (2025-10-21)
+
+* fix: enable partitioned cookies for improved security ([4796b00](https://github.com/foxcaulfield/arete/commit/4796b00))
+
 ## 1.1.0-beta.13 (2025-10-21)
 
 * fix: update SameSite cookie handling for improved cross-domain compatibility ([83e1d97](https://github.com/foxcaulfield/arete/commit/83e1d97))
