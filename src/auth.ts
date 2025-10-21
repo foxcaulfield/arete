@@ -34,6 +34,10 @@ export const auth = betterAuth({
 			enabled: false,
 		},
 		useSecureCookies: process.env.NODE_ENV === "production",
+		// CRITICAL: Set SameSite=None for cross-domain cookies
+		// In production with HTTPS, cookies will be Secure + SameSite=None
+		// In development with HTTP, SameSite=Lax is used (browsers don't allow SameSite=None without Secure)
+		sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 	},
 	session: {
 		expiresIn: 60 * 60 * 24 * 7, // 7 days
