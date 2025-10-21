@@ -1,3 +1,7 @@
+## 1.1.0-beta.12 (2025-10-21)
+
+* fix: update SameSite cookie handling for cross-domain compatibility ([70fb8f4](https://github.com/foxcaulfield/arete/commit/70fb8f4))
+
 ## 1.1.0-beta.11 (2025-10-21)
 
 * fix: update CORS and cookie settings for improved security and cross-origin handling ([238ef34](https://github.com/foxcaulfield/arete/commit/238ef34))
