@@ -1,3 +1,7 @@
+## 1.1.0-beta.15 (2025-10-21)
+
+* fix: adjust partitioned cookie setting based on environment ([8c5a30e](https://github.com/foxcaulfield/arete/commit/8c5a30e))
+
 ## 1.1.0-beta.14 (2025-10-21)
 
 * fix: enable partitioned cookies for improved security ([4796b00](https://github.com/foxcaulfield/arete/commit/4796b00))
