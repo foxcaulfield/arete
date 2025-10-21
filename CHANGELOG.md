@@ -1,3 +1,7 @@
+## 1.1.0-beta.13 (2025-10-21)
+
+* fix: update SameSite cookie handling for improved cross-domain compatibility ([83e1d97](https://github.com/foxcaulfield/arete/commit/83e1d97))
+
 ## 1.1.0-beta.12 (2025-10-21)
 
 * fix: update SameSite cookie handling for cross-domain compatibility ([70fb8f4](https://github.com/foxcaulfield/arete/commit/70fb8f4))
