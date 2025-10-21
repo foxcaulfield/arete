@@ -39,7 +39,7 @@ export const auth = betterAuth({
 		// In development: SameSite not set, allows all contexts
 		defaultCookieAttributes: {
 			sameSite: process.env.NODE_ENV === "production" ? "none" : undefined,
-			partitioned: true,
+			partitioned: process.env.NODE_ENV === "production" ? true : false, // Disable in dev
 		},
 	},
 	session: {
