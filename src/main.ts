@@ -8,7 +8,7 @@ async function bootstrap(): Promise<void> {
 	});
 
 	app.enableCors({
-		origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
+		origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",") : ["http://localhost:5173"],
 		credentials: true, // CRITICAL: allows cookies
 		methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],

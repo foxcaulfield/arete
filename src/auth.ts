@@ -28,10 +28,12 @@ export const auth = betterAuth({
 	},
 	advanced: {
 		cookiePrefix: process.env.COOKIE_PREFIX || "arete",
+		// For cross-domain (not subdomain), disable crossSubDomainCookies
+		// and rely on CORS with credentials instead
 		crossSubDomainCookies: {
-			enabled: true,
-			domain: process.env.CROSS_SUBDOMAIN_COOKIE_DOMAIN, // Allows cookies across *.onrender.com subdomains
+			enabled: false,
 		},
+		useSecureCookies: process.env.NODE_ENV === "production",
 	},
 	session: {
 		expiresIn: 60 * 60 * 24 * 7, // 7 days
@@ -41,8 +43,7 @@ export const auth = betterAuth({
 			maxAge: 5 * 60, // 5 minutes
 		},
 	},
-	trustedOrigins: [
-		process.env.FRONTEND_ORIGIN || "http://localhost:5173",
-		process.env.API_URL || "http://localhost:3000",
-	],
+	trustedOrigins: process.env.TRUSTED_ORIGINS
+		? process.env.TRUSTED_ORIGINS.split(",")
+		: ["http://localhost:5173", "http://localhost:3000"],
 });
