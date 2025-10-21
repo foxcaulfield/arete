@@ -1,3 +1,7 @@
+## 1.1.0-beta.11 (2025-10-21)
+
+* fix: update CORS and cookie settings for improved security and cross-origin handling ([238ef34](https://github.com/foxcaulfield/arete/commit/238ef34))
+
 ## 1.1.0-beta.10 (2025-10-21)
 
 * fix: add domain configuration for cross-subdomain cookies in auth settings ([53c176b](https://github.com/foxcaulfield/arete/commit/53c176b))
