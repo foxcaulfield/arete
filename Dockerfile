@@ -27,5 +27,6 @@ COPY --from=builder /usr/src/app/prisma ./prisma
 COPY package*.json ./
 # Verify migrations are present
 RUN ls -la prisma/migrations/ || (echo "ERROR: Migrations not found in runtime image!" && exit 1)
+RUN ls -la ./ || (echo "ERROR: Application files not found in runtime image!" && exit 1)
 EXPOSE 3000
 CMD [ "sh", "-c", "npm run start:migrate:prod" ]
