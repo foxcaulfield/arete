@@ -13,6 +13,7 @@ import { PermissionsGuard } from "./guards/permissions.guard";
 import { RolesGuard } from "./guards/roles.guard";
 import { SignUpHook } from "./hooks/auth.hook";
 import { ExercisesModule } from "./exercises/exercises.module";
+import { FileStorageLocal, FileStorageModule } from "@getlarge/nestjs-tools-file-storage";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient, UserRole } from "@prisma/client";
@@ -86,6 +87,24 @@ import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 		PrismaModule,
 		CollectionsModule,
 		ExercisesModule,
+		FileStorageModule.forRootAsync({
+			inject: [ConfigService],
+			useFactory: (configService: ConfigService<EnvConfig, true>): FileStorageLocal => {
+				const setup = {
+					storagePath: configService.get("CONTAINER_FILE_STORAGE_PATH", { infer: true }),
+					maxPayloadSize: configService.get("MAX_PAYLOAD_SIZE", { infer: true }),
+				};
+				return new FileStorageLocal(setup);
+			},
+			// (StorageType.FS, {
+			// 	FS: {
+			// 		setup: {
+			// 			storagePath: process.env.CONTAINER_FILE_STORAGE_PATH,
+			// 			maxPayloadSize: 50 * 1024 * 1024,
+			// 		}, // 50 MB
+			// 	},
+			// }
+		}),
 	],
 	controllers: [AppController],
 	providers: [
