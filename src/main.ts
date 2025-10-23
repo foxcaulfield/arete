@@ -10,10 +10,12 @@ async function bootstrap(): Promise<void> {
 	});
 
 	const configService = app.get<ConfigService<EnvConfig, true>>(ConfigService);
-	console.log("App running in", configService.get<string>("NODE_ENV"), "mode");
+	const appMode = configService.get("NODE_ENV", { infer: true });
+	const isProduction = appMode === "production";
+	console.log("App running in", appMode, "mode");
 
 	app.enableCors({
-		origin: configService.get("CORS_ORIGINS", { infer: true }).split(","),
+		origin: isProduction ? configService.get("CORS_ORIGINS", { infer: true }).split(",") : "*",
 		credentials: true, // CRITICAL: allows cookies
 		methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
