@@ -1,14 +1,19 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ValidationPipe } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { EnvConfig } from "./configs/joi-env.config";
 
 async function bootstrap(): Promise<void> {
 	const app = await NestFactory.create(AppModule, {
 		bodyParser: false,
 	});
 
+	const configService = app.get<ConfigService<EnvConfig, true>>(ConfigService);
+	console.log("App running in", configService.get<string>("NODE_ENV"), "mode");
+
 	app.enableCors({
-		origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",") : ["http://localhost:5173"],
+		origin: configService.get("CORS_ORIGINS", { infer: true }).split(","),
 		credentials: true, // CRITICAL: allows cookies
 		methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
@@ -26,7 +31,7 @@ async function bootstrap(): Promise<void> {
 		})
 	);
 
-	await app.listen(process.env.PORT ?? 3000);
+	await app.listen(configService.get("APPLICATION_PORT", { infer: true }));
 }
 bootstrap().catch((err): void => {
 	console.error(err);

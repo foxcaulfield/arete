@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { PrismaService } from "./prisma/prisma.service";
 import { UsersModule } from "./users/users.module";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -13,6 +13,7 @@ import { PermissionsGuard } from "./guards/permissions.guard";
 import { RolesGuard } from "./guards/roles.guard";
 import { SignUpHook } from "./hooks/auth.hook";
 import { ExercisesModule } from "./exercises/exercises.module";
+import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 
 @Module({
 	imports: [
@@ -20,6 +21,11 @@ import { ExercisesModule } from "./exercises/exercises.module";
 		ConfigModule.forRoot({
 			isGlobal: true,
 			envFilePath: [".env"],
+			validationSchema: envValidationSchema,
+			validationOptions: {
+				allowUnknown: true,
+				abortEarly: false,
+			},
 		}),
 		UsersModule,
 		PrismaModule,
