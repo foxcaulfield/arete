@@ -1,4 +1,4 @@
-import { Optional } from "@nestjs/common";
+// import { Optional } from "@nestjs/common";
 import { Expose } from "class-transformer";
 import { IsNotEmpty, IsString } from "class-validator";
 
@@ -9,12 +9,12 @@ export class ResponseDrillQuestionDto {
 	@Expose()
 	public question!: string;
 
-	@Expose()
-	public placehoderSequence!: string;
+	// @Expose()
+	// public placehoderSequence!: string;
 
-	@Optional()
-	@Expose()
-	public tags?: string[];
+	// @Optional()
+	// @Expose()
+	// public tags?: string[];
 }
 
 export class DrillIncomingAnswerDto {
