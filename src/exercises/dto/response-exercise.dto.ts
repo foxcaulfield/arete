@@ -5,10 +5,10 @@ export class ResponseExerciseDto {
 	public id!: string;
 
 	@Expose()
-	public title!: string;
+	public question!: string;
 
 	@Expose()
-	public description!: string | null;
+	public explanation!: string | null;
 
 	@Expose()
 	public collectionId!: string;
@@ -19,3 +19,9 @@ export class ResponseExerciseDto {
 	@Expose()
 	public updatedAt!: Date;
 }
+
+// isActive
+// alternativeAnswers
+// correctAnswer
+// placeholderSequence
+// tags
