@@ -1,3 +1,14 @@
+## 1.1.0-beta.16 (2025-10-23)
+
+* feat: add Joi validation for environment configuration and include Joi dependency ([d2498e1](https://github.com/foxcaulfield/arete/commit/d2498e1))
+* feat: enhance AuthModule configuration to improve production environment handling for cookies ([92b9207](https://github.com/foxcaulfield/arete/commit/92b9207))
+* feat: integrate FileStorageModule with async configuration for dynamic storage setup ([3c20f90](https://github.com/foxcaulfield/arete/commit/3c20f90))
+* feat: integrate Joi validation for environment configuration in app module and main bootstrap ([1df28a5](https://github.com/foxcaulfield/arete/commit/1df28a5))
+* feat: refactor authentication setup to use betterAuth with Prisma integration and remove legacy auth ([622eddb](https://github.com/foxcaulfield/arete/commit/622eddb))
+* feat: update CORS configuration to conditionally allow origins based on environment and improve logg ([16eaf3c](https://github.com/foxcaulfield/arete/commit/16eaf3c))
+* fix: update Dockerfile and docker-compose for improved build process; ([658528e](https://github.com/foxcaulfield/arete/commit/658528e))
+* fix: update package version to 1.1.0-beta.14 and add @getlarge/nestjs-tools-file-storage dependency ([f660bff](https://github.com/foxcaulfield/arete/commit/f660bff))
+
 ## 1.1.0-beta.15 (2025-10-21)
 
 * fix: adjust partitioned cookie setting based on environment ([8c5a30e](https://github.com/foxcaulfield/arete/commit/8c5a30e))
