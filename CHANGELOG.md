@@ -1,3 +1,7 @@
+## 1.1.0-beta.17 (2025-10-23)
+
+* fix: edit dataset in ResponseExerciseDto ([d1f607e](https://github.com/foxcaulfield/arete/commit/d1f607e))
+
 ## 1.1.0-beta.16 (2025-10-23)
 
 * feat: add Joi validation for environment configuration and include Joi dependency ([d2498e1](https://github.com/foxcaulfield/arete/commit/d2498e1))
