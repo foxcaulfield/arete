@@ -24,6 +24,8 @@ import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 		AuthModule.forRootAsync({
 			inject: [ConfigService],
 			useFactory: (configService: ConfigService<EnvConfig, true>) => {
+				const isProduction = configService.get("NODE_ENV", { infer: true }) === "production";
+
 				const prismaClient = new PrismaClient().$extends({
 					query: {
 						user: {
@@ -51,14 +53,10 @@ import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 						crossSubDomainCookies: {
 							enabled: false,
 						},
-						useSecureCookies: configService.get("NODE_ENV", { infer: true }) === "production",
-						// defaultCookieAttributes: {
-						// 	sameSite: "None",
-						// },
+						useSecureCookies: isProduction,
 						defaultCookieAttributes: {
-							sameSite:
-								configService.get("NODE_ENV", { infer: true }) === "production" ? "none" : undefined,
-							partitioned: configService.get("NODE_ENV", { infer: true }) === "production" ? true : false, // Disable in dev
+							sameSite: isProduction ? "none" : "lax", // Use "none" only in production
+							partitioned: isProduction ? true : false, // Disable in dev
 						},
 					},
 					session: {
