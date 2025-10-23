@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateExerciseDto } from "./dto/update-exercise.dto";
 import { CreateExerciseDto } from "./dto/create-exercise.dto";
@@ -47,14 +47,51 @@ export class ExercisesService extends BaseService {
 			throw new ForbiddenException("You are not allowed to update this collection.");
 		}
 
+		const { additionalCorrectAnswers, correctAnswer, distractors, type } = dto;
+
+		if (additionalCorrectAnswers?.some((a): boolean => a === correctAnswer)) {
+			throw new ConflictException("Correct answer cannot be listed as an additional correct answer.");
+		}
+
+		if (
+			additionalCorrectAnswers?.length &&
+			new Set(additionalCorrectAnswers).size !== additionalCorrectAnswers.length
+		) {
+			throw new ConflictException("Additional correct answers must be unique");
+		}
+
+		// Distractor validation
+		if (distractors?.some((d): boolean => d === correctAnswer)) {
+			throw new ConflictException("Distractors cannot be the same as the correct answer");
+		}
+
+		if (additionalCorrectAnswers?.some((a): boolean => !!distractors?.includes(a))) {
+			throw new ConflictException("Distractors cannot be the same as any additional correct answer");
+		}
+
+		if (distractors?.length && new Set(distractors).size !== distractors.length) {
+			throw new ConflictException("Distractors must be unique");
+		}
+
+		if (distractors?.some((dist): boolean => dist.length < 1 || dist.length > 50)) {
+			throw new ConflictException("Each distractor must be 1-50 characters");
+		}
+
+		if (type === "CHOICE_SINGLE") {
+			if (!distractors?.length || distractors.length < 10) {
+				throw new ConflictException("At least 10 distractors are required for single-choice questions");
+			}
+		}
+
 		const exercise = await this.prismaService.exercise.create({
 			data: {
 				question: dto.question,
 				explanation: dto.explanation,
 				correctAnswer: dto.correctAnswer,
-				alternativeAnswers: dto.alternativeAnswers,
+				additionalCorrectAnswers: dto.additionalCorrectAnswers,
 				collectionId: dto.collectionId,
-				tags: dto.tags,
+				distractors: dto.distractors,
+				type: dto.type,
 			},
 		});
 
@@ -220,7 +257,7 @@ export class ExercisesService extends BaseService {
 		};
 	}
 
-	private checkAnswer(userAnswer: string, { correctAnswer, alternativeAnswers }: Exercise): boolean {
+	private checkAnswer(userAnswer: string, { correctAnswer, additionalCorrectAnswers }: Exercise): boolean {
 		const normalizedUserAnswer = this.normalize(userAnswer);
 		const normalizedCorrectAnswer = this.normalize(correctAnswer);
 
@@ -228,8 +265,8 @@ export class ExercisesService extends BaseService {
 			return true;
 		}
 
-		if (alternativeAnswers?.length) {
-			return alternativeAnswers.some((alt): boolean => normalizedUserAnswer === this.normalize(alt));
+		if (additionalCorrectAnswers?.length) {
+			return additionalCorrectAnswers.some((alt): boolean => normalizedUserAnswer === this.normalize(alt));
 		}
 
 		return false;

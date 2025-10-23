@@ -1,8 +1,13 @@
-import { Exercise } from "@prisma/client";
-import { IsArray, IsOptional, IsString, Length } from "class-validator";
+import { Exercise, ExerciseType } from "@prisma/client";
+import { IsArray, IsEnum, IsOptional, IsString, Length } from "class-validator";
 
 export class CreateExerciseDto implements Partial<Exercise> {
-	// public placeholderSequence?: string | null | undefined;
+	@IsString()
+	public collectionId!: string;
+
+	@IsEnum(ExerciseType)
+	public type!: ExerciseType;
+
 	@IsString()
 	@Length(5, 500)
 	public question!: string;
@@ -14,18 +19,20 @@ export class CreateExerciseDto implements Partial<Exercise> {
 	@IsOptional()
 	@IsArray()
 	@IsString({ each: true })
-	public alternativeAnswers?: string[];
+	public additionalCorrectAnswers?: string[];
 
 	@IsOptional()
 	@IsArray()
 	@IsString({ each: true })
-	public tags?: string[];
+	public distractors?: string[];
+
+	// @IsOptional()
+	// @IsArray()
+	// @IsString({ each: true })
+	// public tags?: string[];
 
 	@IsOptional()
 	@IsString()
 	@Length(0, 1000)
 	public explanation?: string;
-
-	@IsString()
-	public collectionId!: string;
 }
