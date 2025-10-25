@@ -1,3 +1,17 @@
+## 1.1.0-beta.18 (2025-10-25)
+
+* Merge pull request #42 from foxcaulfield/feature/add-exercise-file-uploading ([aa875c1](https://github.com/foxcaulfield/arete/commit/aa875c1)), closes [#42](https://github.com/foxcaulfield/arete/issues/42)
+* feat: add uuid dependency and implement file upload handling in ExercisesController and ExercisesSer ([3babac3](https://github.com/foxcaulfield/arete/commit/3babac3))
+* refactor: add audioUrl and imageUrl fields to Exercise model; update migrations ([f878849](https://github.com/foxcaulfield/arete/commit/f878849))
+* refactor: add audioUrl and imageUrl fields to ResponseDrillQuestionDto and ResponseExerciseDto ([8fdebaf](https://github.com/foxcaulfield/arete/commit/8fdebaf))
+* refactor: add default transform options to plainToInstance calls in BaseService ([4cd6c47](https://github.com/foxcaulfield/arete/commit/4cd6c47))
+* refactor: add file storage and multer configuration for file uploads ([9d8d17f](https://github.com/foxcaulfield/arete/commit/9d8d17f))
+* refactor: comment out unused imports and properties in quiz.dto.ts ([a5cce9f](https://github.com/foxcaulfield/arete/commit/a5cce9f))
+* refactor: enhance Exercise model by adding additional fields and updating ExerciseType enum ([3f849c7](https://github.com/foxcaulfield/arete/commit/3f849c7))
+* refactor: integrate FileStorageModule with async configuration in ExercisesModule ([7efbe34](https://github.com/foxcaulfield/arete/commit/7efbe34))
+* refactor: remove FileStorageModule configuration from AppModule ([8844791](https://github.com/foxcaulfield/arete/commit/8844791))
+* refactor: update CreateExerciseDto and ExercisesService for additional correct answers and distracto ([319743d](https://github.com/foxcaulfield/arete/commit/319743d))
+
 ## 1.1.0-beta.17 (2025-10-23)
 
 * fix: edit dataset in ResponseExerciseDto ([d1f607e](https://github.com/foxcaulfield/arete/commit/d1f607e))
