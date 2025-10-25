@@ -1,4 +1,11 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+	BadRequestException,
+	ConflictException,
+	ForbiddenException,
+	Injectable,
+	NotFoundException,
+	StreamableFile,
+} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateExerciseDto } from "./dto/update-exercise.dto";
 import { CreateExerciseDto } from "./dto/create-exercise.dto";
@@ -10,6 +17,10 @@ import { UsersService } from "src/users/users.service";
 import { PaginatedResponseDto } from "src/common/types";
 import { DrillIncomingAnswerDto, ResponseDrillQuestionDto, ResponseDrillResultDto } from "./dto/quiz.dto";
 import { Exercise } from "@prisma/client";
+import { FileStorageService, StorageType } from "@getlarge/nestjs-tools-file-storage";
+import { extname } from "path";
+import { v4 as uuid4 } from "uuid";
+import { ExerciseFileType } from "./enums/exercise-file-type.enum";
 
 @Injectable()
 export class ExercisesService extends BaseService {
@@ -34,12 +45,17 @@ export class ExercisesService extends BaseService {
 	public constructor(
 		private readonly prismaService: PrismaService,
 		private readonly usersService: UsersService,
-		private readonly collectionsService: CollectionsService
+		private readonly collectionsService: CollectionsService,
+		private readonly fileStorageService: FileStorageService<StorageType.FS>
 	) {
 		super();
 	}
 
-	public async create(currentUserId: string, dto: CreateExerciseDto): Promise<ResponseExerciseDto> {
+	public async create(
+		currentUserId: string,
+		dto: CreateExerciseDto,
+		files?: { audio?: Express.Multer.File[]; image?: Express.Multer.File[] }
+	): Promise<ResponseExerciseDto> {
 		const collection = await this.collectionsService.findCollection(dto.collectionId);
 		const currentUser = await this.usersService.findUser(currentUserId);
 
@@ -83,6 +99,19 @@ export class ExercisesService extends BaseService {
 			}
 		}
 
+		const createFilenameForFile = (file: Express.Multer.File): string => {
+			const extension = extname(file.originalname) || file.mimetype.split("/")[1];
+			const safeExtension = extension && extension.startsWith(".") ? extension.slice(1) : extension;
+			return uuid4() + (safeExtension ? `.${safeExtension}` : "");
+		};
+
+		// retrieve file extensions and prepare for upload
+		const audioFile = files?.audio?.length ? files.audio[0] : null;
+		const imageFile = files?.image?.length ? files.image[0] : null;
+
+		const audioFilename = audioFile ? createFilenameForFile(audioFile) : null;
+		const imageFilename = imageFile ? createFilenameForFile(imageFile) : null;
+
 		const exercise = await this.prismaService.exercise.create({
 			data: {
 				question: dto.question,
@@ -92,8 +121,31 @@ export class ExercisesService extends BaseService {
 				collectionId: dto.collectionId,
 				distractors: dto.distractors,
 				type: dto.type,
+				audioUrl: audioFilename,
+				imageUrl: imageFilename,
 			},
 		});
+
+		try {
+			if (audioFile && audioFilename) {
+				await this.fileStorageService.uploadFile({
+					content: audioFile.buffer,
+					filePath: `${this.fileTypeToFolderMap[ExerciseFileType.AUDIO]}/${audioFilename}`,
+				});
+			}
+			if (imageFile && imageFilename) {
+				await this.fileStorageService.uploadFile({
+					content: imageFile.buffer,
+					filePath: `${this.fileTypeToFolderMap[ExerciseFileType.IMAGE]}/${imageFilename}`,
+				});
+			}
+		} catch (error) {
+			// Rollback exercise creation
+			await this.prismaService.exercise.delete({ where: { id: exercise.id } });
+			throw new BadRequestException(
+				`File upload failed: ${error instanceof Error ? error.message : "Unknown error"}`
+			);
+		}
 
 		return this.toResponseDto(ResponseExerciseDto, exercise);
 	}
@@ -253,7 +305,7 @@ export class ExercisesService extends BaseService {
 			isCorrect: isCorrect,
 			correctAnswer: exercise.correctAnswer,
 			explanation: exercise.explanation || undefined,
-			nextExerciseId: nextExercise.exerciseId,
+			nextExerciseId: nextExercise.id,
 		};
 	}
 
@@ -270,5 +322,59 @@ export class ExercisesService extends BaseService {
 		}
 
 		return false;
+	}
+
+	private readonly fileTypeToUrlPropMap = {
+		[ExerciseFileType.AUDIO]: "audioUrl",
+		[ExerciseFileType.IMAGE]: "imageUrl",
+	} as const satisfies Record<ExerciseFileType, keyof Exercise>;
+
+	private readonly fileTypeToFolderMap = {
+		[ExerciseFileType.AUDIO]: "audio",
+		[ExerciseFileType.IMAGE]: "images",
+	} as const;
+
+	private readonly mimeTypeMap = {
+		[ExerciseFileType.AUDIO]: "audio/mpeg",
+		[ExerciseFileType.IMAGE]: "image/jpeg",
+	} as const satisfies Record<ExerciseFileType, string>;
+
+	public async getExerciseFile(
+		currentUserId: string,
+		filename: string,
+		filetype: ExerciseFileType
+	): Promise<StreamableFile> {
+		const currentUser = await this.usersService.findUser(currentUserId);
+
+		const fileNameProp = this.fileTypeToUrlPropMap[filetype];
+
+		const exercise = await this.prismaService.exercise.findFirst({
+			where: {
+				[fileNameProp]: filename,
+			},
+		});
+
+		if (!exercise) {
+			throw new NotFoundException("Exercise not found for the given file");
+		}
+		const collection = await this.collectionsService.findCollection(exercise.collectionId);
+
+		if (!this.collectionsService.canAccessCollection(collection, currentUser)) {
+			throw new ForbiddenException("User is not allowed to access this collection");
+		}
+
+		const folder = this.fileTypeToFolderMap[filetype];
+
+		if (!folder) {
+			throw new BadRequestException("Invalid file type");
+		}
+
+		const stream = await this.fileStorageService.downloadStream({
+			filePath: `${folder}/${filename}`,
+		});
+
+		return new StreamableFile(stream, {
+			type: this.mimeTypeMap[filetype],
+		});
 	}
 }
