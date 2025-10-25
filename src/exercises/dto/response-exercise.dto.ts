@@ -18,6 +18,12 @@ export class ResponseExerciseDto {
 
 	@Expose()
 	public updatedAt!: Date;
+
+	@Expose()
+	public audioUrl?: string | null;
+
+	@Expose()
+	public imageUrl?: string | null;
 }
 
 // isActive
