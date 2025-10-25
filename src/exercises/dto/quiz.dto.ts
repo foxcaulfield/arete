@@ -4,10 +4,16 @@ import { IsNotEmpty, IsString } from "class-validator";
 
 export class ResponseDrillQuestionDto {
 	@Expose()
-	public exerciseId!: string;
+	public id!: string;
 
 	@Expose()
 	public question!: string;
+
+	@Expose()
+	public audioUrl?: string | null;
+
+	@Expose()
+	public imageUrl?: string | null;
 
 	// @Expose()
 	// public placehoderSequence!: string;

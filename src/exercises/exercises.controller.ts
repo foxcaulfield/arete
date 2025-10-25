@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	Param,
+	Patch,
+	Post,
+	Query,
+	UseInterceptors,
+	UploadedFiles,
+	StreamableFile,
+	ParseEnumPipe,
+} from "@nestjs/common";
 import { ExercisesService } from "./exercises.service";
 import { CreateExerciseDto } from "./dto/create-exercise.dto";
 import { Session, type UserSession } from "@thallesp/nestjs-better-auth";
@@ -7,14 +20,26 @@ import { FilterExerciseDto } from "./dto/filter-exercise.dto";
 import { PaginatedResponseDto } from "src/common/types";
 import { UpdateExerciseDto } from "./dto/update-exercise.dto";
 import { DrillIncomingAnswerDto, ResponseDrillQuestionDto, ResponseDrillResultDto } from "./dto/quiz.dto";
+// import { FileInterceptor } from "@nestjs/platform-express";
+import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { multerConfig, multerField as field } from "src/configs/multer.config";
+import { ExerciseFileType } from "./enums/exercise-file-type.enum";
+
+type MulterFiles = Express.Multer.File[];
+type UploadedExerciseFiles = { audio?: MulterFiles; image?: MulterFiles };
 
 @Controller("exercises")
 export class ExercisesController {
 	public constructor(private readonly exercisesService: ExercisesService) {}
 
 	@Post("create")
-	public async create(@Body() dto: CreateExerciseDto, @Session() session: UserSession): Promise<ResponseExerciseDto> {
-		return this.exercisesService.create(session.user.id, dto);
+	@UseInterceptors(FileFieldsInterceptor([field("image"), field("audio")], multerConfig.exerciseFileUpload))
+	public async create(
+		@UploadedFiles() files: UploadedExerciseFiles,
+		@Body() dto: CreateExerciseDto,
+		@Session() session: UserSession
+	): Promise<ResponseExerciseDto> {
+		return this.exercisesService.create(session.user.id, dto, files);
 	}
 
 	@Get("by_collection/:collectionId")
@@ -67,5 +92,14 @@ export class ExercisesController {
 		@Body() dto: DrillIncomingAnswerDto
 	): Promise<ResponseDrillResultDto> {
 		return this.exercisesService.submitDrillAnswer(session.user.id, collectionId, dto);
+	}
+
+	@Get("files/:type/:filename")
+	public getExerciseImageFile(
+		@Param("type", new ParseEnumPipe(ExerciseFileType)) fileType: ExerciseFileType,
+		@Param("filename") filename: string,
+		@Session() session: UserSession
+	): Promise<StreamableFile> {
+		return this.exercisesService.getExerciseFile(session.user.id, filename, fileType);
 	}
 }
