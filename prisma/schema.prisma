@@ -140,6 +140,9 @@ model Exercise {
     correctAnswer            String       @map("correct_answer")
     additionalCorrectAnswers String[]     @default([]) @map("additional_correct_answers")
     distractors              String[]     @default([]) @map("distractors")
+    // Optional single audio and image stored on disk (filenames or relative paths)
+    audioUrl                 String?
+    imageUrl                 String?
     // Metadata
     // tags                     String[]   @default([])
     // Rich content
