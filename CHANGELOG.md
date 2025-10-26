@@ -1,3 +1,7 @@
+## 1.1.0-beta.19 (2025-10-26)
+
+* feat: add optional translation field to Exercise model and migration ([0c63e67](https://github.com/foxcaulfield/arete/commit/0c63e67))
+
 ## 1.1.0-beta.18 (2025-10-25)
 
 * Merge pull request #42 from foxcaulfield/feature/add-exercise-file-uploading ([aa875c1](https://github.com/foxcaulfield/arete/commit/aa875c1)), closes [#42](https://github.com/foxcaulfield/arete/issues/42)
