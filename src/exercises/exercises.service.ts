@@ -240,6 +240,18 @@ export class ExercisesService extends BaseService {
 		return this.toResponseDto(ResponseExerciseDto, deleted);
 	}
 
+	private readonly distractorLimit = 3;
+
+	// mix correct answer with random distractors
+	private getRandomDistractors(correctAnswer: string, allDistractors: string[]): string[] {
+		const shuffled = allDistractors
+			.sort((): number => 0.5 - Math.random())
+			.slice(0, this.distractorLimit)
+			.concat(correctAnswer)
+			.sort((): number => 0.5 - Math.random());
+		return shuffled;
+	}
+
 	/* Drill methods */
 	public async getDrillExercise(currentUserId: string, collectionId: string): Promise<ResponseDrillQuestionDto> {
 		const currentUser = await this.usersService.findUser(currentUserId);
