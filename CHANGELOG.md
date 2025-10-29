@@ -1,3 +1,9 @@
+## 1.1.0-beta.20 (2025-10-29)
+
+* feat: add missing properties to ResponseDrillQuestionDto for enhanced data handling ([119e31a](https://github.com/foxcaulfield/arete/commit/119e31a))
+* feat: implement random distractor generation for drill exercises ([6df293e](https://github.com/foxcaulfield/arete/commit/6df293e))
+* feat: update distractors for drill exercises based on exercise type ([76c9564](https://github.com/foxcaulfield/arete/commit/76c9564))
+
 ## 1.1.0-beta.19 (2025-10-26)
 
 * feat: add optional translation field to Exercise model and migration ([0c63e67](https://github.com/foxcaulfield/arete/commit/0c63e67))
