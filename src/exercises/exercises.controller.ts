@@ -19,7 +19,7 @@ import { ResponseExerciseDto } from "./dto/response-exercise.dto";
 import { FilterExerciseDto } from "./dto/filter-exercise.dto";
 import { PaginatedResponseDto } from "src/common/types";
 import { UpdateExerciseDto } from "./dto/update-exercise.dto";
-import { DrillIncomingAnswerDto, ResponseDrillQuestionDto, ResponseDrillResultDto } from "./dto/quiz.dto";
+import { UserAnswerDto, QuizQuestionDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
 // import { FileInterceptor } from "@nestjs/platform-express";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { multerConfig, multerField as field } from "src/configs/multer.config";
@@ -81,7 +81,7 @@ export class ExercisesController {
 	public async getDrillExercise(
 		@Param("collectionId") collectionId: string,
 		@Session() session: UserSession
-	): Promise<ResponseDrillQuestionDto> {
+	): Promise<QuizQuestionDto> {
 		return this.exercisesService.getDrillExercise(session.user.id, collectionId);
 	}
 
@@ -89,8 +89,8 @@ export class ExercisesController {
 	public async submitDrillAnswer(
 		@Param("collectionId") collectionId: string,
 		@Session() session: UserSession,
-		@Body() dto: DrillIncomingAnswerDto
-	): Promise<ResponseDrillResultDto> {
+		@Body() dto: UserAnswerDto
+	): Promise<UserAnswerFeedbackDto> {
 		return this.exercisesService.submitDrillAnswer(session.user.id, collectionId, dto);
 	}
 
