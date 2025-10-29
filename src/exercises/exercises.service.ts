@@ -15,7 +15,7 @@ import { BaseService } from "src/base/base.service";
 import { CollectionsService } from "src/collections/collections.service";
 import { UsersService } from "src/users/users.service";
 import { PaginatedResponseDto } from "src/common/types";
-import { DrillIncomingAnswerDto, ResponseDrillQuestionDto, ResponseDrillResultDto } from "./dto/quiz.dto";
+import { UserAnswerDto, QuizQuestionDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
 import { Exercise, ExerciseType } from "@prisma/client";
 import { FileStorageService, StorageType } from "@getlarge/nestjs-tools-file-storage";
 import { extname } from "path";
@@ -253,7 +253,7 @@ export class ExercisesService extends BaseService {
 	}
 
 	/* Drill methods */
-	public async getDrillExercise(currentUserId: string, collectionId: string): Promise<ResponseDrillQuestionDto> {
+	public async getDrillExercise(currentUserId: string, collectionId: string): Promise<QuizQuestionDto> {
 		const currentUser = await this.usersService.findUser(currentUserId);
 		const collection = await this.collectionsService.findCollection(collectionId);
 
@@ -288,7 +288,7 @@ export class ExercisesService extends BaseService {
 			exercise.type === ExerciseType.CHOICE_SINGLE
 				? this.getRandomDistractors(exercise.correctAnswer, exercise.distractors || [])
 				: [];
-		return this.toResponseDto(ResponseDrillQuestionDto, {
+		return this.toResponseDto(QuizQuestionDto, {
 			...exercise,
 			distractors: updatedDistractors,
 		});
@@ -297,8 +297,8 @@ export class ExercisesService extends BaseService {
 	public async submitDrillAnswer(
 		currentUserId: string,
 		collectionId: string,
-		dto: DrillIncomingAnswerDto
-	): Promise<ResponseDrillResultDto> {
+		dto: UserAnswerDto
+	): Promise<UserAnswerFeedbackDto> {
 		const collection = await this.collectionsService.findCollection(collectionId);
 		const currentUser = await this.usersService.findUser(currentUserId);
 

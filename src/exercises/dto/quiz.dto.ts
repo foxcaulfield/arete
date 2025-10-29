@@ -1,8 +1,9 @@
 // import { Optional } from "@nestjs/common";
+import { ExerciseType } from "@prisma/client";
 import { Expose } from "class-transformer";
 import { IsNotEmpty, IsString } from "class-validator";
 
-export class ResponseDrillQuestionDto {
+export class QuizQuestionDto {
 	@Expose()
 	public id!: string;
 
@@ -16,7 +17,7 @@ export class ResponseDrillQuestionDto {
 	public imageUrl?: string | null;
 
 	@Expose()
-	public type!: string;
+	public type!: ExerciseType;
 
 	@Expose()
 	public translation?: string | null;
@@ -26,15 +27,9 @@ export class ResponseDrillQuestionDto {
 
 	@Expose()
 	public distractors?: string[] | null;
-	// @Expose()
-	// public placehoderSequence!: string;
-
-	// @Optional()
-	// @Expose()
-	// public tags?: string[];
 }
 
-export class DrillIncomingAnswerDto {
+export class UserAnswerDto {
 	@IsString()
 	@IsNotEmpty()
 	public exerciseId!: string;
@@ -44,7 +39,7 @@ export class DrillIncomingAnswerDto {
 	public userAnswer!: string;
 }
 
-export class ResponseDrillResultDto {
+export class UserAnswerFeedbackDto {
 	@Expose()
 	public isCorrect!: boolean;
 
