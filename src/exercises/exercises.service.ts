@@ -16,7 +16,7 @@ import { CollectionsService } from "src/collections/collections.service";
 import { UsersService } from "src/users/users.service";
 import { PaginatedResponseDto } from "src/common/types";
 import { DrillIncomingAnswerDto, ResponseDrillQuestionDto, ResponseDrillResultDto } from "./dto/quiz.dto";
-import { Exercise } from "@prisma/client";
+import { Exercise, ExerciseType } from "@prisma/client";
 import { FileStorageService, StorageType } from "@getlarge/nestjs-tools-file-storage";
 import { extname } from "path";
 import { v4 as uuid4 } from "uuid";
@@ -284,7 +284,14 @@ export class ExercisesService extends BaseService {
 			throw new NotFoundException("Exercise not found");
 		}
 
-		return this.toResponseDto(ResponseDrillQuestionDto, exercise);
+		const updatedDistractors =
+			exercise.type === ExerciseType.CHOICE_SINGLE
+				? this.getRandomDistractors(exercise.correctAnswer, exercise.distractors || [])
+				: [];
+		return this.toResponseDto(ResponseDrillQuestionDto, {
+			...exercise,
+			distractors: updatedDistractors,
+		});
 	}
 
 	public async submitDrillAnswer(
