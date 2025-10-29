@@ -15,6 +15,17 @@ export class ResponseDrillQuestionDto {
 	@Expose()
 	public imageUrl?: string | null;
 
+	@Expose()
+	public type!: string;
+
+	@Expose()
+	public translation?: string | null;
+
+	@Expose()
+	public explanation?: string | null;
+
+	@Expose()
+	public distractors?: string[] | null;
 	// @Expose()
 	// public placehoderSequence!: string;
 
