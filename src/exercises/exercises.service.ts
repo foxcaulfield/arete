@@ -16,7 +16,7 @@ import { CollectionsService } from "src/collections/collections.service";
 import { UsersService } from "src/users/users.service";
 import { PaginatedResponseDto } from "src/common/types";
 import { UserAnswerDto, QuizQuestionDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
-import { Exercise, ExerciseType } from "@prisma/client";
+import { Exercise, ExerciseType, Prisma } from "@prisma/client";
 import { FileStorageService, StorageType } from "@getlarge/nestjs-tools-file-storage";
 import { extname } from "path";
 import { v4 as uuid4 } from "uuid";
@@ -24,6 +24,8 @@ import { ExerciseFileType } from "./enums/exercise-file-type.enum";
 
 @Injectable()
 export class ExercisesService extends BaseService {
+	private readonly distractorsMinLimit = 5;
+
 	/* Private helpers */
 	private normalize(answer: string): string {
 		return answer.trim().toLowerCase();
@@ -51,20 +53,13 @@ export class ExercisesService extends BaseService {
 		super();
 	}
 
-	public async create(
-		currentUserId: string,
-		dto: CreateExerciseDto,
-		files?: { audio?: Express.Multer.File[]; image?: Express.Multer.File[] }
-	): Promise<ResponseExerciseDto> {
-		const collection = await this.collectionsService.findCollection(dto.collectionId);
-		const currentUser = await this.usersService.findUser(currentUserId);
-
-		if (!this.collectionsService.canAccessCollection(collection, currentUser)) {
-			throw new ForbiddenException("You are not allowed to update this collection.");
-		}
-
-		const { additionalCorrectAnswers, correctAnswer, distractors, type } = dto;
-
+	// Extracted common validation logic for answers and distractors
+	private validateAnswersAndDistractors(
+		correctAnswer: string,
+		additionalCorrectAnswers?: string[],
+		distractors?: string[],
+		type?: ExerciseType
+	): void {
 		if (additionalCorrectAnswers?.some((a): boolean => a === correctAnswer)) {
 			throw new ConflictException("Correct answer cannot be listed as an additional correct answer.");
 		}
@@ -76,7 +71,6 @@ export class ExercisesService extends BaseService {
 			throw new ConflictException("Additional correct answers must be unique");
 		}
 
-		// Distractor validation
 		if (distractors?.some((d): boolean => d === correctAnswer)) {
 			throw new ConflictException("Distractors cannot be the same as the correct answer");
 		}
@@ -93,24 +87,81 @@ export class ExercisesService extends BaseService {
 			throw new ConflictException("Each distractor must be 1-50 characters");
 		}
 
-		if (type === "CHOICE_SINGLE") {
-			if (!distractors?.length || distractors.length < 10) {
-				throw new ConflictException("At least 10 distractors are required for single-choice questions");
-			}
+		if (
+			type === ExerciseType.CHOICE_SINGLE &&
+			(!distractors?.length || distractors.length < this.distractorsMinLimit)
+		) {
+			throw new ConflictException(
+				`At least ${this.distractorsMinLimit} distractors are required for single-choice questions`
+			);
 		}
+	}
 
+	// Extracted common file handling logic
+	private async handleFileUploads(
+		files: { audio?: Express.Multer.File[]; image?: Express.Multer.File[] } | undefined,
+		previous?: { audioUrl?: string | null; imageUrl?: string | null }
+	): Promise<{ audioFilename: string | null; imageFilename: string | null }> {
 		const createFilenameForFile = (file: Express.Multer.File): string => {
 			const extension = extname(file.originalname) || file.mimetype.split("/")[1];
 			const safeExtension = extension && extension.startsWith(".") ? extension.slice(1) : extension;
 			return uuid4() + (safeExtension ? `.${safeExtension}` : "");
 		};
 
-		// retrieve file extensions and prepare for upload
 		const audioFile = files?.audio?.length ? files.audio[0] : null;
 		const imageFile = files?.image?.length ? files.image[0] : null;
 
 		const audioFilename = audioFile ? createFilenameForFile(audioFile) : null;
 		const imageFilename = imageFile ? createFilenameForFile(imageFile) : null;
+
+		try {
+			// Delete previous files if new ones are uploaded
+			if (audioFile && previous?.audioUrl) {
+				await this.fileStorageService.deleteFile({
+					filePath: `${this.fileTypeToFolderMap[ExerciseFileType.AUDIO]}/${previous.audioUrl}`,
+				});
+			}
+			if (imageFile && previous?.imageUrl) {
+				await this.fileStorageService.deleteFile({
+					filePath: `${this.fileTypeToFolderMap[ExerciseFileType.IMAGE]}/${previous.imageUrl}`,
+				});
+			}
+			if (audioFile && audioFilename) {
+				await this.fileStorageService.uploadFile({
+					content: audioFile.buffer,
+					filePath: `${this.fileTypeToFolderMap[ExerciseFileType.AUDIO]}/${audioFilename}`,
+				});
+			}
+			if (imageFile && imageFilename) {
+				await this.fileStorageService.uploadFile({
+					content: imageFile.buffer,
+					filePath: `${this.fileTypeToFolderMap[ExerciseFileType.IMAGE]}/${imageFilename}`,
+				});
+			}
+		} catch (error) {
+			throw new BadRequestException(
+				`File upload failed: ${error instanceof Error ? error.message : "Unknown error"}`
+			);
+		}
+
+		return { audioFilename, imageFilename };
+	}
+
+	public async create(
+		currentUserId: string,
+		dto: CreateExerciseDto,
+		files?: { audio?: Express.Multer.File[]; image?: Express.Multer.File[] }
+	): Promise<ResponseExerciseDto> {
+		const collection = await this.collectionsService.findCollection(dto.collectionId);
+		const currentUser = await this.usersService.findUser(currentUserId);
+
+		if (!this.collectionsService.canAccessCollection(collection, currentUser)) {
+			throw new ForbiddenException("You are not allowed to update this collection.");
+		}
+
+		this.validateAnswersAndDistractors(dto.correctAnswer, dto.additionalCorrectAnswers, dto.distractors, dto.type);
+
+		const { audioFilename, imageFilename } = await this.handleFileUploads(files);
 
 		const exercise = await this.prismaService.exercise.create({
 			data: {
@@ -126,27 +177,6 @@ export class ExercisesService extends BaseService {
 			},
 		});
 
-		try {
-			if (audioFile && audioFilename) {
-				await this.fileStorageService.uploadFile({
-					content: audioFile.buffer,
-					filePath: `${this.fileTypeToFolderMap[ExerciseFileType.AUDIO]}/${audioFilename}`,
-				});
-			}
-			if (imageFile && imageFilename) {
-				await this.fileStorageService.uploadFile({
-					content: imageFile.buffer,
-					filePath: `${this.fileTypeToFolderMap[ExerciseFileType.IMAGE]}/${imageFilename}`,
-				});
-			}
-		} catch (error) {
-			// Rollback exercise creation
-			await this.prismaService.exercise.delete({ where: { id: exercise.id } });
-			throw new BadRequestException(
-				`File upload failed: ${error instanceof Error ? error.message : "Unknown error"}`
-			);
-		}
-
 		return this.toResponseDto(ResponseExerciseDto, exercise);
 	}
 
@@ -159,24 +189,24 @@ export class ExercisesService extends BaseService {
 		const currentUser = await this.usersService.findUser(currentUserId);
 
 		if (!this.collectionsService.canAccessCollection(collection, currentUser)) {
-			throw new ForbiddenException("You are not allowed to update this collection.");
+			throw new ForbiddenException("Forbidden");
 		}
+
+		const where: Prisma.ExerciseWhereInput = { collectionId };
 
 		const [exercises, total] = await Promise.all([
 			this.prismaService.exercise.findMany({
-				where: {
-					collectionId: collectionId,
-				},
+				where,
 				skip: filter.offset,
 				take: filter.limit,
 				orderBy: { createdAt: "desc" },
 			}),
-			this.prismaService.exercise.count({ where: { collectionId } }),
+			this.prismaService.exercise.count({ where }),
 		]);
 
 		return {
 			data: this.toResponseDto(ResponseExerciseDto, exercises),
-			pagination: this.createPaginationMeta(total, 0, filter.limit),
+			pagination: this.createPaginationMeta(total, filter.offset, filter.limit),
 		};
 	}
 
@@ -195,7 +225,8 @@ export class ExercisesService extends BaseService {
 	public async update(
 		currentUserId: string,
 		exerciseId: string,
-		dto: UpdateExerciseDto
+		dto: UpdateExerciseDto,
+		files?: { audio?: Express.Multer.File[]; image?: Express.Multer.File[] }
 	): Promise<ResponseExerciseDto> {
 		const exercise = await this.findExercise(exerciseId);
 		const currentUser = await this.usersService.findUser(currentUserId);
@@ -205,15 +236,27 @@ export class ExercisesService extends BaseService {
 			throw new ForbiddenException("Forbidden");
 		}
 
-		// No-op guard TODO
-		// Build a safe exercise payload
-		// Update and return DTO
+		this.validateAnswersAndDistractors(
+			dto.correctAnswer || exercise.correctAnswer,
+			dto.additionalCorrectAnswers || exercise.additionalCorrectAnswers,
+			dto.distractors || exercise.distractors,
+			dto.type || exercise.type
+		);
+
+		const { audioFilename, imageFilename } = await this.handleFileUploads(files, {
+			audioUrl: exercise.audioUrl,
+			imageUrl: exercise.imageUrl,
+		});
 
 		const updated = await this.prismaService.exercise.update({
 			where: {
 				id: exerciseId,
 			},
-			data: dto,
+			data: {
+				...dto,
+				audioUrl: audioFilename || exercise.audioUrl,
+				imageUrl: imageFilename || exercise.imageUrl,
+			},
 		});
 
 		return this.toResponseDto(ResponseExerciseDto, updated);
@@ -227,9 +270,27 @@ export class ExercisesService extends BaseService {
 		if (!this.collectionsService.canAccessCollection(collection, currentUser)) {
 			throw new ForbiddenException("Forbidden");
 		}
-		// Delete
-		// Check if delete success
-		// Return result
+
+		// Delete associated files if present
+		try {
+			if (exercise.audioUrl) {
+				await this.fileStorageService.deleteFile({
+					filePath: `${this.fileTypeToFolderMap[ExerciseFileType.AUDIO]}/${exercise.audioUrl}`,
+				});
+			}
+			if (exercise.imageUrl) {
+				await this.fileStorageService.deleteFile({
+					filePath: `${this.fileTypeToFolderMap[ExerciseFileType.IMAGE]}/${exercise.imageUrl}`,
+				});
+			}
+		} catch (error) {
+			// Log error but continue with DB deletion
+			console.error(
+				`Failed to delete associated files for exercise ${exerciseId}: ${
+					error instanceof Error ? error.message : "Unknown error"
+				}`
+			);
+		}
 
 		const deleted = await this.prismaService.exercise.delete({
 			where: {

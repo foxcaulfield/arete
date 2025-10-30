@@ -60,12 +60,14 @@ export class ExercisesController {
 	}
 
 	@Patch("update/:id")
+	@UseInterceptors(FileFieldsInterceptor([field("image"), field("audio")], multerConfig.exerciseFileUpload))
 	public async update(
+		@UploadedFiles() files: UploadedExerciseFiles,
 		@Param("id") exerciseId: string,
 		@Session() session: UserSession,
 		@Body() dto: UpdateExerciseDto
 	): Promise<ResponseExerciseDto> {
-		return this.exercisesService.update(session.user.id, exerciseId, dto);
+		return this.exercisesService.update(session.user.id, exerciseId, dto, files);
 	}
 
 	@Delete("delete/:id")
