@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EnvConfig } from "./configs/joi-env.config";
+import { ValidationPipe, BadRequestException } from "@nestjs/common";
+import { ValidationError } from "class-validator";
 
 async function bootstrap(): Promise<void> {
 	const app = await NestFactory.create(AppModule, {
@@ -30,6 +32,25 @@ async function bootstrap(): Promise<void> {
 			forbidNonWhitelisted: true,
 			forbidUnknownValues: true,
 			// disableErrorMessages: true,
+			exceptionFactory: (errors: ValidationError[]) => {
+				const formattedErrors = errors.reduce(
+					(acc, error) => {
+						const constraints = error.constraints;
+						if (constraints) {
+							acc[error.property] = Object.values(constraints);
+						}
+						return acc;
+					},
+					{} as Record<string, string[]>
+				);
+
+				return new BadRequestException({
+					statusCode: 400,
+					error: "Bad Request",
+					message: "Validation failed",
+					fields: formattedErrors,
+				});
+			},
 		})
 	);
 
