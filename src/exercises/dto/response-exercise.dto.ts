@@ -1,3 +1,4 @@
+import { ExerciseType } from "@prisma/client";
 import { Expose } from "class-transformer";
 
 export class ResponseExerciseDto {
@@ -8,7 +9,22 @@ export class ResponseExerciseDto {
 	public question!: string;
 
 	@Expose()
+	public audioUrl?: string | null;
+
+	@Expose()
+	public imageUrl?: string | null;
+
+	@Expose()
+	public type!: ExerciseType;
+
+	@Expose()
+	public translation?: string | null;
+
+	@Expose()
 	public explanation!: string | null;
+
+	@Expose()
+	public distractors?: string[] | null;
 
 	@Expose()
 	public collectionId!: string;
@@ -20,14 +36,13 @@ export class ResponseExerciseDto {
 	public updatedAt!: Date;
 
 	@Expose()
-	public audioUrl?: string | null;
+	public isActive!: boolean;
 
 	@Expose()
-	public imageUrl?: string | null;
-}
+	public additionalCorrectAnswers?: string[] | null;
 
-// isActive
-// alternativeAnswers
-// correctAnswer
+	@Expose()
+	public correctAnswer!: string | null;
+}
 // placeholderSequence
 // tags
