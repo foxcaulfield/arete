@@ -1,3 +1,11 @@
+## 1.1.0-beta.21 (2025-10-30)
+
+* feat: add file upload handling to update exercise endpoint ([c3d377a](https://github.com/foxcaulfield/arete/commit/c3d377a))
+* feat: enhance validation error handling with custom exception factory ([aaaad1b](https://github.com/foxcaulfield/arete/commit/aaaad1b))
+* feat: reorganize ResponseExerciseDto properties for improved structure and clarity ([aa35dd0](https://github.com/foxcaulfield/arete/commit/aa35dd0))
+* Merge pull request #43 from foxcaulfield/feature/update-quiz-dto ([6acdc23](https://github.com/foxcaulfield/arete/commit/6acdc23)), closes [#43](https://github.com/foxcaulfield/arete/issues/43)
+* refactor: rename and update DTOs for drill exercises to improve clarity and type safety ([4342221](https://github.com/foxcaulfield/arete/commit/4342221))
+
 ## 1.1.0-beta.20 (2025-10-29)
 
 * feat: add missing properties to ResponseDrillQuestionDto for enhanced data handling ([119e31a](https://github.com/foxcaulfield/arete/commit/119e31a))
