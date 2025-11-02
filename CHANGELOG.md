@@ -1,3 +1,7 @@
+## 1.1.0-beta.22 (2025-11-02)
+
+* feat: add translation field to CreateExerciseDto and update file handling in ExercisesService ([4b52d77](https://github.com/foxcaulfield/arete/commit/4b52d77))
+
 ## 1.1.0-beta.21 (2025-10-30)
 
 * feat: add file upload handling to update exercise endpoint ([c3d377a](https://github.com/foxcaulfield/arete/commit/c3d377a))
