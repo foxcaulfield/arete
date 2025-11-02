@@ -11,6 +11,8 @@ import {
 	UploadedFiles,
 	StreamableFile,
 	ParseEnumPipe,
+	HttpStatus,
+	HttpCode,
 } from "@nestjs/common";
 import { ExercisesService } from "./exercises.service";
 import { CreateExerciseDto } from "./dto/create-exercise.dto";
@@ -33,6 +35,7 @@ export class ExercisesController {
 	public constructor(private readonly exercisesService: ExercisesService) {}
 
 	@Post("create")
+	@HttpCode(HttpStatus.CREATED)
 	@UseInterceptors(FileFieldsInterceptor([field("image"), field("audio")], multerConfig.exerciseFileUpload))
 	public async create(
 		@UploadedFiles() files: UploadedExerciseFiles,
@@ -88,6 +91,7 @@ export class ExercisesController {
 	}
 
 	@Post("drill/:collectionId/submit")
+	@HttpCode(HttpStatus.OK)
 	public async submitDrillAnswer(
 		@Param("collectionId") collectionId: string,
 		@Session() session: UserSession,

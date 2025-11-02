@@ -35,4 +35,9 @@ export class CreateExerciseDto implements Partial<Exercise> {
 	@IsString()
 	@Length(0, 1000)
 	public explanation?: string;
+
+	@IsOptional()
+	@IsString()
+	@Length(0, 1000)
+	public translation?: string;
 }
