@@ -384,16 +384,12 @@ export class ExercisesService extends BaseService {
 		try {
 			// Delete previous files if new ones are uploaded OR if explicitly cleared (null incoming)
 			await Promise.all([
-				audioFile && previous?.audioUrl
+				previous?.audioUrl
 					? this.deleteFile(ExerciseFileType.AUDIO, previous.audioUrl)
-					: !audioFile && previous?.audioUrl
-						? this.deleteFile(ExerciseFileType.AUDIO, previous.audioUrl)
-						: null,
-				imageFile && previous?.imageUrl
+					: null,
+				previous?.imageUrl
 					? this.deleteFile(ExerciseFileType.IMAGE, previous.imageUrl)
-					: !imageFile && previous?.imageUrl
-						? this.deleteFile(ExerciseFileType.IMAGE, previous.imageUrl)
-						: null,
+					: null,
 			]);
 
 			// Upload new files
