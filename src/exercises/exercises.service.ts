@@ -529,7 +529,7 @@ export class ExercisesService extends BaseService {
 		const shuffled = [...array];
 		for (let i = shuffled.length - 1; i > 0; i--) {
 			const j = Math.floor(Math.random() * (i + 1));
-			// ensure they not undefined
+			// ensure they are not undefined
 			[shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
 		}
 		return shuffled;
