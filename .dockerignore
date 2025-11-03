@@ -1,15 +1,34 @@
 # This file specifies files and directories to ignore when building the Docker image.
-node_modules
-dist
-*.log
-*.env
-*.md
-.git
-.gitignore
-npm-debug.log
-yarn-debug.log
-yarn-error.log
-coverage
-prisma/migrations
-prisma/dev.db
-prisma/seed.ts
+# node_modules
+# dist
+# *.log
+# *.env
+# *.md
+# .git
+# .gitignore
+# npm-debug.log
+# yarn-debug.log
+# yarn-error.log
+# coverage
+# prisma/dev.db
+# prisma/seed.ts
+
+# Deny everything
+*
+
+!src
+!tsconfig.json
+!prisma
+
+!.dockerignore
+!eslint.config.mjs
+
+!docker-compose.yaml
+!Dockerfile
+!eslint.config.mjs
+!nest-cli.json
+!package-lock.json
+!package.json
+
+!tsconfig.json
+!tsconfig.build.json

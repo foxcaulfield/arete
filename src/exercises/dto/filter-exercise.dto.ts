@@ -6,7 +6,7 @@ export class FilterExerciseDto {
 	@Min(0)
 	@IsInt()
 	@IsOptional()
-	public offset: number = 0;
+	public page: number = 0;
 
 	@Type((): typeof Number => Number)
 	@Max(100)

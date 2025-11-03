@@ -33,6 +33,11 @@ enum UserPermission {
     read_all_collections
 }
 
+enum ExerciseType {
+    FILL_IN_THE_BLANK
+    CHOICE_SINGLE
+}
+
 model Permissions {
     id          String         @id @default(cuid())
     name        UserPermission @unique
@@ -125,27 +130,33 @@ model Collection {
 }
 
 model Exercise {
-    id                  String     @id @default(cuid())
-    collectionId        String
-    collection          Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+    id                       String       @id @default(cuid())
+    collectionId             String
+    collection               Collection   @relation(fields: [collectionId], references: [id], onDelete: Cascade)
     // Exercise content
-    question            String     @db.Text
-    placeholderSequence String?    @default("***") @map("placeholder_sequence")
-    correctAnswer       String     @map("correct_answer")
-    alternativeAnswers  String[]   @default([]) @map("alternative_answers")
+    type                     ExerciseType @default(FILL_IN_THE_BLANK)
+    question                 String       @db.Text
+    placeholderSequence      String?      @default("***") @map("placeholder_sequence")
+    correctAnswer            String       @map("correct_answer")
+    additionalCorrectAnswers String[]     @default([]) @map("additional_correct_answers")
+    distractors              String[]     @default([]) @map("distractors")
+    translation              String?      @db.Text
+    // Optional single audio and image stored on disk (filenames or relative paths)
+    audioUrl                 String?
+    imageUrl                 String?
     // Metadata
-    tags                String[]   @default([])
+    // tags                     String[]   @default([])
     // Rich content
     // audioUrl           String?
     // imageUrl           String?
-    explanation         String?    @db.Text
+    explanation              String?      @db.Text
     // State
-    isActive            Boolean    @default(true)
-    createdAt           DateTime   @default(now())
-    updatedAt           DateTime   @updatedAt
+    isActive                 Boolean      @default(true)
+    createdAt                DateTime     @default(now())
+    updatedAt                DateTime     @updatedAt
     // Relations
     // attempts           Attempt[]
-    Attempt             Attempt[]
+    Attempt                  Attempt[]
 
     @@index([collectionId])
     @@map("exercises")
