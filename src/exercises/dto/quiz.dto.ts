@@ -1,4 +1,3 @@
-// import { Optional } from "@nestjs/common";
 import { ExerciseType } from "@prisma/client";
 import { Expose } from "class-transformer";
 import { IsNotEmpty, IsString } from "class-validator";
