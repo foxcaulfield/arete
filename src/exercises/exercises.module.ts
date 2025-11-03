@@ -12,7 +12,6 @@ import { fileStorageFactory } from "src/configs/file-storage.config";
 	imports: [
 		UsersModule,
 		CollectionsModule,
-		FileStorageModule,
 		FileStorageModule.forRootAsync({
 			inject: [ConfigService],
 			useFactory: fileStorageFactory,
