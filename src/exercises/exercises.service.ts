@@ -85,11 +85,17 @@ export class ExercisesService extends BaseService {
 		const { audioFilename, imageFilename } = await this.handleFileUploads(files);
 
 		try {
+			const { collectionId, ...rest } = dto;
 			const exercise = await this.prismaService.exercise.create({
 				data: {
-					...dto,
+					...rest,
 					audioUrl: audioFilename,
 					imageUrl: imageFilename,
+					additionalCorrectAnswers: rest.additionalCorrectAnswers ?? [],
+					distractors: rest.distractors ?? [],
+					collection: {
+						connect: { id: collectionId },
+					},
 				},
 			});
 
@@ -161,8 +167,10 @@ export class ExercisesService extends BaseService {
 			where: { id: exerciseId },
 			data: {
 				...dto,
-				audioUrl: audioFilename ?? exercise.audioUrl,
-				imageUrl: imageFilename ?? exercise.imageUrl,
+				additionalCorrectAnswers: dto.additionalCorrectAnswers === null ? [] : dto.additionalCorrectAnswers,
+				distractors: dto.distractors === null ? [] : dto.distractors,
+				audioUrl: audioFilename,
+				imageUrl: imageFilename,
 			},
 		});
 
@@ -367,10 +375,6 @@ export class ExercisesService extends BaseService {
 	 * Handles file uploads with proper cleanup on failure
 	 */
 	private async handleFileUploads(files?: UploadedFiles, previous?: FileReferences): Promise<FileUploadResult> {
-		if (!files?.audio?.length && !files?.image?.length) {
-			return { audioFilename: null, imageFilename: null };
-		}
-
 		const audioFile = files?.audio?.[0];
 		const imageFile = files?.image?.[0];
 
@@ -378,10 +382,18 @@ export class ExercisesService extends BaseService {
 		const imageFilename = imageFile ? this.generateUniqueFilename(imageFile) : null;
 
 		try {
-			// Delete previous files if new ones are uploaded
+			// Delete previous files if new ones are uploaded OR if explicitly cleared (null incoming)
 			await Promise.all([
-				audioFile && previous?.audioUrl ? this.deleteFile(ExerciseFileType.AUDIO, previous.audioUrl) : null,
-				imageFile && previous?.imageUrl ? this.deleteFile(ExerciseFileType.IMAGE, previous.imageUrl) : null,
+				audioFile && previous?.audioUrl
+					? this.deleteFile(ExerciseFileType.AUDIO, previous.audioUrl)
+					: !audioFile && previous?.audioUrl
+						? this.deleteFile(ExerciseFileType.AUDIO, previous.audioUrl)
+						: null,
+				imageFile && previous?.imageUrl
+					? this.deleteFile(ExerciseFileType.IMAGE, previous.imageUrl)
+					: !imageFile && previous?.imageUrl
+						? this.deleteFile(ExerciseFileType.IMAGE, previous.imageUrl)
+						: null,
 			]);
 
 			// Upload new files
