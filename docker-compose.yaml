@@ -11,7 +11,7 @@ services:
         build: .
         env_file: .env
         ports:
-            - "${PORT}:${PORT}"
+            - "${APPLICATION_PORT}:${APPLICATION_PORT}"
         depends_on:
             - db
 volumes:
