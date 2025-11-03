@@ -1,3 +1,8 @@
+## 1.1.0-beta.23 (2025-11-03)
+
+* feat: add TransformNullableString function and apply it to additionalCorrectAnswers, distractors, ex ([1134e6a](https://github.com/foxcaulfield/arete/commit/1134e6a))
+* feat: enhance exercise creation and update logic with additional correct answers and distractors han ([3c01af0](https://github.com/foxcaulfield/arete/commit/3c01af0))
+
 ## 1.1.0-beta.22 (2025-11-02)
 
 * feat: add translation field to CreateExerciseDto and update file handling in ExercisesService ([4b52d77](https://github.com/foxcaulfield/arete/commit/4b52d77))
