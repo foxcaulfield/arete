@@ -145,9 +145,20 @@ export class ExercisesService extends BaseService {
 		> = await this.prismaService.$queryRaw(
 			Prisma.sql`
             SELECT
-				e.*,
-                e.additional_correct_answers AS "additionalCorrectAnswers",
-                e.correct_answer   AS "correctAnswer",
+				e.id,
+                e.question,
+                e."audioUrl"                               AS "audioUrl",
+                e."imageUrl"                               AS "imageUrl",
+                e.type                                     AS "type",
+                e.translation                              AS "translation",
+                e.explanation                              AS "explanation",
+                e.distractors                              AS "distractors",
+                e."collectionId"                           AS "collectionId",
+                e."createdAt"                              AS "createdAt",
+                e."updatedAt"                              AS "updatedAt",
+                e."isActive"                               AS "isActive",
+                e."additional_correct_answers"             AS "additionalCorrectAnswers",
+                e."correct_answer"                         AS "correctAnswer",
                 COALESCE(a.total, 0)    AS "totalAttempts",
                 COALESCE(c.correct, 0)  AS "correctAttempts"
             FROM "exercises" e
