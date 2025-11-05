@@ -118,19 +118,59 @@ export class ExercisesService extends BaseService {
 		await this.validateCollectionAccess(currentUserId, collectionId);
 
 		const where: Prisma.ExerciseWhereInput = { collectionId };
+		const total = await this.prismaService.exercise.count({ where });
 
-		const [exercises, total] = await Promise.all([
-			this.prismaService.exercise.findMany({
-				where,
-				skip,
-				take: filter.limit,
-				orderBy: { createdAt: "desc" },
-			}),
-			this.prismaService.exercise.count({ where }),
-		]);
+		if (total === 0) {
+			return {
+				data: this.toResponseDto(ResponseExerciseDto, []),
+				pagination: this.createPaginationMeta(total, filter.page, filter.limit),
+			};
+		}
+
+		// const [exercises, total] = await Promise.all([
+		// 	this.prismaService.exercise.findMany({
+		// 		where,
+		// 		skip,
+		// 		take: filter.limit,
+		// 		orderBy: { createdAt: "desc" },
+		// 	}),
+		// 	this.prismaService.exercise.count({ where }),
+		// ]);
+
+		const rows: Array<
+			Exercise & {
+				totalAttempts: number;
+				correctAttempts: number;
+			}
+		> = await this.prismaService.$queryRaw(
+			Prisma.sql`
+            SELECT
+				e.*,
+                e.additional_correct_answers AS "additionalCorrectAnswers",
+                e.correct_answer   AS "correctAnswer",
+                COALESCE(a.total, 0)    AS "totalAttempts",
+                COALESCE(c.correct, 0)  AS "correctAttempts"
+            FROM "exercises" e
+            LEFT JOIN (
+                SELECT "exerciseId", COUNT(*)::int AS total
+                FROM "attempts"
+                WHERE "userId" = ${currentUserId}
+                GROUP BY "exerciseId"
+            ) a ON e.id = a."exerciseId"
+            LEFT JOIN (
+                SELECT "exerciseId", COUNT(*)::int AS correct
+                FROM "attempts"
+                WHERE "userId" = ${currentUserId} AND "isCorrect" = true
+                GROUP BY "exerciseId"
+            ) c ON e.id = c."exerciseId"
+            WHERE e."collectionId" = ${collectionId}
+            ORDER BY COALESCE(a.total, 0) DESC NULLS LAST
+            LIMIT ${filter.limit} OFFSET ${skip};
+        `
+		);
 
 		return {
-			data: this.toResponseDto(ResponseExerciseDto, exercises),
+			data: this.toResponseDto(ResponseExerciseDto, rows),
 			pagination: this.createPaginationMeta(total, filter.page, filter.limit),
 		};
 	}

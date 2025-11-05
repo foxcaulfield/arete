@@ -43,6 +43,12 @@ export class ResponseExerciseDto {
 
 	@Expose()
 	public correctAnswer!: string | null;
+
+	@Expose()
+	public totalAttempts!: number;
+
+	@Expose()
+	public correctAttempts!: number;
 }
 // TODO: The following fields ('placeholderSequence', 'tags') are potential future additions to the DTO.
 //       They are currently commented out as placeholders. Implement or remove as requirements evolve.
