@@ -246,10 +246,19 @@ export class ExercisesService extends BaseService {
 
 	/* ===== DRILL METHODS ===== */
 
-	public async getDrillExercise(currentUserId: string, collectionId: string): Promise<QuizQuestionDto> {
+	public async getDrillExercise(
+		currentUserId: string,
+		collectionId: string,
+		exerciseSelectionMode: string = "least-attempted"
+	): Promise<QuizQuestionDto> {
 		await this.validateCollectionAccess(currentUserId, collectionId);
 
-		const exercise = await this.getRandomActiveExercise(collectionId);
+		let exercise: Exercise;
+		if (exerciseSelectionMode === "least-attempted") {
+			exercise = await this.getLeastAttemptedExercise(collectionId, currentUserId);
+		} else {
+			exercise = await this.getRandomActiveExercise(collectionId);
+		}
 
 		const updatedDistractors =
 			exercise.type === ExerciseType.CHOICE_SINGLE
@@ -559,6 +568,53 @@ export class ExercisesService extends BaseService {
 		}
 
 		return exercise;
+	}
+
+	private async getLeastAttemptedExercise(collectionId: string, userId: string): Promise<Exercise> {
+		const baseWhere = { collectionId, isActive: true };
+
+		// // Global least-attempted (no user filter) — use relation count ordering
+		// if (!userId) {
+		// 	const exercise = await this.prismaService.exercise.findFirst({
+		// 		where: baseWhere,
+		// 		orderBy: { Attempt: { _count: "asc" } },
+		// 	});
+
+		// 	if (!exercise) throw new NotFoundException("Exercise not found");
+
+		// 	return exercise;
+		// }
+
+		// Per-user: prefer any exercise with ZERO attempts by this user
+		const zeroAttemptExercise = await this.prismaService.exercise.findFirst({
+			where: {
+				...baseWhere,
+				Attempt: { none: { userId } }, // exercises with no attempts by this user
+			},
+		});
+		if (zeroAttemptExercise) return zeroAttemptExercise;
+
+		// Otherwise group attempts by exercise (only attempts by this user and in the collection),
+		// pick exerciseId with minimal count and load that exercise.
+		const grouped = await this.prismaService.attempt.groupBy({
+			by: ["exerciseId"],
+			where: {
+				userId,
+				exercise: { collectionId, isActive: true }, // restrict to the collection
+			},
+			_count: { _all: true },
+		});
+
+		if (grouped.length === 0) {
+			throw new NotFoundException("No exercises available in this collection");
+		}
+
+		let min = grouped[0]!;
+		for (const g of grouped) {
+			if (g._count._all < min._count._all) min = g;
+		}
+
+		return this.findExerciseOrFail(min.exerciseId);
 	}
 
 	/**
