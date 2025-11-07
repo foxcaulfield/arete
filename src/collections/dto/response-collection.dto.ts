@@ -30,4 +30,10 @@ export class ResponseCollectionDto {
 	@Expose()
 	@Type((): typeof ResponseUserDto => ResponseUserDto)
 	public user?: ResponseUserDto;
+
+	@Expose()
+	public attemptCount?: number;
+
+	@Expose()
+	public exerciseCount?: number;
 }

@@ -209,10 +209,20 @@ export class ExercisesService extends BaseService {
 			dto.type ?? exercise.type
 		);
 
-		const { audioFilename, imageFilename } = await this.handleFileUploads(files, {
-			audioUrl: exercise.audioUrl,
-			imageUrl: exercise.imageUrl,
-		});
+		const { audioFilename, imageFilename } = await this.handleFileUploads(
+			files,
+			{
+				audioUrl: exercise.audioUrl,
+				imageUrl: exercise.imageUrl,
+			},
+			{
+				setNullAudio: dto.setNullAudio,
+				setNullImage: dto.setNullImage,
+			}
+		);
+		// delete dto properties not part of the Exercise model
+		delete dto.setNullAudio;
+		delete dto.setNullImage;
 
 		const updated = await this.prismaService.exercise.update({
 			where: { id: exerciseId },
@@ -249,7 +259,7 @@ export class ExercisesService extends BaseService {
 	public async getDrillExercise(
 		currentUserId: string,
 		collectionId: string,
-		exerciseSelectionMode: string = "least-attempted"
+		exerciseSelectionMode: string = "random"
 	): Promise<QuizQuestionDto> {
 		await this.validateCollectionAccess(currentUserId, collectionId);
 
@@ -434,35 +444,55 @@ export class ExercisesService extends BaseService {
 	/**
 	 * Handles file uploads with proper cleanup on failure
 	 */
-	private async handleFileUploads(files?: UploadedFiles, previous?: FileReferences): Promise<FileUploadResult> {
-		const audioFile = files?.audio?.[0];
-		const imageFile = files?.image?.[0];
+	private async handleFileUploads(
+		files?: UploadedFiles,
+		previous?: FileReferences,
+		options?: { setNullAudio?: boolean; setNullImage?: boolean }
+	): Promise<FileUploadResult> {
+		const newAudioFile = files?.audio?.[0];
+		const newImageFile = files?.image?.[0];
 
-		const audioFilename = audioFile ? this.generateUniqueFilename(audioFile) : null;
-		const imageFilename = imageFile ? this.generateUniqueFilename(imageFile) : null;
+		const hasNewAudio = newAudioFile !== undefined;
+		const hasNewImage = newImageFile !== undefined;
+
+		const shouldClearAudio = options?.setNullAudio === true;
+		const shouldClearImage = options?.setNullImage === true;
+
+		const hasPreviousAudio = !!previous?.audioUrl;
+		const hasPreviousImage = !!previous?.imageUrl;
+
+		const newAudioFilename = newAudioFile ? this.generateUniqueFilename(newAudioFile) : null;
+		const newImageFilename = newImageFile ? this.generateUniqueFilename(newImageFile) : null;
 
 		try {
 			// Delete previous files if new ones are uploaded OR if explicitly cleared (null incoming)
-			await Promise.all([
-				previous?.audioUrl ? this.deleteFile(ExerciseFileType.AUDIO, previous.audioUrl) : null,
-				previous?.imageUrl ? this.deleteFile(ExerciseFileType.IMAGE, previous.imageUrl) : null,
-			]);
+			const deletePromises: Promise<void>[] = [];
+			if ((shouldClearAudio || hasNewAudio) && hasPreviousAudio) {
+				deletePromises.push(this.deleteFile(ExerciseFileType.AUDIO, previous.audioUrl!));
+			}
+			if ((shouldClearImage || hasNewImage) && hasPreviousImage) {
+				deletePromises.push(this.deleteFile(ExerciseFileType.IMAGE, previous.imageUrl!));
+			}
+			await Promise.all(deletePromises);
 
 			// Upload new files
-			await Promise.all([
-				audioFile && audioFilename
-					? this.uploadFile(ExerciseFileType.AUDIO, audioFilename, audioFile.buffer)
-					: null,
-				imageFile && imageFilename
-					? this.uploadFile(ExerciseFileType.IMAGE, imageFilename, imageFile.buffer)
-					: null,
-			]);
+			const uploadPromises: Promise<void>[] = [];
+			if (!shouldClearAudio && hasNewAudio && newAudioFilename) {
+				uploadPromises.push(this.uploadFile(ExerciseFileType.AUDIO, newAudioFilename, newAudioFile.buffer));
+			}
+			if (!shouldClearImage && hasNewImage && newImageFilename) {
+				uploadPromises.push(this.uploadFile(ExerciseFileType.IMAGE, newImageFilename, newImageFile.buffer));
+			}
+			await Promise.all(uploadPromises);
 
-			return { audioFilename, imageFilename };
+			return {
+				audioFilename: shouldClearAudio ? null : hasNewAudio ? newAudioFilename : (previous?.audioUrl ?? null),
+				imageFilename: shouldClearImage ? null : hasNewImage ? newImageFilename : (previous?.imageUrl ?? null),
+			};
 		} catch (error) {
 			this.logger.error("File upload failed", error);
 			// Cleanup any successfully uploaded files
-			await this.cleanupFiles({ audioFilename, imageFilename });
+			await this.cleanupFiles({ audioFilename: newAudioFilename, imageFilename: newImageFilename });
 			throw new BadRequestException(
 				`File upload failed: ${error instanceof Error ? error.message : "Unknown error"}`
 			);
