@@ -174,5 +174,5 @@ model Attempt {
 
     @@index([userId, exerciseId])
     @@index([createdAt])
-    @@map("attemps")
+    @@map("attempts")
 }

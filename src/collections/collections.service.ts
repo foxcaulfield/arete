@@ -179,13 +179,69 @@ export class CollectionsService extends BaseService {
 				where: { userId: targetUserId },
 				skip,
 				take: limit,
-				include: this.withUser,
+				include: {
+					...this.withUser,
+					_count: {
+						select: {
+							exercises: true,
+						},
+					},
+				},
 			}),
 			this.prismaService.collection.count({ where: { userId: targetUserId } }),
 		]);
 
+		const toIds = (e: { id: string }): string => e.id;
+
+		const collectionIds = collections.map(toIds);
+
+		const exercises = await this.prismaService.exercise.findMany({
+			where: { collectionId: { in: collectionIds } },
+			select: { id: true, collectionId: true },
+		});
+
+		const exerciseIds = exercises.map(toIds);
+		const exerciseToCollectionMap = new Map(exercises.map((e): [string, string] => [e.id, e.collectionId]));
+
+		const attemptCounts = await this.prismaService.attempt.groupBy({
+			by: ["exerciseId"],
+			where: {
+				userId: targetUserId,
+				exerciseId: { in: exerciseIds },
+			},
+			_count: {
+				id: true,
+			},
+		});
+
+		// Aggregate attempts by collection
+		const collectionAttemptMap = new Map<string, number>();
+		for (const { exerciseId, _count } of attemptCounts) {
+			const collectionId = exerciseToCollectionMap.get(exerciseId);
+			if (collectionId) {
+				const current = collectionAttemptMap.get(collectionId) || 0;
+				collectionAttemptMap.set(collectionId, current + _count.id);
+			}
+		}
+
+		// Enrich collections with attempt counts
+		const collectionsWithAttempts = collections.map(
+			(
+				collection
+			): Collection & {
+				attemptCount: number;
+				exerciseCount: number;
+			} => ({
+				...collection,
+				attemptCount: collectionAttemptMap.get(collection.id) || 0,
+				exerciseCount: collection?._count?.exercises || 0,
+			})
+		);
+
+		console.log("COLLECTIONS WITH ATTEMPTS:", collectionsWithAttempts);
+
 		return {
-			data: this.toResponseDto(ResponseCollectionDto, collections),
+			data: this.toResponseDto(ResponseCollectionDto, collectionsWithAttempts),
 			pagination: this.createPaginationMeta(total, page, limit),
 		};
 	}

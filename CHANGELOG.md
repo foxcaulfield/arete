@@ -1,3 +1,12 @@
+## 1.2.0-beta.1 (2025-11-07)
+
+* feat: add exercise selection mode to getDrillExercise; implement least-attempted logic ([05770fe](https://github.com/foxcaulfield/arete/commit/05770fe))
+* feat: enhance ResponseExerciseDto with totalAttempts and correctAttempts fields; update getExercises ([3427a06](https://github.com/foxcaulfield/arete/commit/3427a06))
+* feat: enrich collections with attempt and exercise counts; update response DTO and file upload handl ([c6c1848](https://github.com/foxcaulfield/arete/commit/c6c1848))
+* feat: update exercise selection query ([20bad02](https://github.com/foxcaulfield/arete/commit/20bad02))
+* refactor: rename attempts table and update schema mapping ([dc0e063](https://github.com/foxcaulfield/arete/commit/dc0e063))
+* refactor: update formatting in  ExercisesService ([2183f56](https://github.com/foxcaulfield/arete/commit/2183f56))
+
 ## 1.1.0 (2025-11-03)
 
 * Merge branch 'release' into develop ([4667799](https://github.com/foxcaulfield/arete/commit/4667799))

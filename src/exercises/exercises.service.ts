@@ -118,19 +118,70 @@ export class ExercisesService extends BaseService {
 		await this.validateCollectionAccess(currentUserId, collectionId);
 
 		const where: Prisma.ExerciseWhereInput = { collectionId };
+		const total = await this.prismaService.exercise.count({ where });
 
-		const [exercises, total] = await Promise.all([
-			this.prismaService.exercise.findMany({
-				where,
-				skip,
-				take: filter.limit,
-				orderBy: { createdAt: "desc" },
-			}),
-			this.prismaService.exercise.count({ where }),
-		]);
+		if (total === 0) {
+			return {
+				data: this.toResponseDto(ResponseExerciseDto, []),
+				pagination: this.createPaginationMeta(total, filter.page, filter.limit),
+			};
+		}
+
+		// const [exercises, total] = await Promise.all([
+		// 	this.prismaService.exercise.findMany({
+		// 		where,
+		// 		skip,
+		// 		take: filter.limit,
+		// 		orderBy: { createdAt: "desc" },
+		// 	}),
+		// 	this.prismaService.exercise.count({ where }),
+		// ]);
+
+		const rows: Array<
+			Exercise & {
+				totalAttempts: number;
+				correctAttempts: number;
+			}
+		> = await this.prismaService.$queryRaw(
+			Prisma.sql`
+            SELECT
+				e.id,
+                e.question,
+                e."audioUrl"                               AS "audioUrl",
+                e."imageUrl"                               AS "imageUrl",
+                e.type                                     AS "type",
+                e.translation                              AS "translation",
+                e.explanation                              AS "explanation",
+                e.distractors                              AS "distractors",
+                e."collectionId"                           AS "collectionId",
+                e."createdAt"                              AS "createdAt",
+                e."updatedAt"                              AS "updatedAt",
+                e."isActive"                               AS "isActive",
+                e."additional_correct_answers"             AS "additionalCorrectAnswers",
+                e."correct_answer"                         AS "correctAnswer",
+                COALESCE(a.total, 0)    AS "totalAttempts",
+                COALESCE(c.correct, 0)  AS "correctAttempts"
+            FROM "exercises" e
+            LEFT JOIN (
+                SELECT "exerciseId", COUNT(*)::int AS total
+                FROM "attempts"
+                WHERE "userId" = ${currentUserId}
+                GROUP BY "exerciseId"
+            ) a ON e.id = a."exerciseId"
+            LEFT JOIN (
+                SELECT "exerciseId", COUNT(*)::int AS correct
+                FROM "attempts"
+                WHERE "userId" = ${currentUserId} AND "isCorrect" = true
+                GROUP BY "exerciseId"
+            ) c ON e.id = c."exerciseId"
+            WHERE e."collectionId" = ${collectionId}
+            ORDER BY COALESCE(a.total, 0) DESC NULLS LAST
+            LIMIT ${filter.limit} OFFSET ${skip};
+        `
+		);
 
 		return {
-			data: this.toResponseDto(ResponseExerciseDto, exercises),
+			data: this.toResponseDto(ResponseExerciseDto, rows),
 			pagination: this.createPaginationMeta(total, filter.page, filter.limit),
 		};
 	}
@@ -158,10 +209,20 @@ export class ExercisesService extends BaseService {
 			dto.type ?? exercise.type
 		);
 
-		const { audioFilename, imageFilename } = await this.handleFileUploads(files, {
-			audioUrl: exercise.audioUrl,
-			imageUrl: exercise.imageUrl,
-		});
+		const { audioFilename, imageFilename } = await this.handleFileUploads(
+			files,
+			{
+				audioUrl: exercise.audioUrl,
+				imageUrl: exercise.imageUrl,
+			},
+			{
+				setNullAudio: dto.setNullAudio,
+				setNullImage: dto.setNullImage,
+			}
+		);
+		// delete dto properties not part of the Exercise model
+		delete dto.setNullAudio;
+		delete dto.setNullImage;
 
 		const updated = await this.prismaService.exercise.update({
 			where: { id: exerciseId },
@@ -195,10 +256,19 @@ export class ExercisesService extends BaseService {
 
 	/* ===== DRILL METHODS ===== */
 
-	public async getDrillExercise(currentUserId: string, collectionId: string): Promise<QuizQuestionDto> {
+	public async getDrillExercise(
+		currentUserId: string,
+		collectionId: string,
+		exerciseSelectionMode: string = "random"
+	): Promise<QuizQuestionDto> {
 		await this.validateCollectionAccess(currentUserId, collectionId);
 
-		const exercise = await this.getRandomActiveExercise(collectionId);
+		let exercise: Exercise;
+		if (exerciseSelectionMode === "least-attempted") {
+			exercise = await this.getLeastAttemptedExercise(collectionId, currentUserId);
+		} else {
+			exercise = await this.getRandomActiveExercise(collectionId);
+		}
 
 		const updatedDistractors =
 			exercise.type === ExerciseType.CHOICE_SINGLE
@@ -374,39 +444,55 @@ export class ExercisesService extends BaseService {
 	/**
 	 * Handles file uploads with proper cleanup on failure
 	 */
-	private async handleFileUploads(files?: UploadedFiles, previous?: FileReferences): Promise<FileUploadResult> {
-		const audioFile = files?.audio?.[0];
-		const imageFile = files?.image?.[0];
+	private async handleFileUploads(
+		files?: UploadedFiles,
+		previous?: FileReferences,
+		options?: { setNullAudio?: boolean; setNullImage?: boolean }
+	): Promise<FileUploadResult> {
+		const newAudioFile = files?.audio?.[0];
+		const newImageFile = files?.image?.[0];
 
-		const audioFilename = audioFile ? this.generateUniqueFilename(audioFile) : null;
-		const imageFilename = imageFile ? this.generateUniqueFilename(imageFile) : null;
+		const hasNewAudio = newAudioFile !== undefined;
+		const hasNewImage = newImageFile !== undefined;
+
+		const shouldClearAudio = options?.setNullAudio === true;
+		const shouldClearImage = options?.setNullImage === true;
+
+		const hasPreviousAudio = !!previous?.audioUrl;
+		const hasPreviousImage = !!previous?.imageUrl;
+
+		const newAudioFilename = newAudioFile ? this.generateUniqueFilename(newAudioFile) : null;
+		const newImageFilename = newImageFile ? this.generateUniqueFilename(newImageFile) : null;
 
 		try {
 			// Delete previous files if new ones are uploaded OR if explicitly cleared (null incoming)
-			await Promise.all([
-				previous?.audioUrl
-					? this.deleteFile(ExerciseFileType.AUDIO, previous.audioUrl)
-					: null,
-				previous?.imageUrl
-					? this.deleteFile(ExerciseFileType.IMAGE, previous.imageUrl)
-					: null,
-			]);
+			const deletePromises: Promise<void>[] = [];
+			if ((shouldClearAudio || hasNewAudio) && hasPreviousAudio) {
+				deletePromises.push(this.deleteFile(ExerciseFileType.AUDIO, previous.audioUrl!));
+			}
+			if ((shouldClearImage || hasNewImage) && hasPreviousImage) {
+				deletePromises.push(this.deleteFile(ExerciseFileType.IMAGE, previous.imageUrl!));
+			}
+			await Promise.all(deletePromises);
 
 			// Upload new files
-			await Promise.all([
-				audioFile && audioFilename
-					? this.uploadFile(ExerciseFileType.AUDIO, audioFilename, audioFile.buffer)
-					: null,
-				imageFile && imageFilename
-					? this.uploadFile(ExerciseFileType.IMAGE, imageFilename, imageFile.buffer)
-					: null,
-			]);
+			const uploadPromises: Promise<void>[] = [];
+			if (!shouldClearAudio && hasNewAudio && newAudioFilename) {
+				uploadPromises.push(this.uploadFile(ExerciseFileType.AUDIO, newAudioFilename, newAudioFile.buffer));
+			}
+			if (!shouldClearImage && hasNewImage && newImageFilename) {
+				uploadPromises.push(this.uploadFile(ExerciseFileType.IMAGE, newImageFilename, newImageFile.buffer));
+			}
+			await Promise.all(uploadPromises);
 
-			return { audioFilename, imageFilename };
+			return {
+				audioFilename: shouldClearAudio ? null : hasNewAudio ? newAudioFilename : (previous?.audioUrl ?? null),
+				imageFilename: shouldClearImage ? null : hasNewImage ? newImageFilename : (previous?.imageUrl ?? null),
+			};
 		} catch (error) {
 			this.logger.error("File upload failed", error);
 			// Cleanup any successfully uploaded files
-			await this.cleanupFiles({ audioFilename, imageFilename });
+			await this.cleanupFiles({ audioFilename: newAudioFilename, imageFilename: newImageFilename });
 			throw new BadRequestException(
 				`File upload failed: ${error instanceof Error ? error.message : "Unknown error"}`
 			);
@@ -512,6 +598,53 @@ export class ExercisesService extends BaseService {
 		}
 
 		return exercise;
+	}
+
+	private async getLeastAttemptedExercise(collectionId: string, userId: string): Promise<Exercise> {
+		const baseWhere = { collectionId, isActive: true };
+
+		// // Global least-attempted (no user filter) — use relation count ordering
+		// if (!userId) {
+		// 	const exercise = await this.prismaService.exercise.findFirst({
+		// 		where: baseWhere,
+		// 		orderBy: { Attempt: { _count: "asc" } },
+		// 	});
+
+		// 	if (!exercise) throw new NotFoundException("Exercise not found");
+
+		// 	return exercise;
+		// }
+
+		// Per-user: prefer any exercise with ZERO attempts by this user
+		const zeroAttemptExercise = await this.prismaService.exercise.findFirst({
+			where: {
+				...baseWhere,
+				Attempt: { none: { userId } }, // exercises with no attempts by this user
+			},
+		});
+		if (zeroAttemptExercise) return zeroAttemptExercise;
+
+		// Otherwise group attempts by exercise (only attempts by this user and in the collection),
+		// pick exerciseId with minimal count and load that exercise.
+		const grouped = await this.prismaService.attempt.groupBy({
+			by: ["exerciseId"],
+			where: {
+				userId,
+				exercise: { collectionId, isActive: true }, // restrict to the collection
+			},
+			_count: { _all: true },
+		});
+
+		if (grouped.length === 0) {
+			throw new NotFoundException("No exercises available in this collection");
+		}
+
+		let min = grouped[0]!;
+		for (const g of grouped) {
+			if (g._count._all < min._count._all) min = g;
+		}
+
+		return this.findExerciseOrFail(min.exerciseId);
 	}
 
 	/**
