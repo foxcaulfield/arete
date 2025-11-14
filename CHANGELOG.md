@@ -1,3 +1,20 @@
+## 1.3.0-rc.1 (2025-11-14)
+
+* fix: correct prerelease configuration for release branches in .releaserc.json ([fd354e0](https://github.com/foxcaulfield/arete/commit/fd354e0))
+* fix: update prerelease configuration for release branches in .releaserc.json ([23ec738](https://github.com/foxcaulfield/arete/commit/23ec738))
+* refactor: enhance documentation for file handling methods in FilesService ([d1696b1](https://github.com/foxcaulfield/arete/commit/d1696b1))
+* refactor: enhance error handling and file upload logic in update method of ExercisesService ([78cd614](https://github.com/foxcaulfield/arete/commit/78cd614))
+* refactor: improve file upload handling in create method of ExercisesService ([5d386dc](https://github.com/foxcaulfield/arete/commit/5d386dc))
+* refactor: remove redundant release branch configuration in .releaserc.json ([30b51b6](https://github.com/foxcaulfield/arete/commit/30b51b6))
+* refactor: update file upload handling in FilesService and ExercisesService ([d611da0](https://github.com/foxcaulfield/arete/commit/d611da0))
+* Merge branch 'main' into release/1.3.0 ([8bd81a0](https://github.com/foxcaulfield/arete/commit/8bd81a0))
+* Merge pull request #46 from foxcaulfield/feature/file-service ([fc2f2fa](https://github.com/foxcaulfield/arete/commit/fc2f2fa)), closes [#46](https://github.com/foxcaulfield/arete/issues/46)
+* Move enum to common folder ([b5dbe4f](https://github.com/foxcaulfield/arete/commit/b5dbe4f))
+* Update src/common/files.service.ts ([d5fed8d](https://github.com/foxcaulfield/arete/commit/d5fed8d))
+* Update src/exercises/exercises.service.ts ([4c5ddbe](https://github.com/foxcaulfield/arete/commit/4c5ddbe))
+* chore(release): v1.2.0-beta.2 [skip ci] ([c11da6d](https://github.com/foxcaulfield/arete/commit/c11da6d))
+* feat: implement CommonModule and FilesService for file handling; refactor ExercisesModule and Exerci ([186344f](https://github.com/foxcaulfield/arete/commit/186344f))
+
 ## 1.2.0-beta.2 (2025-11-14)
 
 * Merge pull request #46 from foxcaulfield/feature/file-service ([fc2f2fa](https://github.com/foxcaulfield/arete/commit/fc2f2fa)), closes [#46](https://github.com/foxcaulfield/arete/issues/46)
