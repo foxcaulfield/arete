@@ -18,6 +18,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient, UserRole } from "@prisma/client";
 
 import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
+import { CommonModule } from "./common/common.module";
 
 @Module({
 	imports: [
@@ -86,6 +87,7 @@ import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 		PrismaModule,
 		CollectionsModule,
 		ExercisesModule,
+		CommonModule,
 	],
 	controllers: [AppController],
 	providers: [

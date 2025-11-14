@@ -1,5 +1,4 @@
 import {
-	BadRequestException,
 	ConflictException,
 	ForbiddenException,
 	Injectable,
@@ -19,20 +18,9 @@ import { UsersService } from "src/users/users.service";
 import { PaginatedResponseDto } from "src/common/types";
 import { UserAnswerDto, QuizQuestionDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
 import { Exercise, ExerciseType, Prisma, Collection, User } from "@prisma/client";
-import { FileStorageService, StorageType } from "@getlarge/nestjs-tools-file-storage";
-import { extname } from "path";
-import { v4 as uuid4 } from "uuid";
-import { ExerciseFileType } from "./enums/exercise-file-type.enum";
 
-interface FileUploadResult {
-	audioFilename: string | null;
-	imageFilename: string | null;
-}
-
-interface FileReferences {
-	audioUrl?: string | null;
-	imageUrl?: string | null;
-}
+import { ExerciseFileType } from "src/common/enums/exercise-file-type.enum";
+import { FilesService } from "src/common/files.service";
 
 interface UploadedFiles {
 	audio?: Express.Multer.File[];
@@ -54,21 +42,11 @@ export class ExercisesService extends BaseService {
 		[ExerciseFileType.IMAGE]: "imageUrl",
 	} as const satisfies Record<ExerciseFileType, keyof Exercise>;
 
-	private readonly fileTypeToFolderMap = {
-		[ExerciseFileType.AUDIO]: "audio",
-		[ExerciseFileType.IMAGE]: "images",
-	} as const;
-
-	private readonly mimeTypeMap = {
-		[ExerciseFileType.AUDIO]: "audio/mpeg",
-		[ExerciseFileType.IMAGE]: "image/jpeg",
-	} as const satisfies Record<ExerciseFileType, string>;
-
 	public constructor(
 		private readonly prismaService: PrismaService,
 		private readonly usersService: UsersService,
 		private readonly collectionsService: CollectionsService,
-		private readonly fileStorageService: FileStorageService<StorageType.FS>
+		private readonly filesService: FilesService
 	) {
 		super();
 	}
@@ -82,9 +60,22 @@ export class ExercisesService extends BaseService {
 	): Promise<ResponseExerciseDto> {
 		await this.validateCollectionAccess(currentUserId, dto.collectionId);
 		this.validateAnswersAndDistractors(dto.correctAnswer, dto.additionalCorrectAnswers, dto.distractors, dto.type);
-		const { audioFilename, imageFilename } = await this.handleFileUploads(files);
+		let audioFilename: string | null = null;
+		let imageFilename: string | null = null;
 
 		try {
+			const audioResult = await this.filesService.handleFileUpload({
+				file: files?.audio?.[0],
+				fileType: ExerciseFileType.AUDIO,
+			});
+			const imageResult = await this.filesService.handleFileUpload({
+				file: files?.image?.[0],
+				fileType: ExerciseFileType.IMAGE,
+			});
+
+			audioFilename = audioResult.filename;
+			imageFilename = imageResult.filename;
+
 			const { collectionId, ...rest } = dto;
 			const exercise = await this.prismaService.exercise.create({
 				data: {
@@ -103,8 +94,12 @@ export class ExercisesService extends BaseService {
 			return this.toResponseDto(ResponseExerciseDto, exercise);
 		} catch (error) {
 			this.logger.error("Failed to create exercise", error);
-			// Cleanup uploaded files if database operation fails
-			await this.cleanupFiles({ audioFilename, imageFilename });
+			if (audioFilename) {
+				await this.filesService.deleteFile(ExerciseFileType.AUDIO, audioFilename);
+			}
+			if (imageFilename) {
+				await this.filesService.deleteFile(ExerciseFileType.IMAGE, imageFilename);
+			}
 			throw new InternalServerErrorException("Failed to create exercise");
 		}
 	}
@@ -209,34 +204,51 @@ export class ExercisesService extends BaseService {
 			dto.type ?? exercise.type
 		);
 
-		const { audioFilename, imageFilename } = await this.handleFileUploads(
-			files,
-			{
-				audioUrl: exercise.audioUrl,
-				imageUrl: exercise.imageUrl,
-			},
-			{
-				setNullAudio: dto.setNullAudio,
-				setNullImage: dto.setNullImage,
+		let audioFilename: string | null = null;
+		let imageFilename: string | null = null;
+
+		try {
+			const audioResult = await this.filesService.handleFileUpload({
+				file: files?.audio?.[0],
+				fileType: ExerciseFileType.AUDIO,
+				previousUrl: exercise.audioUrl,
+				setNull: dto.setNullAudio,
+			});
+			const imageResult = await this.filesService.handleFileUpload({
+				file: files?.image?.[0],
+				fileType: ExerciseFileType.IMAGE,
+				previousUrl: exercise.imageUrl,
+				setNull: dto.setNullImage,
+			});
+			audioFilename = audioResult.filename;
+			imageFilename = imageResult.filename;
+
+			delete dto.setNullAudio;
+			delete dto.setNullImage;
+
+			const updated = await this.prismaService.exercise.update({
+				where: { id: exerciseId },
+				data: {
+					...dto,
+					additionalCorrectAnswers: dto.additionalCorrectAnswers === null ? [] : dto.additionalCorrectAnswers,
+					distractors: dto.distractors === null ? [] : dto.distractors,
+					audioUrl: audioFilename,
+					imageUrl: imageFilename,
+				},
+			});
+
+			this.logger.log(`Exercise updated: ${exerciseId} by user ${currentUserId}`);
+			return this.toResponseDto(ResponseExerciseDto, updated);
+		} catch (error) {
+			this.logger.error("Failed to update exercise", error);
+			if (audioFilename) {
+				await this.filesService.deleteFile(ExerciseFileType.AUDIO, audioFilename);
 			}
-		);
-		// delete dto properties not part of the Exercise model
-		delete dto.setNullAudio;
-		delete dto.setNullImage;
-
-		const updated = await this.prismaService.exercise.update({
-			where: { id: exerciseId },
-			data: {
-				...dto,
-				additionalCorrectAnswers: dto.additionalCorrectAnswers === null ? [] : dto.additionalCorrectAnswers,
-				distractors: dto.distractors === null ? [] : dto.distractors,
-				audioUrl: audioFilename,
-				imageUrl: imageFilename,
-			},
-		});
-
-		this.logger.log(`Exercise updated: ${exerciseId} by user ${currentUserId}`);
-		return this.toResponseDto(ResponseExerciseDto, updated);
+			if (imageFilename) {
+				await this.filesService.deleteFile(ExerciseFileType.IMAGE, imageFilename);
+			}
+			throw new InternalServerErrorException("Failed to update exercise");
+		}
 	}
 
 	public async delete(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
@@ -323,14 +335,7 @@ export class ExercisesService extends BaseService {
 
 		await this.validateCollectionAccess(currentUserId, exercise.collectionId);
 
-		const folder = this.fileTypeToFolderMap[filetype];
-		const stream = await this.fileStorageService.downloadStream({
-			filePath: `${folder}/${filename}`,
-		});
-
-		return new StreamableFile(stream, {
-			type: this.mimeTypeMap[filetype],
-		});
+		return this.filesService.getFile({ filetype, filename });
 	}
 
 	/* ===== PRIVATE HELPER METHODS ===== */
@@ -442,124 +447,16 @@ export class ExercisesService extends BaseService {
 	}
 
 	/**
-	 * Handles file uploads with proper cleanup on failure
-	 */
-	private async handleFileUploads(
-		files?: UploadedFiles,
-		previous?: FileReferences,
-		options?: { setNullAudio?: boolean; setNullImage?: boolean }
-	): Promise<FileUploadResult> {
-		const newAudioFile = files?.audio?.[0];
-		const newImageFile = files?.image?.[0];
-
-		const hasNewAudio = newAudioFile !== undefined;
-		const hasNewImage = newImageFile !== undefined;
-
-		const shouldClearAudio = options?.setNullAudio === true;
-		const shouldClearImage = options?.setNullImage === true;
-
-		const hasPreviousAudio = !!previous?.audioUrl;
-		const hasPreviousImage = !!previous?.imageUrl;
-
-		const newAudioFilename = newAudioFile ? this.generateUniqueFilename(newAudioFile) : null;
-		const newImageFilename = newImageFile ? this.generateUniqueFilename(newImageFile) : null;
-
-		try {
-			// Delete previous files if new ones are uploaded OR if explicitly cleared (null incoming)
-			const deletePromises: Promise<void>[] = [];
-			if ((shouldClearAudio || hasNewAudio) && hasPreviousAudio) {
-				deletePromises.push(this.deleteFile(ExerciseFileType.AUDIO, previous.audioUrl!));
-			}
-			if ((shouldClearImage || hasNewImage) && hasPreviousImage) {
-				deletePromises.push(this.deleteFile(ExerciseFileType.IMAGE, previous.imageUrl!));
-			}
-			await Promise.all(deletePromises);
-
-			// Upload new files
-			const uploadPromises: Promise<void>[] = [];
-			if (!shouldClearAudio && hasNewAudio && newAudioFilename) {
-				uploadPromises.push(this.uploadFile(ExerciseFileType.AUDIO, newAudioFilename, newAudioFile.buffer));
-			}
-			if (!shouldClearImage && hasNewImage && newImageFilename) {
-				uploadPromises.push(this.uploadFile(ExerciseFileType.IMAGE, newImageFilename, newImageFile.buffer));
-			}
-			await Promise.all(uploadPromises);
-
-			return {
-				audioFilename: shouldClearAudio ? null : hasNewAudio ? newAudioFilename : (previous?.audioUrl ?? null),
-				imageFilename: shouldClearImage ? null : hasNewImage ? newImageFilename : (previous?.imageUrl ?? null),
-			};
-		} catch (error) {
-			this.logger.error("File upload failed", error);
-			// Cleanup any successfully uploaded files
-			await this.cleanupFiles({ audioFilename: newAudioFilename, imageFilename: newImageFilename });
-			throw new BadRequestException(
-				`File upload failed: ${error instanceof Error ? error.message : "Unknown error"}`
-			);
-		}
-	}
-
-	/**
-	 * Generates a unique filename for uploaded files
-	 */
-	private generateUniqueFilename(file: Express.Multer.File): string {
-		const extension = extname(file.originalname) || file.mimetype.split("/")[1];
-		const safeExtension = extension?.startsWith(".") ? extension.slice(1) : extension;
-		return `${uuid4()}${safeExtension ? `.${safeExtension}` : ""}`;
-	}
-
-	/**
-	 * Uploads a file to storage
-	 */
-	private async uploadFile(fileType: ExerciseFileType, filename: string, buffer: Buffer): Promise<void> {
-		const folder = this.fileTypeToFolderMap[fileType];
-		await this.fileStorageService.uploadFile({
-			content: buffer,
-			filePath: `${folder}/${filename}`,
-		});
-	}
-
-	/**
-	 * Deletes a file from storage
-	 */
-	private async deleteFile(fileType: ExerciseFileType, filename: string): Promise<void> {
-		const folder = this.fileTypeToFolderMap[fileType];
-		try {
-			await this.fileStorageService.deleteFile({
-				filePath: `${folder}/${filename}`,
-			});
-		} catch (error) {
-			this.logger.warn(`Failed to delete file ${filename}:`, error);
-		}
-	}
-
-	/**
-	 * Cleans up uploaded files (used for rollback on error)
-	 */
-	private async cleanupFiles(files: FileUploadResult): Promise<void> {
-		const cleanupPromises: Promise<void>[] = [];
-
-		if (files.audioFilename) {
-			cleanupPromises.push(this.deleteFile(ExerciseFileType.AUDIO, files.audioFilename));
-		}
-		if (files.imageFilename) {
-			cleanupPromises.push(this.deleteFile(ExerciseFileType.IMAGE, files.imageFilename));
-		}
-
-		await Promise.allSettled(cleanupPromises);
-	}
-
-	/**
 	 * Deletes all files associated with an exercise
 	 */
 	private async deleteExerciseFiles(exercise: Exercise): Promise<void> {
 		const deletionPromises: Promise<void>[] = [];
 
 		if (exercise.audioUrl) {
-			deletionPromises.push(this.deleteFile(ExerciseFileType.AUDIO, exercise.audioUrl));
+			deletionPromises.push(this.filesService.deleteFile(ExerciseFileType.AUDIO, exercise.audioUrl));
 		}
 		if (exercise.imageUrl) {
-			deletionPromises.push(this.deleteFile(ExerciseFileType.IMAGE, exercise.imageUrl));
+			deletionPromises.push(this.filesService.deleteFile(ExerciseFileType.IMAGE, exercise.imageUrl));
 		}
 
 		const results = await Promise.allSettled(deletionPromises);
