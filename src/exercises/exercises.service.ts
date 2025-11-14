@@ -204,35 +204,51 @@ export class ExercisesService extends BaseService {
 			dto.type ?? exercise.type
 		);
 
-		const { filename: audioFilename } = await this.filesService.handleFileUpload({
-			file: files?.audio?.[0],
-			fileType: ExerciseFileType.AUDIO,
-			previousUrl: exercise.audioUrl,
-			setNull: dto.setNullAudio,
-		});
-		const { filename: imageFilename } = await this.filesService.handleFileUpload({
-			file: files?.image?.[0],
-			fileType: ExerciseFileType.IMAGE,
-			previousUrl: exercise.imageUrl,
-			setNull: dto.setNullImage,
-		});
+		let audioFilename: string | null = null;
+		let imageFilename: string | null = null;
 
-		delete dto.setNullAudio;
-		delete dto.setNullImage;
+		try {
+			const audioResult = await this.filesService.handleFileUpload({
+				file: files?.audio?.[0],
+				fileType: ExerciseFileType.AUDIO,
+				previousUrl: exercise.audioUrl,
+				setNull: dto.setNullAudio,
+			});
+			const imageResult = await this.filesService.handleFileUpload({
+				file: files?.image?.[0],
+				fileType: ExerciseFileType.IMAGE,
+				previousUrl: exercise.imageUrl,
+				setNull: dto.setNullImage,
+			});
+			audioFilename = audioResult.filename;
+			imageFilename = imageResult.filename;
 
-		const updated = await this.prismaService.exercise.update({
-			where: { id: exerciseId },
-			data: {
-				...dto,
-				additionalCorrectAnswers: dto.additionalCorrectAnswers === null ? [] : dto.additionalCorrectAnswers,
-				distractors: dto.distractors === null ? [] : dto.distractors,
-				audioUrl: audioFilename,
-				imageUrl: imageFilename,
-			},
-		});
+			delete dto.setNullAudio;
+			delete dto.setNullImage;
 
-		this.logger.log(`Exercise updated: ${exerciseId} by user ${currentUserId}`);
-		return this.toResponseDto(ResponseExerciseDto, updated);
+			const updated = await this.prismaService.exercise.update({
+				where: { id: exerciseId },
+				data: {
+					...dto,
+					additionalCorrectAnswers: dto.additionalCorrectAnswers === null ? [] : dto.additionalCorrectAnswers,
+					distractors: dto.distractors === null ? [] : dto.distractors,
+					audioUrl: audioFilename,
+					imageUrl: imageFilename,
+				},
+			});
+
+			this.logger.log(`Exercise updated: ${exerciseId} by user ${currentUserId}`);
+			return this.toResponseDto(ResponseExerciseDto, updated);
+		} catch (error) {
+			this.logger.error("Failed to update exercise", error);
+			if (audioFilename) {
+				await this.filesService.deleteFile(ExerciseFileType.AUDIO, audioFilename);
+			}
+			if (imageFilename) {
+				await this.filesService.deleteFile(ExerciseFileType.IMAGE, imageFilename);
+			}
+			throw new InternalServerErrorException("Failed to update exercise");
+		}
 	}
 
 	public async delete(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
