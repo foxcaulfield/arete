@@ -60,16 +60,22 @@ export class ExercisesService extends BaseService {
 	): Promise<ResponseExerciseDto> {
 		await this.validateCollectionAccess(currentUserId, dto.collectionId);
 		this.validateAnswersAndDistractors(dto.correctAnswer, dto.additionalCorrectAnswers, dto.distractors, dto.type);
-		const { filename: audioFilename } = await this.filesService.handleFileUpload({
-			file: files?.audio?.[0],
-			fileType: ExerciseFileType.AUDIO,
-		});
-		const { filename: imageFilename } = await this.filesService.handleFileUpload({
-			file: files?.image?.[0],
-			fileType: ExerciseFileType.IMAGE,
-		});
+		let audioFilename: string | null = null;
+		let imageFilename: string | null = null;
 
 		try {
+			const audioResult = await this.filesService.handleFileUpload({
+				file: files?.audio?.[0],
+				fileType: ExerciseFileType.AUDIO,
+			});
+			const imageResult = await this.filesService.handleFileUpload({
+				file: files?.image?.[0],
+				fileType: ExerciseFileType.IMAGE,
+			});
+
+			audioFilename = audioResult.filename;
+			imageFilename = imageResult.filename;
+
 			const { collectionId, ...rest } = dto;
 			const exercise = await this.prismaService.exercise.create({
 				data: {
