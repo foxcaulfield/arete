@@ -4,6 +4,9 @@ import { ExerciseFileType } from "src/common/enums/exercise-file-type.enum";
 import { extname } from "path";
 import { v4 as uuid4 } from "uuid";
 
+/**
+ * Parameters used when handling a single file upload request.
+ */
 interface HandleSingleFileUploadsParams {
 	file?: Express.Multer.File;
 	fileType: ExerciseFileType;
@@ -27,6 +30,12 @@ export class FilesService {
 
 	public constructor(private readonly fileStorageService: FileStorageService<StorageType.FS>) {}
 
+	/**
+	 * Streams a file back to the caller based on the requested exercise file type and file name.
+	 * @param filetype The type of exercise file (audio or image) so that we look up the correct folder and MIME type.
+	 * @param filename The stored filename to load from the backing store.
+	 * @returns A {@link StreamableFile} wrapper that includes the appropriate MIME type header.
+	 */
 	public async getFile({
 		filetype,
 		filename,
@@ -44,6 +53,11 @@ export class FilesService {
 		});
 	}
 
+	/**
+	 * Deletes a previously stored file if it exists.
+	 * @param fileType The type of exercise file so the correct folder can be targeted.
+	 * @param filename The stored filename to delete.
+	 */
 	public async deleteFile(fileType: ExerciseFileType, filename: string): Promise<void> {
 		const folder = this.fileTypeToFolderMap[fileType];
 		try {
@@ -55,6 +69,12 @@ export class FilesService {
 		}
 	}
 
+	/**
+	 * Uploads a file buffer to the configured storage backend.
+	 * @param fileType The exercise file type determining the destination folder.
+	 * @param filename The target filename to store within the folder.
+	 * @param buffer Raw file bytes to upload.
+	 */
 	public async uploadFile(fileType: ExerciseFileType, filename: string, buffer: Buffer): Promise<void> {
 		const folder = this.fileTypeToFolderMap[fileType];
 		await this.fileStorageService.uploadFile({
@@ -63,6 +83,11 @@ export class FilesService {
 		});
 	}
 
+	/**
+	 * Handles a single upload request, deleting any previous file and optionally clearing the stored reference.
+	 * @param params Upload parameters controlling the new file, clearing behavior, and previous file reference.
+	 * @returns The filename that should be stored after processing, or {@code null} when clearing.
+	 */
 	public async handleFileUpload({
 		fileType,
 		file,
@@ -101,6 +126,11 @@ export class FilesService {
 
 	/**
 	 * Generates a unique filename for uploaded files
+	 */
+	/**
+	 * Creates a collision-resistant filename based on a UUID and the incoming file extension.
+	 * @param file The uploaded file whose original name and mimetype yield an extension.
+	 * @returns A unique filename that preserves the original extension when available.
 	 */
 	public generateUniqueFilename(file: Express.Multer.File): string {
 		const extension = extname(file.originalname) || file.mimetype.split("/")[1];
