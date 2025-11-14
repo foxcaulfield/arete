@@ -4,19 +4,10 @@ import { ExercisesService } from "./exercises.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UsersModule } from "src/users/users.module";
 import { CollectionsModule } from "src/collections/collections.module";
-import { FileStorageModule } from "@getlarge/nestjs-tools-file-storage";
-import { ConfigService } from "@nestjs/config";
-import { fileStorageFactory } from "src/configs/file-storage.config";
+import { CommonModule } from "src/common/common.module";
 
 @Module({
-	imports: [
-		UsersModule,
-		CollectionsModule,
-		FileStorageModule.forRootAsync({
-			inject: [ConfigService],
-			useFactory: fileStorageFactory,
-		}),
-	],
+	imports: [CommonModule, UsersModule, CollectionsModule],
 	controllers: [ExercisesController],
 	providers: [ExercisesService, PrismaService],
 })
