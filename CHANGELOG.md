@@ -9,6 +9,16 @@
 * refactor: improve file upload handling in create method of ExercisesService ([5d386dc](https://github.com/foxcaulfield/arete/commit/5d386dc))
 * refactor: update file upload handling in FilesService and ExercisesService ([d611da0](https://github.com/foxcaulfield/arete/commit/d611da0))
 * feat: implement CommonModule and FilesService for file handling; refactor ExercisesModule and Exerci ([186344f](https://github.com/foxcaulfield/arete/commit/186344f))
+## 1.2.0 (2025-11-07)
+
+* Merge pull request #45 from foxcaulfield/release/1.2.0 ([b2ac802](https://github.com/foxcaulfield/arete/commit/b2ac802)), closes [#45](https://github.com/foxcaulfield/arete/issues/45)
+* chore(release): v1.2.0-beta.1 [skip ci] ([3ec629c](https://github.com/foxcaulfield/arete/commit/3ec629c))
+* feat: add exercise selection mode to getDrillExercise; implement least-attempted logic ([05770fe](https://github.com/foxcaulfield/arete/commit/05770fe))
+* feat: enhance ResponseExerciseDto with totalAttempts and correctAttempts fields; update getExercises ([3427a06](https://github.com/foxcaulfield/arete/commit/3427a06))
+* feat: enrich collections with attempt and exercise counts; update response DTO and file upload handl ([c6c1848](https://github.com/foxcaulfield/arete/commit/c6c1848))
+* feat: update exercise selection query ([20bad02](https://github.com/foxcaulfield/arete/commit/20bad02))
+* refactor: rename attempts table and update schema mapping ([dc0e063](https://github.com/foxcaulfield/arete/commit/dc0e063))
+* refactor: update formatting in  ExercisesService ([2183f56](https://github.com/foxcaulfield/arete/commit/2183f56))
 
 ## 1.2.0-beta.1 (2025-11-07)
 
