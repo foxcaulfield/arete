@@ -60,8 +60,14 @@ export class ExercisesService extends BaseService {
 	): Promise<ResponseExerciseDto> {
 		await this.validateCollectionAccess(currentUserId, dto.collectionId);
 		this.validateAnswersAndDistractors(dto.correctAnswer, dto.additionalCorrectAnswers, dto.distractors, dto.type);
-		const { filename: audioFilename } = await this.filesService.handleSingleFileUploads(files?.audio?.[0], ExerciseFileType.AUDIO);
-		const { filename: imageFilename } = await this.filesService.handleSingleFileUploads(files?.image?.[0], ExerciseFileType.IMAGE);
+		const { filename: audioFilename } = await this.filesService.handleFileUpload({
+			file: files?.audio?.[0],
+			fileType: ExerciseFileType.AUDIO,
+		});
+		const { filename: imageFilename } = await this.filesService.handleFileUpload({
+			file: files?.image?.[0],
+			fileType: ExerciseFileType.IMAGE,
+		});
 
 		try {
 			const { collectionId, ...rest } = dto;
@@ -192,18 +198,18 @@ export class ExercisesService extends BaseService {
 			dto.type ?? exercise.type
 		);
 
-		const { filename: audioFilename } = await this.filesService.handleSingleFileUploads(
-			files?.audio?.[0],
-			ExerciseFileType.AUDIO,
-			exercise.audioUrl,
-			dto.setNullAudio
-		);
-		const { filename: imageFilename } = await this.filesService.handleSingleFileUploads(
-			files?.image?.[0],
-			ExerciseFileType.IMAGE,
-			exercise.imageUrl,
-			dto.setNullImage
-		);
+		const { filename: audioFilename } = await this.filesService.handleFileUpload({
+			file: files?.audio?.[0],
+			fileType: ExerciseFileType.AUDIO,
+			previousUrl: exercise.audioUrl,
+			setNull: dto.setNullAudio,
+		});
+		const { filename: imageFilename } = await this.filesService.handleFileUpload({
+			file: files?.image?.[0],
+			fileType: ExerciseFileType.IMAGE,
+			previousUrl: exercise.imageUrl,
+			setNull: dto.setNullImage,
+		});
 
 		delete dto.setNullAudio;
 		delete dto.setNullImage;

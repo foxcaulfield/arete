@@ -4,6 +4,13 @@ import { ExerciseFileType } from "src/common/enums/exercise-file-type.enum";
 import { extname } from "path";
 import { v4 as uuid4 } from "uuid";
 
+interface HandleSingleFileUploadsParams {
+	file?: Express.Multer.File;
+	fileType: ExerciseFileType;
+	previousUrl?: string | null;
+	setNull?: boolean;
+}
+
 @Injectable()
 export class FilesService {
 	private readonly logger = new Logger(FilesService.name);
@@ -56,12 +63,12 @@ export class FilesService {
 		});
 	}
 
-	public async handleSingleFileUploads(
-		file?: Express.Multer.File,
-		fileType?: ExerciseFileType,
-		previousUrl?: string | null,
-		setNull?: boolean
-	): Promise<{ filename: string | null }> {
+	public async handleFileUpload({
+		fileType,
+		file,
+		previousUrl,
+		setNull,
+	}: HandleSingleFileUploadsParams): Promise<{ filename: string | null }> {
 		const hasNewFile = file !== undefined;
 		const shouldClearExisting = setNull === true;
 		const hasPrevious = !!previousUrl;
@@ -70,12 +77,12 @@ export class FilesService {
 		try {
 			// Delete previous files if new ones are uploaded OR if explicitly cleared (null incoming)
 			if ((shouldClearExisting || hasNewFile) && hasPrevious) {
-				await this.deleteFile(fileType!, previousUrl);
+				await this.deleteFile(fileType, previousUrl);
 			}
 
 			// Upload new files
 			if (!shouldClearExisting && hasNewFile && newFilename) {
-				await this.uploadFile(fileType!, newFilename, file.buffer);
+				await this.uploadFile(fileType, newFilename, file.buffer);
 			}
 			return {
 				filename: shouldClearExisting ? null : hasNewFile ? newFilename : (previousUrl ?? null),
@@ -84,7 +91,7 @@ export class FilesService {
 			this.logger.error("File upload failed", error);
 			// Cleanup any successfully uploaded files
 			if (newFilename) {
-				await this.deleteFile(fileType!, newFilename);
+				await this.deleteFile(fileType, newFilename);
 			}
 			throw new BadRequestException(
 				`File upload failed: ${error instanceof Error ? error.message : "Unknown error"}`
