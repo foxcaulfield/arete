@@ -1,3 +1,15 @@
+## 1.2.0-beta.2 (2025-11-14)
+
+* Merge pull request #46 from foxcaulfield/feature/file-service ([fc2f2fa](https://github.com/foxcaulfield/arete/commit/fc2f2fa)), closes [#46](https://github.com/foxcaulfield/arete/issues/46)
+* Move enum to common folder ([b5dbe4f](https://github.com/foxcaulfield/arete/commit/b5dbe4f))
+* Update src/common/files.service.ts ([d5fed8d](https://github.com/foxcaulfield/arete/commit/d5fed8d))
+* Update src/exercises/exercises.service.ts ([4c5ddbe](https://github.com/foxcaulfield/arete/commit/4c5ddbe))
+* refactor: enhance documentation for file handling methods in FilesService ([d1696b1](https://github.com/foxcaulfield/arete/commit/d1696b1))
+* refactor: enhance error handling and file upload logic in update method of ExercisesService ([78cd614](https://github.com/foxcaulfield/arete/commit/78cd614))
+* refactor: improve file upload handling in create method of ExercisesService ([5d386dc](https://github.com/foxcaulfield/arete/commit/5d386dc))
+* refactor: update file upload handling in FilesService and ExercisesService ([d611da0](https://github.com/foxcaulfield/arete/commit/d611da0))
+* feat: implement CommonModule and FilesService for file handling; refactor ExercisesModule and Exerci ([186344f](https://github.com/foxcaulfield/arete/commit/186344f))
+
 ## 1.2.0-beta.1 (2025-11-07)
 
 * feat: add exercise selection mode to getDrillExercise; implement least-attempted logic ([05770fe](https://github.com/foxcaulfield/arete/commit/05770fe))
