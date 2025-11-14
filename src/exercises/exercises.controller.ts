@@ -25,7 +25,7 @@ import { UserAnswerDto, QuizQuestionDto, UserAnswerFeedbackDto } from "./dto/qui
 // import { FileInterceptor } from "@nestjs/platform-express";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { multerConfig, multerField as field } from "src/configs/multer.config";
-import { ExerciseFileType } from "./enums/exercise-file-type.enum";
+import { ExerciseFileType } from "../common/enums/exercise-file-type.enum";
 
 type MulterFiles = Express.Multer.File[];
 type UploadedExerciseFiles = { audio?: MulterFiles; image?: MulterFiles };
