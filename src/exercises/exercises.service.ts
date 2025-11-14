@@ -60,9 +60,8 @@ export class ExercisesService extends BaseService {
 	): Promise<ResponseExerciseDto> {
 		await this.validateCollectionAccess(currentUserId, dto.collectionId);
 		this.validateAnswersAndDistractors(dto.correctAnswer, dto.additionalCorrectAnswers, dto.distractors, dto.type);
-		const upload = this.filesService.handleSingleFileUploads.bind(this.filesService);
-		const { filename: audioFilename } = await upload(files?.audio?.[0], ExerciseFileType.AUDIO);
-		const { filename: imageFilename } = await upload(files?.image?.[0], ExerciseFileType.IMAGE);
+		const { filename: audioFilename } = await this.filesService.handleSingleFileUploads(files?.audio?.[0], ExerciseFileType.AUDIO);
+		const { filename: imageFilename } = await this.filesService.handleSingleFileUploads(files?.image?.[0], ExerciseFileType.IMAGE);
 
 		try {
 			const { collectionId, ...rest } = dto;
