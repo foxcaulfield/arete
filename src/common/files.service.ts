@@ -44,7 +44,6 @@ export class FilesService {
 				filePath: `${folder}/${filename}`,
 			});
 		} catch (error: unknown) {
-			// console.log("error", JSON.stringify(error));
 			this.logger.warn(`Failed to delete file ${filename}:`, error);
 		}
 	}
