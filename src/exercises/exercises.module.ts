@@ -8,7 +8,14 @@ import { CommonModule } from "src/common/common.module";
 import { QuizService } from "./quiz.service";
 import { ExerciseQueryService } from "./exercise-query.service";
 import { ExerciseValidationService } from "./exercise-validation.service";
-import { EXERCISE_RULES_SYMBOL, exerciseRulesSettings } from "src/configs/exercise.config";
+import { EXERCISE_RULES_SYMBOL, ExerciseRulesConfig } from "src/exercises/ExerciseRulesConfig";
+
+export const exerciseRulesSettings: ExerciseRulesConfig = {
+	DISTRACTORS_PER_QUESTION: 3,
+	MIN_DISTRACTORS_FOR_EXERCISE: 5,
+	MIN_DISTRACTOR_CHAR_LENGTH: 1,
+	MAX_DISTRACTOR_CHAR_LENGTH: 50,
+};
 
 @Module({
 	imports: [CommonModule, UsersModule, CollectionsModule],

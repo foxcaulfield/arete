@@ -1,6 +1,6 @@
 import { ConflictException, Inject, Injectable } from "@nestjs/common";
 import { ExerciseType } from "@prisma/client";
-import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/configs/exercise.config";
+import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/exercises/ExerciseRulesConfig";
 
 @Injectable()
 export class ExerciseValidationService {

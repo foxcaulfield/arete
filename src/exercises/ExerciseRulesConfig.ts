@@ -6,10 +6,3 @@ export type ExerciseRulesConfig = {
 };
 
 export const EXERCISE_RULES_SYMBOL = Symbol("EXERCISE_RULES_CONFIG_KEY");
-
-export const exerciseRulesSettings: ExerciseRulesConfig = {
-	DISTRACTORS_PER_QUESTION: 3,
-	MIN_DISTRACTORS_FOR_EXERCISE: 5,
-	MIN_DISTRACTOR_CHAR_LENGTH: 1,
-	MAX_DISTRACTOR_CHAR_LENGTH: 50,
-};
