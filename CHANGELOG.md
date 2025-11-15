@@ -1,3 +1,7 @@
+## 1.4.0-beta.2 (2025-11-15)
+
+* feat: add UtilsService and refactor QuizService to utilize utility methods ([bcc4cbd](https://github.com/foxcaulfield/arete/commit/bcc4cbd))
+
 ## 1.4.0-beta.1 (2025-11-15)
 
 * feat: integrate QuizService into ExercisesController and ExercisesModule ([75f20df](https://github.com/foxcaulfield/arete/commit/75f20df))
