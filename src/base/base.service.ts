@@ -1,22 +1,12 @@
 import { ClassConstructor, ClassTransformOptions, plainToInstance } from "class-transformer";
-import { NotArray, OneOrMany, PaginationMetaDto } from "src/common/types";
+import { NotArray, OneOrMany } from "src/common/types";
 
 export abstract class BaseService {
 	private readonly DEFAULT_TRANSFORM_OPTIONS: ClassTransformOptions = {
 		excludeExtraneousValues: true,
 		enableImplicitConversion: true,
 	};
-	protected createPaginationMeta(total: number, page: number, limit: number): PaginationMetaDto {
-		const totalPages = Math.ceil(total / limit);
-		return {
-			page,
-			limit,
-			totalItems: total,
-			totalPages,
-			hasPreviousPage: page > 1,
-			hasNextPage: page < totalPages,
-		};
-	}
+
 	protected toResponseDto<T, V extends NotArray>(DtoClass: ClassConstructor<T>, entity: V): T;
 	protected toResponseDto<T, V extends NotArray>(DtoClass: ClassConstructor<T>, entity: Array<V>): T[];
 	protected toResponseDto<T, V extends NotArray>(DtoClass: ClassConstructor<T>, entity: OneOrMany<V>): OneOrMany<T> {

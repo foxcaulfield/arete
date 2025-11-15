@@ -4,6 +4,7 @@ import { FileStorageModule } from "@getlarge/nestjs-tools-file-storage";
 import { ConfigService } from "@nestjs/config";
 import { fileStorageFactory } from "src/configs/file-storage.config";
 import { UtilsService } from "./utils.service";
+import { PaginationService } from "./pagination.service";
 
 @Module({
 	imports: [
@@ -12,7 +13,7 @@ import { UtilsService } from "./utils.service";
 			useFactory: fileStorageFactory,
 		}),
 	],
-	providers: [FilesService, UtilsService],
-	exports: [FilesService, UtilsService],
+	providers: [FilesService, UtilsService, PaginationService],
+	exports: [FilesService, UtilsService, PaginationService],
 })
 export class CommonModule {}

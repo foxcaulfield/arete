@@ -13,6 +13,7 @@ import { CreateCollectionDto } from "./dto/create-collection.dto";
 import { ResponseCollectionDto } from "./dto/response-collection.dto";
 import { UpdateCollectionDto } from "./dto/update-collection.dto";
 import { UsersService } from "src/users/users.service";
+import { PaginationService } from "src/common/pagination.service";
 
 type CollectionWithUser = Collection & { user?: Pick<User, "id" | "name"> };
 
@@ -45,7 +46,8 @@ export class CollectionsService extends BaseService {
 	/* Public methods */
 	public constructor(
 		private readonly prismaService: PrismaService,
-		private readonly usersService: UsersService
+		private readonly usersService: UsersService,
+		private readonly paginationService: PaginationService
 	) {
 		super();
 	}
@@ -68,16 +70,19 @@ export class CollectionsService extends BaseService {
 	}
 
 	public async getAllCollections(page = 1, limit = 10): Promise<PaginatedResponseDto<ResponseCollectionDto>> {
-		const skip = (page - 1) * limit;
+		// const skip = (page - 1) * limit;
+		const skip = this.paginationService.calculateSkip(page, limit);
 		const [collections, total] = await Promise.all([
 			this.prismaService.collection.findMany({ skip, take: limit, include: this.withUser }),
 			this.prismaService.collection.count(),
 		]);
 
-		return {
-			data: this.toResponseDto(ResponseCollectionDto, collections),
-			pagination: this.createPaginationMeta(total, page, limit),
-		};
+		return this.paginationService.buildPaginatedResponse(
+			this.toResponseDto(ResponseCollectionDto, collections),
+			total,
+			page,
+			limit
+		);
 	}
 
 	public async getCollectionById(id: string, currentUserId: string): Promise<ResponseCollectionDto> {
@@ -173,7 +178,7 @@ export class CollectionsService extends BaseService {
 		page = 1,
 		limit = 10
 	): Promise<PaginatedResponseDto<ResponseCollectionDto>> {
-		const skip = (page - 1) * limit;
+		const skip = this.paginationService.calculateSkip(page, limit);
 		const [collections, total] = await Promise.all([
 			this.prismaService.collection.findMany({
 				where: { userId: targetUserId },
@@ -240,10 +245,12 @@ export class CollectionsService extends BaseService {
 
 		// console.log("COLLECTIONS WITH ATTEMPTS:", collectionsWithAttempts);
 
-		return {
-			data: this.toResponseDto(ResponseCollectionDto, collectionsWithAttempts),
-			pagination: this.createPaginationMeta(total, page, limit),
-		};
+		return this.paginationService.buildPaginatedResponse(
+			this.toResponseDto(ResponseCollectionDto, collectionsWithAttempts),
+			total,
+			page,
+			limit
+		);
 	}
 
 	public async countCollections(userId?: string): Promise<number> {

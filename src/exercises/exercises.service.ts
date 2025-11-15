@@ -15,12 +15,13 @@ import { BaseService } from "src/base/base.service";
 import { CollectionsService } from "src/collections/collections.service";
 import { UsersService } from "src/users/users.service";
 import { PaginatedResponseDto } from "src/common/types";
-import { Exercise, Prisma, Collection, User } from "@prisma/client";
+import { Exercise, Collection, User } from "@prisma/client";
 
 import { ExerciseFileType } from "src/common/enums/exercise-file-type.enum";
 import { FilesService } from "src/common/files.service";
 import { ExerciseQueryService } from "./exercise-query.service";
 import { ExerciseValidationService } from "./exercise-validation.service";
+import { PaginationService } from "src/common/pagination.service";
 
 type MulterFile = Express.Multer.File;
 
@@ -47,7 +48,8 @@ export class ExercisesService extends BaseService {
 		private readonly collectionsService: CollectionsService,
 		private readonly filesService: FilesService,
 		private readonly exerciseQueryService: ExerciseQueryService,
-		private readonly exerciseValidationService: ExerciseValidationService
+		private readonly exerciseValidationService: ExerciseValidationService,
+		private readonly paginationService: PaginationService
 	) {
 		super();
 	}
@@ -108,17 +110,17 @@ export class ExercisesService extends BaseService {
 		collectionId: string,
 		filter: FilterExerciseDto
 	): Promise<PaginatedResponseDto<ResponseExerciseDto>> {
-		const skip = (filter.page - 1) * filter.limit;
 		await this.validateCollectionAccess(currentUserId, collectionId);
 
-		const where: Prisma.ExerciseWhereInput = { collectionId };
-		const total = await this.prismaService.exercise.count({ where });
+		const total = await this.prismaService.exercise.count({ where: { collectionId } });
 
 		if (total === 0) {
-			return {
-				data: this.toResponseDto(ResponseExerciseDto, []),
-				pagination: this.createPaginationMeta(total, filter.page, filter.limit),
-			};
+			return this.paginationService.buildPaginatedResponse(
+				this.toResponseDto(ResponseExerciseDto, []),
+				total,
+				filter.page,
+				filter.limit
+			);
 		}
 
 		// const [exercises, total] = await Promise.all([
@@ -130,6 +132,7 @@ export class ExercisesService extends BaseService {
 		// 	}),
 		// 	this.prismaService.exercise.count({ where }),
 		// ]);
+		const skip = this.paginationService.calculateSkip(filter.page, filter.limit);
 
 		const rows: Array<
 			Exercise & {
@@ -143,10 +146,12 @@ export class ExercisesService extends BaseService {
 			skip
 		);
 
-		return {
-			data: this.toResponseDto(ResponseExerciseDto, rows),
-			pagination: this.createPaginationMeta(total, filter.page, filter.limit),
-		};
+		return this.paginationService.buildPaginatedResponse(
+			this.toResponseDto(ResponseExerciseDto, rows),
+			total,
+			filter.page,
+			filter.limit
+		);
 	}
 
 	public async getExerciseById(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
