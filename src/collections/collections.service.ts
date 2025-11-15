@@ -238,7 +238,7 @@ export class CollectionsService extends BaseService {
 			})
 		);
 
-		console.log("COLLECTIONS WITH ATTEMPTS:", collectionsWithAttempts);
+		// console.log("COLLECTIONS WITH ATTEMPTS:", collectionsWithAttempts);
 
 		return {
 			data: this.toResponseDto(ResponseCollectionDto, collectionsWithAttempts),

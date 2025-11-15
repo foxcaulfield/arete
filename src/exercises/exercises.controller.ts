@@ -27,10 +27,12 @@ import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { multerConfig, multerField as field } from "src/configs/multer.config";
 import { ExerciseFileType } from "../common/enums/exercise-file-type.enum";
 import { QuizService } from "./quiz.service";
+import { RateLimit } from "src/decorators/rate-limit.decorator";
 
 type MulterFiles = Express.Multer.File[];
 type UploadedExerciseFiles = { audio?: MulterFiles; image?: MulterFiles };
 
+@RateLimit(5)
 @Controller("exercises")
 export class ExercisesController {
 	public constructor(

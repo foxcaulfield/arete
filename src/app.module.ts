@@ -19,6 +19,8 @@ import { PrismaClient, UserRole } from "@prisma/client";
 
 import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 import { CommonModule } from "./common/common.module";
+import { RateLimitGuard } from "./guards/rate-limit.guard";
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
 	imports: [
@@ -88,6 +90,7 @@ import { CommonModule } from "./common/common.module";
 		CollectionsModule,
 		ExercisesModule,
 		CommonModule,
+		ScheduleModule.forRoot(),
 	],
 	controllers: [AppController],
 	providers: [
@@ -104,6 +107,10 @@ import { CommonModule } from "./common/common.module";
 		{
 			provide: APP_GUARD,
 			useClass: PermissionsGuard,
+		},
+		{
+			provide: APP_GUARD,
+			useClass: RateLimitGuard,
 		},
 		SignUpHook,
 	],
