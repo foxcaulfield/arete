@@ -7,10 +7,11 @@ import { CollectionsModule } from "src/collections/collections.module";
 import { CommonModule } from "src/common/common.module";
 import { QuizService } from "./quiz.service";
 import { ExerciseQueryService } from "./exercise-query.service";
+import { ExerciseValidationService } from "./exercise-validation.service";
 
 @Module({
 	imports: [CommonModule, UsersModule, CollectionsModule],
 	controllers: [ExercisesController],
-	providers: [ExercisesService, PrismaService, QuizService, ExerciseQueryService],
+	providers: [ExercisesService, PrismaService, QuizService, ExerciseQueryService, ExerciseValidationService],
 })
 export class ExercisesModule {}

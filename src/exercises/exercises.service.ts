@@ -1,5 +1,4 @@
 import {
-	ConflictException,
 	ForbiddenException,
 	Injectable,
 	InternalServerErrorException,
@@ -16,11 +15,12 @@ import { BaseService } from "src/base/base.service";
 import { CollectionsService } from "src/collections/collections.service";
 import { UsersService } from "src/users/users.service";
 import { PaginatedResponseDto } from "src/common/types";
-import { Exercise, ExerciseType, Prisma, Collection, User } from "@prisma/client";
+import { Exercise, Prisma, Collection, User } from "@prisma/client";
 
 import { ExerciseFileType } from "src/common/enums/exercise-file-type.enum";
 import { FilesService } from "src/common/files.service";
 import { ExerciseQueryService } from "./exercise-query.service";
+import { ExerciseValidationService } from "./exercise-validation.service";
 
 type MulterFile = Express.Multer.File;
 
@@ -34,10 +34,7 @@ export class ExercisesService extends BaseService {
 	private readonly logger = new Logger(ExercisesService.name);
 
 	// Configuration constants
-	public readonly distractorsMinLimit = 5;
 	public readonly distractorInQuestionLimit = 3;
-	public readonly maxDistractorLength = 50;
-	public readonly minDistractorLength = 1;
 
 	private readonly fileTypeToUrlPropMap = {
 		[ExerciseFileType.AUDIO]: "audioUrl",
@@ -49,7 +46,8 @@ export class ExercisesService extends BaseService {
 		private readonly usersService: UsersService,
 		private readonly collectionsService: CollectionsService,
 		private readonly filesService: FilesService,
-		private readonly exerciseQueryService: ExerciseQueryService
+		private readonly exerciseQueryService: ExerciseQueryService,
+		private readonly exerciseValidationService: ExerciseValidationService
 	) {
 		super();
 	}
@@ -62,7 +60,12 @@ export class ExercisesService extends BaseService {
 		files?: UploadedFiles
 	): Promise<ResponseExerciseDto> {
 		await this.validateCollectionAccess(currentUserId, dto.collectionId);
-		this.validateAnswersAndDistractors(dto.correctAnswer, dto.additionalCorrectAnswers, dto.distractors, dto.type);
+		this.exerciseValidationService.validateAnswersAndDistractors(
+			dto.correctAnswer,
+			dto.additionalCorrectAnswers,
+			dto.distractors,
+			dto.type
+		);
 		let audioFilename: string | null = null;
 		let imageFilename: string | null = null;
 
@@ -162,7 +165,7 @@ export class ExercisesService extends BaseService {
 		const exercise = await this.findExerciseOrFail(exerciseId);
 		await this.validateCollectionAccess(currentUserId, exercise.collectionId);
 
-		this.validateAnswersAndDistractors(
+		this.exerciseValidationService.validateAnswersAndDistractors(
 			dto.correctAnswer ?? exercise.correctAnswer,
 			dto.additionalCorrectAnswers ?? exercise.additionalCorrectAnswers,
 			dto.distractors ?? exercise.distractors,
@@ -282,78 +285,6 @@ export class ExercisesService extends BaseService {
 		}
 
 		return exercise;
-	}
-
-	/**
-	 * Validates answers and distractors for an exercise
-	 */
-	private validateAnswersAndDistractors(
-		correctAnswer: string,
-		additionalCorrectAnswers?: string[],
-		distractors?: string[],
-		type?: ExerciseType
-	): void {
-		// Validate correct answer isn't in additional answers
-		if (additionalCorrectAnswers?.includes(correctAnswer)) {
-			throw new ConflictException("Correct answer cannot be listed as an additional correct answer");
-		}
-
-		// Validate additional correct answers are unique
-		if (additionalCorrectAnswers?.length) {
-			const uniqueAnswers = new Set(additionalCorrectAnswers);
-			if (uniqueAnswers.size !== additionalCorrectAnswers.length) {
-				throw new ConflictException("Additional correct answers must be unique");
-			}
-		}
-
-		// Validate distractors
-		if (distractors?.length) {
-			this.validateDistractors(distractors, correctAnswer, additionalCorrectAnswers);
-		}
-
-		// Validate minimum distractors for single-choice questions
-		if (type === ExerciseType.CHOICE_SINGLE) {
-			if (!distractors?.length || distractors.length < this.distractorsMinLimit) {
-				throw new ConflictException(
-					`At least ${this.distractorsMinLimit} distractors are required for single-choice questions`
-				);
-			}
-		}
-	}
-
-	/**
-	 * Validates distractor-specific rules
-	 */
-	private validateDistractors(
-		distractors: string[],
-		correctAnswer: string,
-		additionalCorrectAnswers?: string[]
-	): void {
-		// Check uniqueness
-		const uniqueDistractors = new Set(distractors);
-		if (uniqueDistractors.size !== distractors.length) {
-			throw new ConflictException("Distractors must be unique");
-		}
-
-		// Check against correct answer
-		if (distractors.includes(correctAnswer)) {
-			throw new ConflictException("Distractors cannot be the same as the correct answer");
-		}
-
-		// Check against additional correct answers
-		if (additionalCorrectAnswers?.some((answer): boolean => distractors.includes(answer))) {
-			throw new ConflictException("Distractors cannot be the same as any additional correct answer");
-		}
-
-		// Check length constraints
-		const invalidDistractor = distractors.find(
-			(d): boolean => d.length < this.minDistractorLength || d.length > this.maxDistractorLength
-		);
-		if (invalidDistractor) {
-			throw new ConflictException(
-				`Each distractor must be ${this.minDistractorLength}-${this.maxDistractorLength} characters`
-			);
-		}
 	}
 
 	/**
