@@ -1,3 +1,7 @@
+## 1.4.0-beta.12 (2025-11-15)
+
+* feat: implement CollectionAccessService for validating user access to collections ([b38111c](https://github.com/foxcaulfield/arete/commit/b38111c))
+
 ## 1.4.0-beta.11 (2025-11-15)
 
 * fix: update import paths for ExerciseRulesConfig to use correct file name ([7b787af](https://github.com/foxcaulfield/arete/commit/7b787af))
