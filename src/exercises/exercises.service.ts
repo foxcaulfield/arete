@@ -131,43 +131,7 @@ export class ExercisesService extends BaseService {
 				totalAttempts: number;
 				correctAttempts: number;
 			}
-		> = await this.prismaService.$queryRaw(
-			Prisma.sql`
-            SELECT
-				e.id,
-                e.question,
-                e."audioUrl"                               AS "audioUrl",
-                e."imageUrl"                               AS "imageUrl",
-                e.type                                     AS "type",
-                e.translation                              AS "translation",
-                e.explanation                              AS "explanation",
-                e.distractors                              AS "distractors",
-                e."collectionId"                           AS "collectionId",
-                e."createdAt"                              AS "createdAt",
-                e."updatedAt"                              AS "updatedAt",
-                e."isActive"                               AS "isActive",
-                e."additional_correct_answers"             AS "additionalCorrectAnswers",
-                e."correct_answer"                         AS "correctAnswer",
-                COALESCE(a.total, 0)    AS "totalAttempts",
-                COALESCE(c.correct, 0)  AS "correctAttempts"
-            FROM "exercises" e
-            LEFT JOIN (
-                SELECT "exerciseId", COUNT(*)::int AS total
-                FROM "attempts"
-                WHERE "userId" = ${currentUserId}
-                GROUP BY "exerciseId"
-            ) a ON e.id = a."exerciseId"
-            LEFT JOIN (
-                SELECT "exerciseId", COUNT(*)::int AS correct
-                FROM "attempts"
-                WHERE "userId" = ${currentUserId} AND "isCorrect" = true
-                GROUP BY "exerciseId"
-            ) c ON e.id = c."exerciseId"
-            WHERE e."collectionId" = ${collectionId}
-            ORDER BY COALESCE(a.total, 0) DESC NULLS LAST
-            LIMIT ${filter.limit} OFFSET ${skip};
-        `
-		);
+		> = await this.getTopMostAttemptedExercises(collectionId, currentUserId, filter.limit, skip);
 
 		return {
 			data: this.toResponseDto(ResponseExerciseDto, rows),
@@ -506,5 +470,57 @@ export class ExercisesService extends BaseService {
 			})
 		);
 		return { audioFilename: result[0]?.filename ?? null, imageFilename: result[1]?.filename ?? null };
+	}
+
+	public async getTopMostAttemptedExercises(
+		collectionId: string,
+		userId: string,
+		limit: number = 5,
+		skip: number = 0
+	): Promise<
+		Array<
+			Exercise & {
+				totalAttempts: number;
+				correctAttempts: number;
+			}
+		>
+	> {
+		return await this.prismaService.$queryRaw(
+			Prisma.sql`
+            SELECT
+				e.id,
+                e.question,
+                e."audioUrl"                               AS "audioUrl",
+                e."imageUrl"                               AS "imageUrl",
+                e.type                                     AS "type",
+                e.translation                              AS "translation",
+                e.explanation                              AS "explanation",
+                e.distractors                              AS "distractors",
+                e."collectionId"                           AS "collectionId",
+                e."createdAt"                              AS "createdAt",
+                e."updatedAt"                              AS "updatedAt",
+                e."isActive"                               AS "isActive",
+                e."additional_correct_answers"             AS "additionalCorrectAnswers",
+                e."correct_answer"                         AS "correctAnswer",
+                COALESCE(a.total, 0)    AS "totalAttempts",
+                COALESCE(c.correct, 0)  AS "correctAttempts"
+            FROM "exercises" e
+            LEFT JOIN (
+                SELECT "exerciseId", COUNT(*)::int AS total
+                FROM "attempts"
+                WHERE "userId" = ${userId}
+                GROUP BY "exerciseId"
+            ) a ON e.id = a."exerciseId"
+            LEFT JOIN (
+                SELECT "exerciseId", COUNT(*)::int AS correct
+                FROM "attempts"
+                WHERE "userId" = ${userId} AND "isCorrect" = true
+                GROUP BY "exerciseId"
+            ) c ON e.id = c."exerciseId"
+            WHERE e."collectionId" = ${collectionId}
+            ORDER BY COALESCE(a.total, 0) DESC NULLS LAST
+            LIMIT ${limit} OFFSET ${skip};
+        `
+		);
 	}
 }
