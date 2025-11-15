@@ -8,7 +8,7 @@ import { QuizQuestionDto, UserAnswerDto, UserAnswerFeedbackDto } from "./dto/qui
 import { BaseService } from "src/base/base.service";
 import { UtilsService } from "src/common/utils.service";
 import { ExerciseQueryService } from "./exercise-query.service";
-import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/exercises/ExerciseRulesConfig";
+import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/exercises/exercise-rules.config";
 
 @Injectable()
 export class QuizService extends BaseService {
