@@ -1,3 +1,8 @@
+## 1.4.0-beta.7 (2025-11-15)
+
+* feat: implement ExerciseValidationService for answer and distractor validation ([41fc822](https://github.com/foxcaulfield/arete/commit/41fc822))
+* feat: integrate PaginationService for consistent pagination handling across collections and exercise ([0cd53a0](https://github.com/foxcaulfield/arete/commit/0cd53a0))
+
 ## 1.4.0-beta.6 (2025-11-15)
 
 * feat: add ExerciseQueryService for enhanced exercise retrieval methods ([022be7c](https://github.com/foxcaulfield/arete/commit/022be7c))
