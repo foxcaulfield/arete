@@ -2,7 +2,6 @@ import { Module } from "@nestjs/common";
 import { ExercisesController } from "./exercises.controller";
 import { ExercisesService } from "./exercises.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { UsersModule } from "src/users/users.module";
 import { CollectionsModule } from "src/collections/collections.module";
 import { CommonModule } from "src/common/common.module";
 import { QuizService } from "./quiz.service";
@@ -18,7 +17,7 @@ export const exerciseRulesSettings: ExerciseRulesConfig = {
 };
 
 @Module({
-	imports: [CommonModule, UsersModule, CollectionsModule],
+	imports: [CommonModule, CollectionsModule],
 	controllers: [ExercisesController],
 	providers: [
 		{ provide: EXERCISE_RULES_SYMBOL, useValue: exerciseRulesSettings },

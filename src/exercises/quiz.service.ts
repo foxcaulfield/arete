@@ -1,22 +1,20 @@
-import { ForbiddenException, Inject, Injectable } from "@nestjs/common";
-import { Collection, Exercise, ExerciseType, User } from "@prisma/client";
+import { Inject, Injectable } from "@nestjs/common";
+import { Exercise, ExerciseType } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ExercisesService } from "./exercises.service";
-import { UsersService } from "src/users/users.service";
-import { CollectionsService } from "src/collections/collections.service";
 import { QuizQuestionDto, UserAnswerDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
 import { BaseService } from "src/base/base.service";
 import { UtilsService } from "src/common/utils.service";
 import { ExerciseQueryService } from "./exercise-query.service";
 import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/exercises/exercise-rules.config";
+import { CollectionAccessService } from "src/collections/collection-access.service";
 
 @Injectable()
 export class QuizService extends BaseService {
 	public constructor(
 		private readonly prismaService: PrismaService,
 		private readonly exercisesService: ExercisesService,
-		private readonly collectionsService: CollectionsService,
-		private readonly usersService: UsersService,
+		private readonly collectionAccessService: CollectionAccessService,
 		private readonly utilsService: UtilsService,
 		private readonly exerciseQueryService: ExerciseQueryService,
 		@Inject(EXERCISE_RULES_SYMBOL) private readonly exerciseConfig: ExerciseRulesConfig
@@ -74,7 +72,7 @@ export class QuizService extends BaseService {
 		collectionId: string,
 		exerciseSelectionMode: string = "random"
 	): Promise<QuizQuestionDto> {
-		await this.validateCollectionAccess(currentUserId, collectionId);
+		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
 
 		let exercise: Exercise;
 		if (exerciseSelectionMode === "least-attempted") {
@@ -99,7 +97,7 @@ export class QuizService extends BaseService {
 		collectionId: string,
 		dto: UserAnswerDto
 	): Promise<UserAnswerFeedbackDto> {
-		await this.validateCollectionAccess(currentUserId, collectionId);
+		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
 
 		const exercise = await this.exercisesService.findExerciseOrFail(dto.exerciseId);
 		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
@@ -115,26 +113,5 @@ export class QuizService extends BaseService {
 			explanation: exercise.explanation ?? undefined,
 			nextExerciseId: nextExercise.id,
 		};
-	}
-
-	/* ===== PRIVATE HELPER METHODS ===== */
-
-	/**
-	 * Validates user access to a collection and returns both collection and user
-	 */
-	private async validateCollectionAccess(
-		userId: string,
-		collectionId: string
-	): Promise<{ collection: Collection; currentUser: User }> {
-		const [collection, currentUser] = await Promise.all([
-			this.collectionsService.findCollection(collectionId),
-			this.usersService.findUser(userId),
-		]);
-
-		if (!this.collectionsService.canAccessCollection(collection, currentUser)) {
-			throw new ForbiddenException("You are not allowed to access this collection");
-		}
-
-		return { collection, currentUser };
 	}
 }

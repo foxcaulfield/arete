@@ -1,27 +1,19 @@
-import {
-	ForbiddenException,
-	Injectable,
-	InternalServerErrorException,
-	Logger,
-	NotFoundException,
-	StreamableFile,
-} from "@nestjs/common";
+import { Injectable, InternalServerErrorException, Logger, NotFoundException, StreamableFile } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateExerciseDto } from "./dto/update-exercise.dto";
 import { CreateExerciseDto } from "./dto/create-exercise.dto";
 import { ResponseExerciseDto } from "./dto/response-exercise.dto";
 import { FilterExerciseDto } from "./dto/filter-exercise.dto";
 import { BaseService } from "src/base/base.service";
-import { CollectionsService } from "src/collections/collections.service";
-import { UsersService } from "src/users/users.service";
 import { PaginatedResponseDto } from "src/common/types";
-import { Exercise, Collection, User } from "@prisma/client";
+import { Exercise } from "@prisma/client";
 
 import { ExerciseFileType } from "src/common/enums/exercise-file-type.enum";
 import { FilesService } from "src/common/files.service";
 import { ExerciseQueryService } from "./exercise-query.service";
 import { ExerciseValidationService } from "./exercise-validation.service";
 import { PaginationService } from "src/common/pagination.service";
+import { CollectionAccessService } from "src/collections/collection-access.service";
 
 type MulterFile = Express.Multer.File;
 
@@ -41,12 +33,11 @@ export class ExercisesService extends BaseService {
 
 	public constructor(
 		private readonly prismaService: PrismaService,
-		private readonly usersService: UsersService,
-		private readonly collectionsService: CollectionsService,
 		private readonly filesService: FilesService,
 		private readonly exerciseQueryService: ExerciseQueryService,
 		private readonly exerciseValidationService: ExerciseValidationService,
-		private readonly paginationService: PaginationService
+		private readonly paginationService: PaginationService,
+		private readonly collectionAccessService: CollectionAccessService
 	) {
 		super();
 	}
@@ -58,7 +49,7 @@ export class ExercisesService extends BaseService {
 		dto: CreateExerciseDto,
 		files?: UploadedFiles
 	): Promise<ResponseExerciseDto> {
-		await this.validateCollectionAccess(currentUserId, dto.collectionId);
+		await this.collectionAccessService.validateCollectionAccess(currentUserId, dto.collectionId);
 		this.exerciseValidationService.validateAnswersAndDistractors(
 			dto.correctAnswer,
 			dto.additionalCorrectAnswers,
@@ -107,7 +98,7 @@ export class ExercisesService extends BaseService {
 		collectionId: string,
 		filter: FilterExerciseDto
 	): Promise<PaginatedResponseDto<ResponseExerciseDto>> {
-		await this.validateCollectionAccess(currentUserId, collectionId);
+		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
 
 		const total = await this.prismaService.exercise.count({ where: { collectionId } });
 
@@ -153,7 +144,7 @@ export class ExercisesService extends BaseService {
 
 	public async getExerciseById(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
 		const exercise = await this.findExerciseOrFail(exerciseId);
-		await this.validateCollectionAccess(currentUserId, exercise.collectionId);
+		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
 
 		return this.toResponseDto(ResponseExerciseDto, exercise);
 	}
@@ -165,7 +156,7 @@ export class ExercisesService extends BaseService {
 		files?: UploadedFiles
 	): Promise<ResponseExerciseDto> {
 		const exercise = await this.findExerciseOrFail(exerciseId);
-		await this.validateCollectionAccess(currentUserId, exercise.collectionId);
+		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
 
 		this.exerciseValidationService.validateAnswersAndDistractors(
 			dto.correctAnswer ?? exercise.correctAnswer,
@@ -218,7 +209,7 @@ export class ExercisesService extends BaseService {
 
 	public async delete(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
 		const exercise = await this.findExerciseOrFail(exerciseId);
-		await this.validateCollectionAccess(currentUserId, exercise.collectionId);
+		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
 
 		// Delete associated files (non-blocking)
 		await this.deleteExerciseFiles(exercise);
@@ -248,31 +239,12 @@ export class ExercisesService extends BaseService {
 			throw new NotFoundException("Exercise not found for the given file");
 		}
 
-		await this.validateCollectionAccess(currentUserId, exercise.collectionId);
+		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
 
 		return this.filesService.getFile({ filetype, filename });
 	}
 
 	/* ===== PRIVATE HELPER METHODS ===== */
-
-	/**
-	 * Validates user access to a collection and returns both collection and user
-	 */
-	private async validateCollectionAccess(
-		userId: string,
-		collectionId: string
-	): Promise<{ collection: Collection; currentUser: User }> {
-		const [collection, currentUser] = await Promise.all([
-			this.collectionsService.findCollection(collectionId),
-			this.usersService.findUser(userId),
-		]);
-
-		if (!this.collectionsService.canAccessCollection(collection, currentUser)) {
-			throw new ForbiddenException("You are not allowed to access this collection");
-		}
-
-		return { collection, currentUser };
-	}
 
 	/**
 	 * Finds an exercise by ID or throws NotFoundException
