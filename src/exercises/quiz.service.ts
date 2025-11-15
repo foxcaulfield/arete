@@ -7,6 +7,7 @@ import { CollectionsService } from "src/collections/collections.service";
 import { QuizQuestionDto, UserAnswerDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
 import { BaseService } from "src/base/base.service";
 import { UtilsService } from "src/common/utils.service";
+import { ExerciseQueryService } from "./exercise-query.service";
 
 @Injectable()
 export class QuizService extends BaseService {
@@ -15,7 +16,8 @@ export class QuizService extends BaseService {
 		private readonly exercisesService: ExercisesService,
 		private readonly collectionsService: CollectionsService,
 		private readonly usersService: UsersService,
-		private readonly utilsService: UtilsService
+		private readonly utilsService: UtilsService,
+		private readonly exerciseQueryService: ExerciseQueryService
 	) {
 		super();
 	}
@@ -74,9 +76,9 @@ export class QuizService extends BaseService {
 
 		let exercise: Exercise;
 		if (exerciseSelectionMode === "least-attempted") {
-			exercise = await this.exercisesService.getLeastAttemptedExercise(collectionId, currentUserId);
+			exercise = await this.exerciseQueryService.getLeastAttemptedExercise(collectionId, currentUserId);
 		} else {
-			exercise = await this.exercisesService.getRandomActiveExercise(collectionId);
+			exercise = await this.exerciseQueryService.getRandomActiveExercise(collectionId);
 		}
 
 		const updatedDistractors =
