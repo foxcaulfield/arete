@@ -10,8 +10,7 @@ export class PaginationService {
 	// public createPaginationMeta(total: number, page: number, limit: number): PaginationMetaDto {}
 	protected createPaginationMeta(total: number, page: number, limit: number): PaginationMetaDto {
 		const totalPages = Math.max(1, Math.ceil(total / limit));
-		let safePage = Math.max(1, page);
-		safePage = Math.min(safePage, totalPages);
+		const safePage = Math.min(Math.max(page, 1), totalPages);
 		return {
 			page: safePage,
 			limit,
