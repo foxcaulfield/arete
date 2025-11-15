@@ -1,3 +1,7 @@
+## 1.4.0-beta.10 (2025-11-15)
+
+* feat: create ExerciseRulesConfig for configurable exercise settings and update imports ([7516251](https://github.com/foxcaulfield/arete/commit/7516251))
+
 ## 1.4.0-beta.9 (2025-11-15)
 
 * feat: introduce ExerciseRulesConfig for configurable distractor settings in exercises ([10e6529](https://github.com/foxcaulfield/arete/commit/10e6529))
