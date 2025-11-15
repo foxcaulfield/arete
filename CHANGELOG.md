@@ -1,3 +1,8 @@
+## 1.4.0-beta.11 (2025-11-15)
+
+* fix: update import paths for ExerciseRulesConfig to use correct file name ([7b787af](https://github.com/foxcaulfield/arete/commit/7b787af))
+* feat: add ExerciseRulesConfig type for exercise configuration settings ([b845487](https://github.com/foxcaulfield/arete/commit/b845487))
+
 ## 1.4.0-beta.10 (2025-11-15)
 
 * feat: create ExerciseRulesConfig for configurable exercise settings and update imports ([7516251](https://github.com/foxcaulfield/arete/commit/7516251))
