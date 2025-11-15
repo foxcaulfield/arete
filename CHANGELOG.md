@@ -1,3 +1,7 @@
+## 1.4.0-beta.8 (2025-11-15)
+
+* feat: add CollectionAnalyticsService for enriching collections with user-specific attempt and exerci ([a90664c](https://github.com/foxcaulfield/arete/commit/a90664c))
+
 ## 1.4.0-beta.7 (2025-11-15)
 
 * feat: implement ExerciseValidationService for answer and distractor validation ([41fc822](https://github.com/foxcaulfield/arete/commit/41fc822))
