@@ -1,3 +1,7 @@
+## 1.4.0-beta.3 (2025-11-15)
+
+* feat: refactor file upload handling in ExercisesService ([ad099a6](https://github.com/foxcaulfield/arete/commit/ad099a6))
+
 ## 1.4.0-beta.2 (2025-11-15)
 
 * feat: add UtilsService and refactor QuizService to utilize utility methods ([bcc4cbd](https://github.com/foxcaulfield/arete/commit/bcc4cbd))
