@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable } from "@nestjs/common";
 import { Collection, Exercise, ExerciseType, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ExercisesService } from "./exercises.service";
@@ -8,6 +8,7 @@ import { QuizQuestionDto, UserAnswerDto, UserAnswerFeedbackDto } from "./dto/qui
 import { BaseService } from "src/base/base.service";
 import { UtilsService } from "src/common/utils.service";
 import { ExerciseQueryService } from "./exercise-query.service";
+import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/configs/exercise.config";
 
 @Injectable()
 export class QuizService extends BaseService {
@@ -17,7 +18,8 @@ export class QuizService extends BaseService {
 		private readonly collectionsService: CollectionsService,
 		private readonly usersService: UsersService,
 		private readonly utilsService: UtilsService,
-		private readonly exerciseQueryService: ExerciseQueryService
+		private readonly exerciseQueryService: ExerciseQueryService,
+		@Inject(EXERCISE_RULES_SYMBOL) private readonly exerciseConfig: ExerciseRulesConfig
 	) {
 		super();
 	}
@@ -61,7 +63,7 @@ export class QuizService extends BaseService {
 	private getRandomDistractors(correctAnswer: string, allDistractors: string[]): string[] {
 		const selectedDistractors = this.utilsService
 			.shuffleArray([...allDistractors])
-			.slice(0, this.exercisesService.distractorInQuestionLimit);
+			.slice(0, this.exerciseConfig.DISTRACTORS_PER_QUESTION);
 		return this.utilsService.shuffleArray([...selectedDistractors, correctAnswer]);
 	}
 

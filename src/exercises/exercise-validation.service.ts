@@ -1,12 +1,10 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, Inject, Injectable } from "@nestjs/common";
 import { ExerciseType } from "@prisma/client";
+import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/configs/exercise.config";
 
 @Injectable()
 export class ExerciseValidationService {
-	public readonly distractorsMinLimit = 5;
-	public readonly maxDistractorLength = 50;
-	public readonly minDistractorLength = 1;
-
+	public constructor(@Inject(EXERCISE_RULES_SYMBOL) private readonly exerciseConfig: ExerciseRulesConfig) {}
 	/**
 	 * Validates answers and distractors for an exercise
 	 */
@@ -36,9 +34,9 @@ export class ExerciseValidationService {
 
 		// Validate minimum distractors for single-choice questions
 		if (type === ExerciseType.CHOICE_SINGLE) {
-			if (!distractors?.length || distractors.length < this.distractorsMinLimit) {
+			if (!distractors?.length || distractors.length < this.exerciseConfig.MIN_DISTRACTORS_FOR_EXERCISE) {
 				throw new ConflictException(
-					`At least ${this.distractorsMinLimit} distractors are required for single-choice questions`
+					`At least ${this.exerciseConfig.MIN_DISTRACTORS_FOR_EXERCISE} distractors are required for single-choice questions`
 				);
 			}
 		}
@@ -68,14 +66,12 @@ export class ExerciseValidationService {
 			throw new ConflictException("Distractors cannot be the same as any additional correct answer");
 		}
 
+		const minLen = this.exerciseConfig.MIN_DISTRACTOR_CHAR_LENGTH;
+		const maxLen = this.exerciseConfig.MAX_DISTRACTOR_CHAR_LENGTH;
 		// Check length constraints
-		const invalidDistractor = distractors.find(
-			(d): boolean => d.length < this.minDistractorLength || d.length > this.maxDistractorLength
-		);
+		const invalidDistractor = distractors.find((d): boolean => d.length < minLen || d.length > maxLen);
 		if (invalidDistractor) {
-			throw new ConflictException(
-				`Each distractor must be ${this.minDistractorLength}-${this.maxDistractorLength} characters`
-			);
+			throw new ConflictException(`Each distractor must be ${minLen}-${maxLen} characters`);
 		}
 	}
 }

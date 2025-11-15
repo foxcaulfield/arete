@@ -34,9 +34,6 @@ interface UploadedFiles {
 export class ExercisesService extends BaseService {
 	private readonly logger = new Logger(ExercisesService.name);
 
-	// Configuration constants
-	public readonly distractorInQuestionLimit = 3;
-
 	private readonly fileTypeToUrlPropMap = {
 		[ExerciseFileType.AUDIO]: "audioUrl",
 		[ExerciseFileType.IMAGE]: "imageUrl",
