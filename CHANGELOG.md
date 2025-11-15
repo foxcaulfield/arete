@@ -1,3 +1,7 @@
+## 1.4.0-beta.6 (2025-11-15)
+
+* feat: add ExerciseQueryService for enhanced exercise retrieval methods ([022be7c](https://github.com/foxcaulfield/arete/commit/022be7c))
+
 ## 1.4.0-beta.5 (2025-11-15)
 
 * feat: enhance file upload handling with MIME type validation and error handling ([a643c1a](https://github.com/foxcaulfield/arete/commit/a643c1a))
