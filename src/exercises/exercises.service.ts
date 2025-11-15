@@ -16,7 +16,6 @@ import { BaseService } from "src/base/base.service";
 import { CollectionsService } from "src/collections/collections.service";
 import { UsersService } from "src/users/users.service";
 import { PaginatedResponseDto } from "src/common/types";
-import { UserAnswerDto, QuizQuestionDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
 import { Exercise, ExerciseType, Prisma, Collection, User } from "@prisma/client";
 
 import { ExerciseFileType } from "src/common/enums/exercise-file-type.enum";
@@ -32,10 +31,10 @@ export class ExercisesService extends BaseService {
 	private readonly logger = new Logger(ExercisesService.name);
 
 	// Configuration constants
-	private readonly distractorsMinLimit = 5;
-	private readonly distractorInQuestionLimit = 3;
-	private readonly maxDistractorLength = 50;
-	private readonly minDistractorLength = 1;
+	public readonly distractorsMinLimit = 5;
+	public readonly distractorInQuestionLimit = 3;
+	public readonly maxDistractorLength = 50;
+	public readonly minDistractorLength = 1;
 
 	private readonly fileTypeToUrlPropMap = {
 		[ExerciseFileType.AUDIO]: "audioUrl",
@@ -266,56 +265,6 @@ export class ExercisesService extends BaseService {
 		return this.toResponseDto(ResponseExerciseDto, deleted);
 	}
 
-	/* ===== DRILL METHODS ===== */
-
-	public async getDrillExercise(
-		currentUserId: string,
-		collectionId: string,
-		exerciseSelectionMode: string = "random"
-	): Promise<QuizQuestionDto> {
-		await this.validateCollectionAccess(currentUserId, collectionId);
-
-		let exercise: Exercise;
-		if (exerciseSelectionMode === "least-attempted") {
-			exercise = await this.getLeastAttemptedExercise(collectionId, currentUserId);
-		} else {
-			exercise = await this.getRandomActiveExercise(collectionId);
-		}
-
-		const updatedDistractors =
-			exercise.type === ExerciseType.CHOICE_SINGLE
-				? this.getRandomDistractors(exercise.correctAnswer, exercise.distractors ?? [])
-				: [];
-
-		return this.toResponseDto(QuizQuestionDto, {
-			...exercise,
-			distractors: updatedDistractors,
-		});
-	}
-
-	public async submitDrillAnswer(
-		currentUserId: string,
-		collectionId: string,
-		dto: UserAnswerDto
-	): Promise<UserAnswerFeedbackDto> {
-		await this.validateCollectionAccess(currentUserId, collectionId);
-
-		const exercise = await this.findExerciseOrFail(dto.exerciseId);
-		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
-
-		// TODO: Uncomment when ready to track attempts
-		await this.recordAttempt(currentUserId, exercise.id, isCorrect);
-
-		const nextExercise = await this.getDrillExercise(currentUserId, collectionId);
-
-		return {
-			isCorrect,
-			correctAnswer: exercise.correctAnswer,
-			explanation: exercise.explanation ?? undefined,
-			nextExerciseId: nextExercise.id,
-		};
-	}
-
 	/* ===== FILE HANDLING ===== */
 
 	public async getExerciseFile(
@@ -362,7 +311,7 @@ export class ExercisesService extends BaseService {
 	/**
 	 * Finds an exercise by ID or throws NotFoundException
 	 */
-	private async findExerciseOrFail(id: string): Promise<Exercise> {
+	public async findExerciseOrFail(id: string): Promise<Exercise> {
 		const exercise = await this.prismaService.exercise.findUnique({
 			where: { id },
 		});
@@ -473,7 +422,7 @@ export class ExercisesService extends BaseService {
 	/**
 	 * Retrieves a random active exercise from a collection
 	 */
-	private async getRandomActiveExercise(collectionId: string): Promise<Exercise> {
+	public async getRandomActiveExercise(collectionId: string): Promise<Exercise> {
 		const count = await this.prismaService.exercise.count({
 			where: { collectionId, isActive: true },
 		});
@@ -497,7 +446,7 @@ export class ExercisesService extends BaseService {
 		return exercise;
 	}
 
-	private async getLeastAttemptedExercise(collectionId: string, userId: string): Promise<Exercise> {
+	public async getLeastAttemptedExercise(collectionId: string, userId: string): Promise<Exercise> {
 		const baseWhere = { collectionId, isActive: true };
 
 		// // Global least-attempted (no user filter) — use relation count ordering
@@ -542,66 +491,5 @@ export class ExercisesService extends BaseService {
 		}
 
 		return this.findExerciseOrFail(min.exerciseId);
-	}
-
-	/**
-	 * Mixes correct answer with random distractors
-	 */
-	private getRandomDistractors(correctAnswer: string, allDistractors: string[]): string[] {
-		const selectedDistractors = this.shuffleArray([...allDistractors]).slice(0, this.distractorInQuestionLimit);
-		return this.shuffleArray([...selectedDistractors, correctAnswer]);
-	}
-
-	/**
-	 * Fisher-Yates shuffle algorithm
-	 */
-	private shuffleArray<T>(array: T[]): T[] {
-		const shuffled = [...array];
-		for (let i = shuffled.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			// ensure they are not undefined
-			[shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
-		}
-		return shuffled;
-	}
-
-	/**
-	 * Checks if user's answer is correct (case-insensitive, trimmed)
-	 */
-	private checkAnswer(userAnswer: string, exercise: Exercise): boolean {
-		const normalizedUserAnswer = this.normalize(userAnswer);
-		const normalizedCorrectAnswer = this.normalize(exercise.correctAnswer);
-
-		if (normalizedUserAnswer === normalizedCorrectAnswer) {
-			return true;
-		}
-
-		if (exercise.additionalCorrectAnswers?.length) {
-			return exercise.additionalCorrectAnswers.some(
-				(alt): boolean => normalizedUserAnswer === this.normalize(alt)
-			);
-		}
-
-		return false;
-	}
-
-	/**
-	 * Normalizes answer for comparison (lowercase, trimmed)
-	 */
-	private normalize(answer: string): string {
-		return answer.trim().toLowerCase();
-	}
-
-	/**
-	 * Records user attempt (currently commented out in original)
-	 */
-	private async recordAttempt(userId: string, exerciseId: string, isCorrect: boolean): Promise<void> {
-		await this.prismaService.attempt.create({
-			data: {
-				exerciseId,
-				userId,
-				isCorrect,
-			},
-		});
 	}
 }

@@ -1,0 +1,155 @@
+import { ForbiddenException, Injectable } from "@nestjs/common";
+import { Collection, Exercise, ExerciseType, User } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
+import { ExercisesService } from "./exercises.service";
+import { UsersService } from "src/users/users.service";
+import { CollectionsService } from "src/collections/collections.service";
+import { QuizQuestionDto, UserAnswerDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
+import { BaseService } from "src/base/base.service";
+
+@Injectable()
+export class QuizService extends BaseService {
+	/**
+	 * Normalizes answer for comparison (lowercase, trimmed)
+	 */
+	private normalize(answer: string): string {
+		return answer.trim().toLowerCase();
+	}
+
+	/**
+	 * Fisher-Yates shuffle algorithm
+	 */
+	private shuffleArray<T>(array: T[]): T[] {
+		const shuffled = [...array];
+		for (let i = shuffled.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			// ensure they are not undefined
+			[shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+		}
+		return shuffled;
+	}
+
+	public constructor(
+		private readonly prismaService: PrismaService,
+		private readonly exercisesService: ExercisesService,
+		private readonly collectionsService: CollectionsService,
+		private readonly usersService: UsersService
+	) {
+		super();
+	}
+
+	/**
+	 * Records user attempt (currently commented out in original)
+	 */
+	private async recordAttempt(userId: string, exerciseId: string, isCorrect: boolean): Promise<void> {
+		await this.prismaService.attempt.create({
+			data: {
+				exerciseId,
+				userId,
+				isCorrect,
+			},
+		});
+	}
+
+	/**
+	 * Checks if user's answer is correct (case-insensitive, trimmed)
+	 */
+	private checkAnswer(userAnswer: string, exercise: Exercise): boolean {
+		const normalizedUserAnswer = this.normalize(userAnswer);
+		const normalizedCorrectAnswer = this.normalize(exercise.correctAnswer);
+
+		if (normalizedUserAnswer === normalizedCorrectAnswer) {
+			return true;
+		}
+
+		if (exercise.additionalCorrectAnswers?.length) {
+			return exercise.additionalCorrectAnswers.some(
+				(alt): boolean => normalizedUserAnswer === this.normalize(alt)
+			);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Mixes correct answer with random distractors
+	 */
+	private getRandomDistractors(correctAnswer: string, allDistractors: string[]): string[] {
+		const selectedDistractors = this.shuffleArray([...allDistractors]).slice(
+			0,
+			this.exercisesService.distractorInQuestionLimit
+		);
+		return this.shuffleArray([...selectedDistractors, correctAnswer]);
+	}
+
+	/* ===== DRILL METHODS ===== */
+
+	public async getDrillExercise(
+		currentUserId: string,
+		collectionId: string,
+		exerciseSelectionMode: string = "random"
+	): Promise<QuizQuestionDto> {
+		await this.validateCollectionAccess(currentUserId, collectionId);
+
+		let exercise: Exercise;
+		if (exerciseSelectionMode === "least-attempted") {
+			exercise = await this.exercisesService.getLeastAttemptedExercise(collectionId, currentUserId);
+		} else {
+			exercise = await this.exercisesService.getRandomActiveExercise(collectionId);
+		}
+
+		const updatedDistractors =
+			exercise.type === ExerciseType.CHOICE_SINGLE
+				? this.getRandomDistractors(exercise.correctAnswer, exercise.distractors ?? [])
+				: [];
+
+		return this.toResponseDto(QuizQuestionDto, {
+			...exercise,
+			distractors: updatedDistractors,
+		});
+	}
+
+	public async submitDrillAnswer(
+		currentUserId: string,
+		collectionId: string,
+		dto: UserAnswerDto
+	): Promise<UserAnswerFeedbackDto> {
+		await this.validateCollectionAccess(currentUserId, collectionId);
+
+		const exercise = await this.exercisesService.findExerciseOrFail(dto.exerciseId);
+		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
+
+		// TODO: Uncomment when ready to track attempts
+		await this.recordAttempt(currentUserId, exercise.id, isCorrect);
+
+		const nextExercise = await this.getDrillExercise(currentUserId, collectionId);
+
+		return {
+			isCorrect,
+			correctAnswer: exercise.correctAnswer,
+			explanation: exercise.explanation ?? undefined,
+			nextExerciseId: nextExercise.id,
+		};
+	}
+
+	/* ===== PRIVATE HELPER METHODS ===== */
+
+	/**
+	 * Validates user access to a collection and returns both collection and user
+	 */
+	private async validateCollectionAccess(
+		userId: string,
+		collectionId: string
+	): Promise<{ collection: Collection; currentUser: User }> {
+		const [collection, currentUser] = await Promise.all([
+			this.collectionsService.findCollection(collectionId),
+			this.usersService.findUser(userId),
+		]);
+
+		if (!this.collectionsService.canAccessCollection(collection, currentUser)) {
+			throw new ForbiddenException("You are not allowed to access this collection");
+		}
+
+		return { collection, currentUser };
+	}
+}
