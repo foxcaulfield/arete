@@ -1,3 +1,8 @@
+## 1.4.0-beta.4 (2025-11-15)
+
+* feat: implement rate limiting with RateLimitGuard and associated exceptions ([e85d049](https://github.com/foxcaulfield/arete/commit/e85d049))
+* feat: refactor getTopMostAttemptedExercises method and move query logic to a dedicated function ([1f8db24](https://github.com/foxcaulfield/arete/commit/1f8db24))
+
 ## 1.4.0-beta.3 (2025-11-15)
 
 * feat: refactor file upload handling in ExercisesService ([ad099a6](https://github.com/foxcaulfield/arete/commit/ad099a6))
