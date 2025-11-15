@@ -1,3 +1,7 @@
+## 1.4.0-beta.5 (2025-11-15)
+
+* feat: enhance file upload handling with MIME type validation and error handling ([a643c1a](https://github.com/foxcaulfield/arete/commit/a643c1a))
+
 ## 1.4.0-beta.4 (2025-11-15)
 
 * feat: implement rate limiting with RateLimitGuard and associated exceptions ([e85d049](https://github.com/foxcaulfield/arete/commit/e85d049))
