@@ -6,34 +6,16 @@ import { UsersService } from "src/users/users.service";
 import { CollectionsService } from "src/collections/collections.service";
 import { QuizQuestionDto, UserAnswerDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
 import { BaseService } from "src/base/base.service";
+import { UtilsService } from "src/common/utils.service";
 
 @Injectable()
 export class QuizService extends BaseService {
-	/**
-	 * Normalizes answer for comparison (lowercase, trimmed)
-	 */
-	private normalize(answer: string): string {
-		return answer.trim().toLowerCase();
-	}
-
-	/**
-	 * Fisher-Yates shuffle algorithm
-	 */
-	private shuffleArray<T>(array: T[]): T[] {
-		const shuffled = [...array];
-		for (let i = shuffled.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			// ensure they are not undefined
-			[shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
-		}
-		return shuffled;
-	}
-
 	public constructor(
 		private readonly prismaService: PrismaService,
 		private readonly exercisesService: ExercisesService,
 		private readonly collectionsService: CollectionsService,
-		private readonly usersService: UsersService
+		private readonly usersService: UsersService,
+		private readonly utilsService: UtilsService
 	) {
 		super();
 	}
@@ -55,8 +37,8 @@ export class QuizService extends BaseService {
 	 * Checks if user's answer is correct (case-insensitive, trimmed)
 	 */
 	private checkAnswer(userAnswer: string, exercise: Exercise): boolean {
-		const normalizedUserAnswer = this.normalize(userAnswer);
-		const normalizedCorrectAnswer = this.normalize(exercise.correctAnswer);
+		const normalizedUserAnswer = this.utilsService.trimAndLowercase(userAnswer);
+		const normalizedCorrectAnswer = this.utilsService.trimAndLowercase(exercise.correctAnswer);
 
 		if (normalizedUserAnswer === normalizedCorrectAnswer) {
 			return true;
@@ -64,7 +46,7 @@ export class QuizService extends BaseService {
 
 		if (exercise.additionalCorrectAnswers?.length) {
 			return exercise.additionalCorrectAnswers.some(
-				(alt): boolean => normalizedUserAnswer === this.normalize(alt)
+				(alt): boolean => normalizedUserAnswer === this.utilsService.trimAndLowercase(alt)
 			);
 		}
 
@@ -75,11 +57,10 @@ export class QuizService extends BaseService {
 	 * Mixes correct answer with random distractors
 	 */
 	private getRandomDistractors(correctAnswer: string, allDistractors: string[]): string[] {
-		const selectedDistractors = this.shuffleArray([...allDistractors]).slice(
-			0,
-			this.exercisesService.distractorInQuestionLimit
-		);
-		return this.shuffleArray([...selectedDistractors, correctAnswer]);
+		const selectedDistractors = this.utilsService
+			.shuffleArray([...allDistractors])
+			.slice(0, this.exercisesService.distractorInQuestionLimit);
+		return this.utilsService.shuffleArray([...selectedDistractors, correctAnswer]);
 	}
 
 	/* ===== DRILL METHODS ===== */
