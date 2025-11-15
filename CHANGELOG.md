@@ -1,3 +1,8 @@
+## 1.4.0-beta.1 (2025-11-15)
+
+* feat: integrate QuizService into ExercisesController and ExercisesModule ([75f20df](https://github.com/foxcaulfield/arete/commit/75f20df))
+* chore(merge): back-merge main into develop ([4e05242](https://github.com/foxcaulfield/arete/commit/4e05242))
+
 ## 1.3.0 (2025-11-14)
 
 * Merge branch 'main' into release/1.3.0 ([8bd81a0](https://github.com/foxcaulfield/arete/commit/8bd81a0))
