@@ -21,9 +21,11 @@ import { Exercise, ExerciseType, Prisma, Collection, User } from "@prisma/client
 import { ExerciseFileType } from "src/common/enums/exercise-file-type.enum";
 import { FilesService } from "src/common/files.service";
 
+type MulterFile = Express.Multer.File;
+
 interface UploadedFiles {
-	audio?: Express.Multer.File[];
-	image?: Express.Multer.File[];
+	audio?: MulterFile[];
+	image?: MulterFile[];
 }
 
 @Injectable()
@@ -63,17 +65,10 @@ export class ExercisesService extends BaseService {
 		let imageFilename: string | null = null;
 
 		try {
-			const audioResult = await this.filesService.handleFileUpload({
-				file: files?.audio?.[0],
-				fileType: ExerciseFileType.AUDIO,
-			});
-			const imageResult = await this.filesService.handleFileUpload({
-				file: files?.image?.[0],
-				fileType: ExerciseFileType.IMAGE,
-			});
+			const filesUploadResult = await this.handleExerciseFileUpload({ files });
 
-			audioFilename = audioResult.filename;
-			imageFilename = imageResult.filename;
+			audioFilename = filesUploadResult.audioFilename;
+			imageFilename = filesUploadResult.imageFilename;
 
 			const { collectionId, ...rest } = dto;
 			const exercise = await this.prismaService.exercise.create({
@@ -207,20 +202,15 @@ export class ExercisesService extends BaseService {
 		let imageFilename: string | null = null;
 
 		try {
-			const audioResult = await this.filesService.handleFileUpload({
-				file: files?.audio?.[0],
-				fileType: ExerciseFileType.AUDIO,
-				previousUrl: exercise.audioUrl,
-				setNull: dto.setNullAudio,
+			const { audioFilename: audioResult, imageFilename: imageResult } = await this.handleExerciseFileUpload({
+				files,
+				prevAudio: exercise.audioUrl ?? undefined,
+				prevImage: exercise.imageUrl ?? undefined,
+				setNullAudio: dto.setNullAudio,
+				setNullImage: dto.setNullImage,
 			});
-			const imageResult = await this.filesService.handleFileUpload({
-				file: files?.image?.[0],
-				fileType: ExerciseFileType.IMAGE,
-				previousUrl: exercise.imageUrl,
-				setNull: dto.setNullImage,
-			});
-			audioFilename = audioResult.filename;
-			imageFilename = imageResult.filename;
+			audioFilename = audioResult;
+			imageFilename = imageResult;
 
 			delete dto.setNullAudio;
 			delete dto.setNullImage;
@@ -491,5 +481,30 @@ export class ExercisesService extends BaseService {
 		}
 
 		return this.findExerciseOrFail(min.exerciseId);
+	}
+
+	/* Private */
+	private async handleExerciseFileUpload({
+		files,
+		prevAudio,
+		prevImage,
+		setNullAudio,
+		setNullImage,
+	}: {
+		files?: UploadedFiles;
+		prevAudio?: string;
+		prevImage?: string;
+		setNullAudio?: boolean;
+		setNullImage?: boolean;
+	}): Promise<{ audioFilename: string | null; imageFilename: string | null }> {
+		const result = await Promise.all(
+			[
+				[files?.audio?.[0], ExerciseFileType.AUDIO, prevAudio, setNullAudio] as const,
+				[files?.image?.[0], ExerciseFileType.IMAGE, prevImage, setNullImage] as const,
+			].map(async ([file, fileType, previousUrl, setNull]): Promise<{ filename: string | null }> => {
+				return this.filesService.handleFileUpload({ file, fileType, previousUrl, setNull });
+			})
+		);
+		return { audioFilename: result[0]?.filename ?? null, imageFilename: result[1]?.filename ?? null };
 	}
 }
