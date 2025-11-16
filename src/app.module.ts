@@ -21,7 +21,6 @@ import { join } from "path";
 
 import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 import { CommonModule } from "./common/common.module";
-import { RateLimitGuard } from "./guards/rate-limit.guard";
 import { ScheduleModule } from "@nestjs/schedule";
 import { UiModule } from "./ui/ui.module";
 
@@ -115,10 +114,6 @@ import { UiModule } from "./ui/ui.module";
 		{
 			provide: APP_GUARD,
 			useClass: PermissionsGuard,
-		},
-		{
-			provide: APP_GUARD,
-			useClass: RateLimitGuard,
 		},
 		SignUpHook,
 	],
