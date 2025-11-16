@@ -1,0 +1,17 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+  <section class="hero">
+    <h1>{{ title }}</h1>
+    {% if subtitle %}<p class="muted">{{ subtitle }}</p>{% endif %}
+  </section>
+
+  <section>
+    <h2>Minimal htmx demo</h2>
+    <p>
+      Click the button to fetch the current server time without a full page reload.
+    </p>
+    <button class="btn" hx-get="/ui/time" hx-target="#time" hx-swap="innerHTML">Show server time</button>
+    <div id="time" class="mt"></div>
+  </section>
+{% endblock %}

@@ -5,9 +5,12 @@ import { ConfigService } from "@nestjs/config";
 import { EnvConfig } from "./configs/joi-env.config";
 import { ValidationPipe, BadRequestException } from "@nestjs/common";
 import { ValidationError } from "class-validator";
+import nunjucks from "nunjucks";
+import { join } from "path";
+import { NestExpressApplication } from "@nestjs/platform-express";
 
 async function bootstrap(): Promise<void> {
-	const app = await NestFactory.create(AppModule, {
+	const app = await NestFactory.create<NestExpressApplication>(AppModule, {
 		bodyParser: false,
 	});
 
@@ -15,6 +18,19 @@ async function bootstrap(): Promise<void> {
 	const appMode = configService.get("NODE_ENV", { infer: true });
 	const isProduction = appMode === "production";
 	console.log("App running in", appMode, "mode");
+
+	const viewsDir = join(process.cwd(), "views");
+	const staticDir = join(process.cwd(), "public");
+
+	app.useStaticAssets(staticDir);
+	app.setBaseViewsDir(viewsDir);
+
+	nunjucks.configure(viewsDir, {
+		express: app,
+		autoescape: true,
+	});
+
+	app.setViewEngine("njk");
 
 	app.enableCors({
 		origin: isProduction ? configService.get("CORS_ORIGINS", { infer: true }).split(",") : "*",

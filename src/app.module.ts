@@ -16,6 +16,8 @@ import { ExercisesModule } from "./exercises/exercises.module";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient, UserRole } from "@prisma/client";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { join } from "path";
 
 import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 import { CommonModule } from "./common/common.module";
@@ -90,6 +92,10 @@ import { ScheduleModule } from "@nestjs/schedule";
 		CollectionsModule,
 		ExercisesModule,
 		CommonModule,
+		ServeStaticModule.forRoot({
+			rootPath: join(process.cwd(), "public"),
+			serveRoot: "/static",
+		}),
 		ScheduleModule.forRoot(),
 	],
 	controllers: [AppController],
