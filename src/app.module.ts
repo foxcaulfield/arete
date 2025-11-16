@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { Module } from "@nestjs/common";
+import { Module, MiddlewareConsumer, NestModule } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ConfigModule, ConfigService } from "@nestjs/config";
@@ -23,6 +23,7 @@ import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 import { CommonModule } from "./common/common.module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { UiModule } from "./ui/ui.module";
+import { ViewContextMiddleware } from "./middlewares/view-context.middleware";
 
 @Module({
 	imports: [
@@ -45,6 +46,7 @@ import { UiModule } from "./ui/ui.module";
 				});
 				const auth = betterAuth({
 					// baseURL: process.env.API_URL,
+					basePath: "/api/auth",
 					secret: process.env.BETTER_AUTH_SECRET,
 					database: prismaAdapter(prismaClient, {
 						provider: "postgresql",
@@ -118,4 +120,8 @@ import { UiModule } from "./ui/ui.module";
 		SignUpHook,
 	],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+	public configure(consumer: MiddlewareConsumer): void {
+		consumer.apply(ViewContextMiddleware).forRoutes("/ui", "ui/*");
+	}
+}

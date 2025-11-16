@@ -24,10 +24,12 @@ async function bootstrap(): Promise<void> {
 
 	app.useStaticAssets(staticDir);
 	app.setBaseViewsDir(viewsDir);
-
+	const expressInstance = app.getHttpAdapter().getInstance();
 	nunjucks.configure(viewsDir, {
-		express: app.getHttpAdapter().getInstance(),
+		express: expressInstance,
 		autoescape: true,
+		noCache: !isProduction,
+		watch: !isProduction,
 	});
 
 	app.setViewEngine("njk");

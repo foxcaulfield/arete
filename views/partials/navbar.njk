@@ -3,7 +3,32 @@
     <a href="/ui">Arete</a>
   </div>
   <ul class="navbar__links">
-    <li><a href="/ui">Home</a></li>
-    <li><a href="/collections/list">Collections API</a></li>
+    <li>
+      <a href="/ui">Home</a>
+    </li>
+    {% if not isAuthenticated %}
+      <li>
+        <a href="/ui/auth/login">Login</a>
+      </li>
+    {% endif %}
+    {% if not isAuthenticated %}
+      <li>
+        <a href="/ui/auth/signup">Sign up</a>
+      </li>
+    {% endif %}
+    {% if isAuthenticated %}
+      <li>
+        <a href="/ui/profile">Profile</a>
+      </li>
+    {% endif %}
+    {% if isAuthenticated %}
+      <li>
+        <a 
+        hx-post="/api/auth/sign-out" 
+        hx-swap="none"
+        hx-on::after-request="window.location='/ui/auth/login'"
+      >Sign Out</a>
+      </li>
+    {% endif %}
   </ul>
 </nav>
