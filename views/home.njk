@@ -12,6 +12,6 @@
       Click the button to fetch the current server time without a full page reload.
     </p>
     <button class="btn" hx-get="/ui/time" hx-target="#time" hx-swap="innerHTML">Show server time</button>
-    <div id="time" class="mt"></div>
+    <div id="time" class="mt">{{now}}</div>
   </section>
 {% endblock %}

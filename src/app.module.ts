@@ -23,6 +23,7 @@ import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 import { CommonModule } from "./common/common.module";
 import { RateLimitGuard } from "./guards/rate-limit.guard";
 import { ScheduleModule } from "@nestjs/schedule";
+import { UiModule } from "./ui/ui.module";
 
 @Module({
 	imports: [
@@ -97,6 +98,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 			serveRoot: "/static",
 		}),
 		ScheduleModule.forRoot(),
+		UiModule,
 	],
 	controllers: [AppController],
 	providers: [

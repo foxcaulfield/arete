@@ -26,7 +26,7 @@ async function bootstrap(): Promise<void> {
 	app.setBaseViewsDir(viewsDir);
 
 	nunjucks.configure(viewsDir, {
-		express: app,
+		express: app.getHttpAdapter().getInstance(),
 		autoescape: true,
 	});
 
