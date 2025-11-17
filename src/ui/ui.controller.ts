@@ -1,9 +1,16 @@
-import { Controller, Get, Render } from "@nestjs/common";
+import { Controller, Get, Query, Render } from "@nestjs/common";
 import { AllowAnonymous, Session, type UserSession } from "@thallesp/nestjs-better-auth";
+import { CollectionsService } from "src/collections/collections.service";
+import { ResponseCollectionDto } from "src/collections/dto/response-collection.dto";
 // import { type Response } from "express";
+import { PaginatedResponseDto } from "src/common/types";
+
+type Paginated<T> = PaginatedResponseDto<T>;
 
 @Controller("ui")
 export class UiController {
+	public constructor(private readonly collectionsService: CollectionsService) {}
+
 	@Get("/")
 	@AllowAnonymous()
 	@Render("home.njk")
@@ -50,5 +57,19 @@ export class UiController {
 			name: session.user.name,
 			email: session.user.email,
 		};
+	}
+
+	@Get("/collections")
+	@Render("collections/page.njk")
+	public collections(
+		@Session() session: UserSession,
+		@Query("page") page?: string,
+		@Query("limit") limit?: string
+	): Promise<Paginated<ResponseCollectionDto>> {
+		return this.collectionsService.getCollectionsByUserId(
+			session.user.id,
+			page ? parseInt(page) : 1,
+			limit ? parseInt(limit) : 10
+		);
 	}
 }

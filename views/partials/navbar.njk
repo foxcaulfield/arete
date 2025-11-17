@@ -10,18 +10,17 @@
       <li>
         <a href="/ui/auth/login">Login</a>
       </li>
-    {% endif %}
-    {% if not isAuthenticated %}
       <li>
         <a href="/ui/auth/signup">Sign up</a>
       </li>
     {% endif %}
     {% if isAuthenticated %}
       <li>
+        <a href="/ui/collections">Collections</a>
+      </li>
+      <li>
         <a href="/ui/profile">Profile</a>
       </li>
-    {% endif %}
-    {% if isAuthenticated %}
       <li>
         <a 
         hx-post="/api/auth/sign-out" 

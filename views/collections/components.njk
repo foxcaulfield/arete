@@ -1,0 +1,25 @@
+{% macro tableRow(collectionUnit) %}
+    <tr>
+        <td>{{ collectionUnit.name }}</td>
+        <td>{{ collectionUnit.description }}</td>
+        <td>{{ collectionUnit.user.name or "N/A" }}</td>
+        {# <td>{{ collectionUnit.id }}</td> #}
+        {# <td>{{ collectionUnit.createdAt  }}</td>
+        <td>{{ collectionUnit.updatedAt  }}</td> #}
+        <td>{{ collectionUnit.exerciseCount or 0 }}</td>
+        <td>{{ collectionUnit.attemptCount or 0 }}</td>
+    </tr>
+{% endmacro %}
+
+{% macro tableHeader() %}
+    <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Owner</th>
+        {# <th>ID</th> #}
+        {# <th>Created At</th>
+        <th>Updated At</th> #}
+        <th>Exercises</th>
+        <th>Attempts</th>
+    </tr>
+{% endmacro %}
