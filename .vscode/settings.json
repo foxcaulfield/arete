@@ -1,0 +1,71 @@
+{
+    "files.associations": {
+        "*.njk": "nunjucks"
+    },
+    "emmet.includeLanguages": {
+        "njk": "html",
+        "jinja": "html",
+        "html": "html",
+        "nunjucks": "html",
+        "jinja-html": "html",
+        "html-nunjucks": "html",
+        "htmlnunjucks": "html",
+        "html.njk": "html"
+    },
+    "html.format.wrapAttributes": "preserve",
+    "html.customData": [
+        "./.vscode/htmx-custom-data.json"
+    ],
+    // "editor.semanticHighlighting.enabled": true,
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": [
+                    "entity.name.tag.njk",
+                    "punctuation.tag.njk",
+                    "punctuation.definition.tag.begin.njk",
+                    "punctuation.definition.tag.end.njk"
+                ],
+                "settings": {
+                    "foreground": "#C678DD",
+                    "fontStyle": ""
+                }
+            },
+            {
+                "scope": [
+                    "variable.other.njk",
+                    "meta.output.njk"
+                ],
+                "settings": {
+                    "foreground": "#ffd866"
+                }
+            },
+            {
+                "scope": [
+                    "text.html.derivative meta.block.njk",
+                    "meta.block.njk",
+                    "keyword.control.njk",
+                    "punctuation.definition.template.njk",
+                    "punctuation.definition.template.begin.njk",
+                    "punctuation.definition.template.end.njk",
+                    "punctuation.section.embedded.begin.njk",
+                    "punctuation.section.embedded.end.njk"
+                ],
+                "settings": {
+                    "foreground": "#ff5f87",
+                    "fontStyle": "bold"
+                }
+            },
+            {
+                "scope": [
+                    "comment.block.njk",
+                    "comment.line.njk"
+                ],
+                "settings": {
+                    "foreground": "#40464d",
+                    "fontStyle": "italic"
+                }
+            }
+        ]
+    }
+}
