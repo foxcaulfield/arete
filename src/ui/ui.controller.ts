@@ -71,6 +71,16 @@ export class UiController {
 		return {};
 	}
 
+	@Get("/collections/:id/edit")
+	@Render("collections/edit-form.njk")
+	public async editCollection(
+		@Param("id") collectionId: string,
+		@Session() session: UserSession
+	): Promise<{ collection: ResponseCollectionDto }> {
+		const collection = await this.collectionsService.getCollectionById(collectionId, session.user.id);
+		return { collection };
+	}
+
 	@Get("/collections")
 	@Render("collections/page.njk")
 	public collections(

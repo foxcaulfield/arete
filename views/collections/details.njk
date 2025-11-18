@@ -4,40 +4,47 @@
 {% block content %}
     <h1 >Collection: {{ collection.name }}</h1>
     <div  class="card">
+        <div>
+            <span>Description: </span>
+            <span>{{ collection.description }}</span>
+        </div>
         <!-- Owner Block -->
         <div>
-            <span>Owner</span>
-            <div>
-                <p>{{ collection.user.name }}</p>
-                <code>{{ collection.user.id }}</code>
-            </div>
+            {# <span>Owner</span> #}
+            <h3>
+                <span>Owner: </span>
+                <span>{{ collection.user.name }}</span>
+                {# <code>{{ collection.user.id }}</code> #}
+            </h3>
         </div>
 
         <!-- Dates Block -->
         <div>
-            <span>Timeline</span>
+            {# <span>Timeline</span> #}
             <div>
                 <div>
-                    <span>Created</span>
+                    <span>
+                        <strong>Created</strong>
+                    </span>
                     <span>{{ collection.createdAt }}</span>
                 </div>
                 <div>
-                    <span>Updated</span>
+                    <span>
+                        <strong>Updated</strong>
+                    </span>
                     <span>{{ collection.updatedAt }}</span>
                 </div>
             </div>
         </div>
+        <br/>
+        <code>{{ collection.id }}</code>
 
-        <!-- ID Block -->
-        <div>
-            <span>Collection ID</span>
-            <code>{{ collection.id }}</code>
-        </div>
+        {# description Block #}
+
     </div>
-    <div class="card">
+    <div class="card actions">
         <span>Actions</span>
-        <button>Add Exercise</button>
-        <button>Start Quiz</button>
+
         <!-- <Button
                         withAction={true}
                         action="?/delete"
@@ -47,6 +54,7 @@
                         fullWidth={true}
                         size="sm"
                     /> -->
+        <button type="button" onclick="window.location.href='/ui/collections/{{ collection.id }}/edit'">Edit</button>
         <button
             type="button"
             hx-delete="/collections/delete/{{ collection.id }}"
@@ -65,9 +73,34 @@
                     }
                 }"
                hx-confirm="Are you sure you wish to delete your collection?"
-        >Delete Collection</button>
-    <button type="button" onclick="window.location.href='/ui/collections'">Back</button>
-        <button>Edit</button>
+        >Delete</button>
+        <button type="button" onclick="window.location.href='/ui/collections'">Back</button>
+        <span id="separator"></span>
+
+        <style>
+            /* Only apply to the "Actions" card to avoid affecting other .card elements */
+            .card.actions {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            /* Make the separator a flexible spacer to push following controls to the right */
+            .card.actions > #separator {
+                display: block;
+                width: 0;
+                margin-left: auto;
+            }
+
+            /* Keep button spacing inside the actions card */
+            .card.actions > button {
+                margin: 0;
+            }
+        </style>
+
+        <button>Add Exercise</button>
+        <button>Start Quiz</button>
         <div>
             {# <div id="dialog-trigger">Delete Collection</div> #}
             {# <dialog id="delete-collection-dialog" aria-labelledby="delete-dialog-title"
