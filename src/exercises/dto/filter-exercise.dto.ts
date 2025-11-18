@@ -13,5 +13,5 @@ export class FilterExerciseDto {
 	@Min(1)
 	@IsInt()
 	@IsOptional()
-	public limit: number = 20;
+	public limit: number = 10;
 }

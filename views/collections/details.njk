@@ -1,0 +1,171 @@
+{% extends "layouts/base.njk" %}
+{% import "collections/components.njk" as components %}
+
+{% block content %}
+    <h1 >Collection: {{ collection.name }}</h1>
+    <div  class="card">
+        <!-- Owner Block -->
+        <div>
+            <span>Owner</span>
+            <div>
+                <p>{{ collection.user.name }}</p>
+                <code>{{ collection.user.id }}</code>
+            </div>
+        </div>
+
+        <!-- Dates Block -->
+        <div>
+            <span>Timeline</span>
+            <div>
+                <div>
+                    <span>Created</span>
+                    <span>{{ collection.createdAt }}</span>
+                </div>
+                <div>
+                    <span>Updated</span>
+                    <span>{{ collection.updatedAt }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ID Block -->
+        <div>
+            <span>Collection ID</span>
+            <code>{{ collection.id }}</code>
+        </div>
+    </div>
+    <div class="card">
+        <span>Actions</span>
+        <button>Add Exercise</button>
+        <button>Start Quiz</button>
+        <!-- <Button
+                        withAction={true}
+                        action="?/delete"
+                        onsubmit={confirmDelete}
+                        text="Delete Collection"
+                        color="error"
+                        fullWidth={true}
+                        size="sm"
+                    /> -->
+        <button
+            hx-post="/ui/collections/{{ collection.id }}/delete"
+            hx-trigger="click"
+            hx-swap="none"
+            hx-on::after-request="
+                if(event.detail.successful){ 
+                    window.location='/ui/collections'; 
+                } else {
+                    try { 
+                        const err=JSON.parse(event.detail.xhr.responseText); 
+                        alert('Delete failed: ' + (err.message || 'Unknown error'));
+                    } catch(e){
+                        alert('Delete failed'); 
+                    }
+                }"
+               hx-confirm="Are you sure you wish to delete your collection?"
+        >Delete Collection</button>
+    <button type="button" onclick="window.location.href='/ui/collections'">Back</button>
+        <button>Edit</button>
+        <div>
+            {# <div id="dialog-trigger">Delete Collection</div> #}
+            {# <dialog id="delete-collection-dialog" aria-labelledby="delete-dialog-title"
+            aria-describedby="delete-dialog-desc">
+            <form id="delete-collection-form" action="?/delete" method="post" class="card"
+                onsubmit="return confirmDelete(event)">
+                <header id="delete-dialog-header">
+                    <h2 id="delete-dialog-title">Delete this Collection?</h2>
+                    <button type="button" id="delete-dialog-close" aria-label="Close">&times;</button>
+                </header>
+
+                <p id="delete-dialog-desc">This action cannot be undone.</p>
+
+                <div id="delete-dialog-actions" class="dialog-actions">
+                    <button type="submit" id="delete-collection-btn" class="btn btn-error">Delete Collection</button>
+                    <button type="button" id="cancel-delete-btn" class="btn">Cancel</button>
+                </div>
+            </form>
+        </dialog> #}
+        </div>
+    </div>
+    <div 
+        id="exercises-wrapper"
+        hx-disabled-elt="#exercise-limit-select, #prev-exercises-button, #next-exercises-button">
+        <div>
+            <h2>Exercises</h2>
+            <span>{{ exercises.pagination.totalItems }} total</span>
+        </div>
+        <div>
+            <div>
+                <label for="exercise-limit-select">Show</label>
+                <select 
+                    id="exercise-limit-select" 
+                    name="limit"
+                    hx-get="/ui/collections/{{ collection.id }}"
+                    hx-trigger="change"
+                    hx-select="#exercises-wrapper"
+                    hx-target="#exercises-wrapper"
+                    hx-push-url="true"
+                    hx-disabled-elt="inherit">
+                    <option value="5" {% if exercises.pagination.limit==5 %}selected{% endif %}>5</option>
+                    <option value="10" {% if exercises.pagination.limit==10 %}selected{% endif %}>10</option>
+                    <option value="20" {% if exercises.pagination.limit==20 %}selected{% endif %}>20</option>
+                </select>
+                <span>per page</span>
+            </div>
+            <div>Total Exercises: {{ exercises.pagination.totalItems }}</div>
+            <div>Total Pages: {{ exercises.pagination.totalPages }}</div>
+            <div>
+                {% if exercises.pagination.hasPreviousPage %}
+                    <button 
+                        type="button"
+                        hx-get="/ui/collections/{{ collection.id }}?page={{ exercises.pagination.page - 1 }}&limit={{ exercises.pagination.limit }}"
+                        hx-select="#exercises-wrapper" 
+                        hx-target="#exercises-wrapper" 
+                        hx-push-url="true"
+                        hx-disabled-elt="inherit"
+                        >Previous</button>
+                {% else %}
+                    <button type="button" disabled>Previous</button>
+                {% endif %}
+
+                <span> Page: {{ exercises.pagination.page }} / {{ exercises.pagination.totalPages }}</span>
+
+                {% if exercises.pagination.hasNextPage %}
+                    <button 
+                    type="button"
+                    hx-get="/ui/collections/{{ collection.id }}?page={{ exercises.pagination.page + 1 }}&limit={{ exercises.pagination.limit }}"
+                    hx-select="#exercises-wrapper" 
+                    hx-target="#exercises-wrapper" 
+                    hx-push-url="true"
+                    hx-disabled-elt="inherit"
+                    >Next</button>
+                {% else %}
+                    <button type="button" disabled>Next</button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Exercises Table or Empty State -->
+        {% if exercises.data.length %}
+            <div>
+                <table id="exercises-table" class="arete-table-fixed">
+                    <thead>
+                        {{ components.exerciseTableHeader() }}
+                    </thead>
+                    <tbody>
+                        {% for exercise in exercises.data %}
+                            {{ components.exerciseTableRow(exercise) }}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div>
+                <p>No exercises yet</p>
+                <p>Create one from the Actions panel to get started</p>
+            </div>
+        {% endif %}
+    </div>
+    {# {{ exercises.pagination | dump }}
+{{ exercises.data | dump }} #}
+{% endblock %}

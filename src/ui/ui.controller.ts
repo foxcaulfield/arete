@@ -1,15 +1,21 @@
-import { Controller, Get, Query, Render } from "@nestjs/common";
+import { Controller, Get, Param, Query, Render } from "@nestjs/common";
 import { AllowAnonymous, Session, type UserSession } from "@thallesp/nestjs-better-auth";
 import { CollectionsService } from "src/collections/collections.service";
+import { ExercisesService } from "src/exercises/exercises.service";
 import { ResponseCollectionDto } from "src/collections/dto/response-collection.dto";
 // import { type Response } from "express";
 import { PaginatedResponseDto } from "src/common/types";
+import { ResponseExerciseDto } from "src/exercises/dto/response-exercise.dto";
+import { FilterExerciseDto } from "src/exercises/dto/filter-exercise.dto";
 
 type Paginated<T> = PaginatedResponseDto<T>;
 
 @Controller("ui")
 export class UiController {
-	public constructor(private readonly collectionsService: CollectionsService) {}
+	public constructor(
+		private readonly collectionsService: CollectionsService,
+		private readonly exercisesService: ExercisesService
+	) {}
 
 	@Get("/")
 	@AllowAnonymous()
@@ -59,6 +65,12 @@ export class UiController {
 		};
 	}
 
+	@Get("/collections/create")
+	@Render("collections/create-form.njk")
+	public createCollection(): object {
+		return {};
+	}
+
 	@Get("/collections")
 	@Render("collections/page.njk")
 	public collections(
@@ -71,5 +83,23 @@ export class UiController {
 			page ? parseInt(page) : 1,
 			limit ? parseInt(limit) : 10
 		);
+	}
+
+	@Get("/collections/:id")
+	@Render("collections/details.njk")
+	public async collectionDetail(
+		@Param("id") id: string,
+		@Query() filter: FilterExerciseDto,
+		@Session() session: UserSession
+	): Promise<{
+		collection: ResponseCollectionDto;
+		exercises: PaginatedResponseDto<ResponseExerciseDto>;
+	}> {
+		const [collection, exercises] = await Promise.all([
+			this.collectionsService.getCollectionById(id, session.user.id),
+			this.exercisesService.getExercisesInCollection(session.user.id, id, filter),
+		]);
+
+		return { collection, exercises };
 	}
 }

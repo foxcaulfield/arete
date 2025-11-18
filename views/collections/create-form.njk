@@ -1,0 +1,42 @@
+{% extends "layouts/base.njk" %}
+{% import "collections/components.njk" as components %}
+{# {"statusCode":400,"error":"Bad Request","message":"Validation failed","fields":{"name":["name must be longer than or equal to 3 characters"],"description":["description must be longer than or equal to 5 characters"]}} #}
+{% block content %}
+    <h1>Create New Collection</h1>
+    <form 
+        id="create-collection-form" 
+        hx-post="/collections/create"
+        hx-encoding="json"
+        hx-trigger="submit"
+        hx-swap="none"
+        hx-on::after-request="
+        console.log(event.detail);
+        {# debugger; #}
+            if(event.detail.successful){ 
+                const body = JSON.parse(event.detail.xhr.responseText);
+                const newCollectionId = body.id;
+                window.location='/ui/collections/' + newCollectionId; 
+            } else {
+                try { 
+                    const err=JSON.parse(event.detail.xhr.responseText); 
+                    document.getElementById('create-collection-form-errors').textContent = err.message + ' Fields: ' + (err.fields ? Object.values(err.fields).flat().join(', ') : 'N/A'); 
+                } catch(e){
+                    document.getElementById('create-collection-form-errors').textContent='Login failed'; 
+                }
+            }"
+        class="card">
+        <div>
+            <label for="collection-name-input">Collection Name</label>
+            <input type="text" id="collection-name-input" name="name" required/>
+        </div>
+        <div>
+            <label for="collection-description-input">Description</label>
+            <textarea id="collection-description-input" name="description" rows="4"></textarea>
+        </div>
+        <div>
+            <button type="submit">Create Collection</button>
+            <button type="button" onclick="window.location.href='/ui/collections'">Cancel</button>
+        </div>
+    </form>
+    <div id="create-collection-form-errors" class="error mt"></div>
+{% endblock %}

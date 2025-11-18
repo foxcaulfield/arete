@@ -16,17 +16,17 @@
         } else {
             try { 
                 const err=JSON.parse(event.detail.xhr.responseText); 
-                document.getElementById('form-errors').textContent = err.message || 'Login failed'; 
+                document.getElementById('login-form-errors').textContent = err.message || 'Login failed'; 
             } catch(e){
-                document.getElementById('form-errors').textContent='Login failed'; 
+                document.getElementById('login-form-errors').textContent='Login failed'; 
             }
         }"
     hx-on::response-error="
         try { 
             const err = JSON.parse(event.detail.xhr.responseText);
-            document.getElementById('form-errors').textContent = err.message || 'Login failed';
+            document.getElementById('login-form-errors').textContent = err.message || 'Login failed';
         } catch(e){
-            document.getElementById('form-errors').textContent='Login failed';
+            document.getElementById('login-form-errors').textContent='Login failed';
         }">
         <h1>Login</h1>
         <div>
@@ -37,7 +37,7 @@
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required/>
         </div>
-        <div id="form-errors" class="error"></div>
+        <div id="login-form-errors" class="error"></div>
         <button type="submit" class="btn">Login</button>
     </form>
     <p class="muted">No account? <a href="/ui/auth/signup">Sign up</a>

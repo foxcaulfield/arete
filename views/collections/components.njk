@@ -1,25 +1,48 @@
-{% macro tableRow(collectionUnit) %}
-    <tr>
-        <td>{{ collectionUnit.name }}</td>
-        <td>{{ collectionUnit.description }}</td>
-        <td>{{ collectionUnit.user.name or "N/A" }}</td>
-        {# <td>{{ collectionUnit.id }}</td> #}
-        {# <td>{{ collectionUnit.createdAt  }}</td>
-        <td>{{ collectionUnit.updatedAt  }}</td> #}
-        <td>{{ collectionUnit.exerciseCount or 0 }}</td>
-        <td>{{ collectionUnit.attemptCount or 0 }}</td>
-    </tr>
+{% macro collectionTableHeader() %}
+<tr>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Owner</th>
+    {# <th>ID</th> #}
+    {# <th>Created At</th>
+    <th>Updated At</th> #}
+    <th>Exercises</th>
+    <th>Attempts</th>
+</tr>
 {% endmacro %}
 
-{% macro tableHeader() %}
-    <tr>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Owner</th>
-        {# <th>ID</th> #}
-        {# <th>Created At</th>
-        <th>Updated At</th> #}
-        <th>Exercises</th>
-        <th>Attempts</th>
-    </tr>
+{% macro collectionTableRow(collectionUnit) %}
+<tr hx-get="/ui/collections/{{ collectionUnit.id }}" hx-trigger="click" hx-target="body" hx-swap="innerHTML"
+    hx-push-url="true">
+    <td>{{ collectionUnit.name }}</td>
+    <td>{{ collectionUnit.description }}</td>
+    <td>{{ collectionUnit.user.name or "N/A" }}</td>
+    {# <td>{{ collectionUnit.id }}</td> #}
+    {# <td>{{ collectionUnit.createdAt }}</td>
+    <td>{{ collectionUnit.updatedAt }}</td> #}
+    <td>{{ collectionUnit.exerciseCount or 0 }}</td>
+    <td>{{ collectionUnit.attemptCount or 0 }}</td>
+</tr>
+{% endmacro %}
+
+{% macro exerciseTableHeader() %}
+<tr>
+    {# <th>ID</th> #}
+    <th>Question</th>
+    <th>Correct Answer</th>
+    <th>Type</th>
+    <th>Total Attempts</th>
+    <th>Correct Attempts</th>
+</tr>
+{% endmacro %}
+
+{% macro exerciseTableRow(exerciseUnit) %}
+<tr>
+    {# <td>{{ exerciseUnit.id }}</td> #}
+    <td>{{ exerciseUnit.question }}</td>
+    <td>{{ exerciseUnit.correctAnswer }}</td>
+    <td>{{ exerciseUnit.type }}</td>
+    <td>{{ exerciseUnit.totalAttempts }}</td>
+    <td>{{ exerciseUnit.correctAttempts }}</td>
+</tr>
 {% endmacro %}

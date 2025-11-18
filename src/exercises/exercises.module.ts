@@ -27,5 +27,6 @@ export const exerciseRulesSettings: ExerciseRulesConfig = {
 		ExerciseQueryService,
 		ExerciseValidationService,
 	],
+	exports: [ExercisesService],
 })
 export class ExercisesModule {}
