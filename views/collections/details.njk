@@ -48,7 +48,9 @@
                         size="sm"
                     /> -->
         <button
-            hx-post="/ui/collections/{{ collection.id }}/delete"
+            type="button"
+            hx-delete="/collections/delete/{{ collection.id }}"
+            hx-disabled-elt="this"
             hx-trigger="click"
             hx-swap="none"
             hx-on::after-request="
