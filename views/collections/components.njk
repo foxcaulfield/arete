@@ -37,7 +37,13 @@
 {% endmacro %}
 
 {% macro exerciseTableRow(exerciseUnit) %}
-<tr>
+<tr
+    hx-get="/ui/exercises/{{ exerciseUnit.id }}"
+    hx-trigger="click"
+    hx-target="body"
+    hx-swap="innerHTML"
+    hx-push-url="true"
+>
     {# <td>{{ exerciseUnit.id }}</td> #}
     <td>{{ exerciseUnit.question }}</td>
     <td>{{ exerciseUnit.correctAnswer }}</td>

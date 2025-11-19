@@ -120,4 +120,14 @@ export class UiController {
 	public createExercise(@Query("collectionId") collectionId?: string): object {
 		return { collectionId };
 	}
+
+	@Get("/exercises/:id")
+	@Render("exercises/details.njk")
+	public async exerciseDetail(
+		@Param("id") exerciseId: string,
+		@Session() session: UserSession
+	): Promise<{ exercise: ResponseExerciseDto }> {
+		const exercise = await this.exercisesService.getExerciseById(session.user.id, exerciseId);
+		return { exercise };
+	}
 }

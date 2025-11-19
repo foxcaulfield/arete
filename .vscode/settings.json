@@ -1,6 +1,6 @@
 {
     "files.associations": {
-        "*.njk": "nunjucks"
+        "*.njk": "html"
     },
     "emmet.includeLanguages": {
         "njk": "html",
@@ -17,6 +17,13 @@
         "./.vscode/htmx-custom-data.json"
     ],
     // "editor.semanticHighlighting.enabled": true,
+    "workbench.colorCustomizations": {
+        "window.activeBorder": "#00FF00", // Bright Green for active window
+        "editorGroup.border": "#FF0000", // Red border between editor panels
+        "contrastBorder": "#888888", // Light gray for general contrast borders
+        // "tab.border": "#0000FF" // Blue border for tabs
+        "panel.border": "#FF0000" // Red border for bottom panel
+    },
     "editor.tokenColorCustomizations": {
         "textMateRules": [
             {
