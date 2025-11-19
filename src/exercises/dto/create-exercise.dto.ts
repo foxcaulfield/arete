@@ -16,6 +16,15 @@ export function TransformNullableString() {
 	});
 }
 
+export function TransformToArray() {
+	return Transform(({ value }) => {
+		if (value === undefined || value === null) {
+			return undefined;
+		}
+		return Array.isArray(value) ? value : [value];
+	});
+}
+
 export class CreateExerciseDto implements Partial<Exercise> {
 	@IsString()
 	public collectionId!: string;
@@ -32,21 +41,18 @@ export class CreateExerciseDto implements Partial<Exercise> {
 	public correctAnswer!: string;
 
 	@IsOptional()
+	@TransformToArray()
+	@TransformNullableString()
 	@IsArray()
 	@IsString({ each: true })
-	@TransformNullableString()
 	public additionalCorrectAnswers?: string[];
 
 	@IsOptional()
+	@TransformToArray()
+	@TransformNullableString()
 	@IsArray()
 	@IsString({ each: true })
-	@TransformNullableString()
 	public distractors?: string[];
-
-	// @IsOptional()
-	// @IsArray()
-	// @IsString({ each: true })
-	// public tags?: string[];
 
 	@IsOptional()
 	@IsString()

@@ -99,7 +99,10 @@
             }
         </style>
 
-        <button>Add Exercise</button>
+        <button
+            type="button"
+            onclick="window.location.href='/ui/exercises/create?collectionId={{ collection.id }}'"
+        >Add Exercise</button>
         <button>Start Quiz</button>
         <div>
             {# <div id="dialog-trigger">Delete Collection</div> #}

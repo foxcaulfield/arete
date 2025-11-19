@@ -65,6 +65,7 @@ export class UiController {
 		};
 	}
 
+	/* collection */
 	@Get("/collections/create")
 	@Render("collections/create-form.njk")
 	public createCollection(): object {
@@ -111,5 +112,12 @@ export class UiController {
 		]);
 
 		return { collection, exercises };
+	}
+
+	/* exercises */
+	@Get("/exercises/create")
+	@Render("exercises/create-form.njk")
+	public createExercise(@Query("collectionId") collectionId?: string): object {
+		return { collectionId };
 	}
 }
