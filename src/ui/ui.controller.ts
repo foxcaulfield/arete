@@ -121,6 +121,16 @@ export class UiController {
 		return { collectionId };
 	}
 
+	@Get("/exercises/:id/edit")
+	@Render("exercises/edit-form.njk")
+	public async editExercise(
+		@Param("id") exerciseId: string,
+		@Session() session: UserSession
+	): Promise<{ exercise: ResponseExerciseDto }> {
+		const exercise = await this.exercisesService.getExerciseById(session.user.id, exerciseId);
+		return { exercise };
+	}
+
 	@Get("/exercises/:id")
 	@Render("exercises/details.njk")
 	public async exerciseDetail(
