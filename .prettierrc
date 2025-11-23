@@ -3,5 +3,17 @@
 	"trailingComma": "es5",
 	"useTabs": true,
 	"tabWidth": 4,
-	"printWidth": 120
+	"printWidth": 120,
+	"files.associations": {
+		"**/*.njk": "html"
+	},
+	"plugins": ["prettier-plugin-jinja-template"],
+	"overrides": [
+		{
+			"files": ["*.njk"],
+			"options": {
+				"parser": "jinja-template"
+			}
+		}
+	]
 }
