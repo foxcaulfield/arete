@@ -8,6 +8,7 @@ import { ValidationError } from "class-validator";
 import nunjucks from "nunjucks";
 import { join } from "path";
 import { NestExpressApplication } from "@nestjs/platform-express";
+import { marked } from "marked";
 
 async function bootstrap(): Promise<void> {
 	const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -25,12 +26,32 @@ async function bootstrap(): Promise<void> {
 	app.useStaticAssets(staticDir);
 	app.setBaseViewsDir(viewsDir);
 	const expressInstance = app.getHttpAdapter().getInstance();
-	nunjucks.configure(viewsDir, {
-		express: expressInstance,
-		autoescape: true,
-		noCache: !isProduction,
-		watch: !isProduction,
-	});
+	nunjucks
+		.configure(viewsDir, {
+			express: expressInstance,
+			autoescape: true,
+			noCache: !isProduction,
+			watch: !isProduction,
+		})
+		.addFilter("parseQuestion", function (question: string) {
+			if (!question) return [];
+
+			const result = [];
+			const regEx = /{{(.*?)}}|([^{}]+)/g;
+			let match;
+
+			while ((match = regEx.exec(question)) !== null) {
+				if (match[1]) {
+					result.push({ text: match[1].trim(), isAnswer: true });
+				} else if (match[2]) {
+					result.push({ text: match[2].trim(), isAnswer: false });
+				}
+			}
+			return result;
+		})
+		.addFilter("filterMarkdown", function (text: string) {
+			return marked.parse(text);
+		});
 
 	app.setViewEngine("njk");
 
