@@ -7,14 +7,31 @@
 			return document.getElementById(id);
 		}
 
+		function htmxBeforeNextQuestionLoad(event) {
+			console.log("htmxBeforeNextQuestionLoad fired");
+		}
+
+		function htmxAfterNextQuestionLoad(event) {
+			console.log("htmxAfterNextQuestionLoad fired");
+		}
+		function htmxBeforeSubmit(event) {
+			console.log("htmxBeforeSubmit fired");
+			event.target.classList.add('distractor--selected')
+		}
 		function htmxAfterSubmit(event) {
+			console.log("htmxAfterSubmit fired");
+			if (!event.detail.xhr || event.detail.xhr.status !== 200) {
+				alert("Failed submitting answer");
+				return;
+			}
+
 			const response = JSON.parse(event.detail.xhr.responseText);
 
 			const questionParts = document.querySelectorAll(".question-part");
 			// select all distractor buttons and input with button
 			const distractorButtons = document.querySelectorAll(".distractor");
 			const inputElements = document.querySelectorAll("#submit-answer-button, #answer-input");
-			const feedbackCard = ElementWithId("feedback-card");
+			const feedbackErrorMessage = ElementWithId("feedback--error");
 			const quizCardElement = ElementWithId("quiz-card-content");
 			const skipQuestionButton = ElementWithId("skip-question-button");
 			const nextQuestionButton = ElementWithId("next-question-button");
@@ -39,36 +56,33 @@
 				}
 			});
 
-			feedbackCard.insertAdjacentHTML(
-				"beforeend",
-				`<div>Correct answer: ${JSON.stringify(response.fields)}</div>`
-			);
+			if (!isCorrect) {
+				feedbackErrorMessage.textContent = `Incorrect. The correct answer is: ${correctAnswer}`;
+			}
 
 			skipQuestionButton.disabled = true;
 			nextQuestionButton.disabled = false;
 			nextQuestionButton.focus();
 		}
 
-		function htmxAfterNextQuestionLoad(event) {}
-
 		function afterCardContentLoad() {
 			console.log("afterCardContentLoad fired");
-			// that is in DOM and visible now
-			const inputElement = document.querySelector("#answer-input.is-used");
-			const firstDistractorButton = document.querySelector(".distractor.is-used");
 
-			const skipQuestionButton = ElementWithId("skip-question-button");
-			const nextQuestionButton = ElementWithId("next-question-button");
-			console.log("Input el is here:", !!inputElement);
-			console.log("First distractor button is here:", !!firstDistractorButton);
-			if (inputElement) {
-				inputElement.focus();
-			} else if (firstDistractorButton) {
-				firstDistractorButton.focus();
-			}
+			// const inputElement = document.querySelector("#answer-input.is-used");
+			// const firstDistractorButton = document.querySelector(".distractor.is-used");
 
-			skipQuestionButton.disabled = false;
-			nextQuestionButton.disabled = true;
+			// const skipQuestionButton = ElementWithId("skip-question-button");
+			// const nextQuestionButton = ElementWithId("next-question-button");
+			// // console.log("Input el is here:", !!inputElement);
+			// // console.log("First distractor button is here:", !!firstDistractorButton);
+			// if (inputElement) {
+			// 	inputElement.focus();
+			// } else if (firstDistractorButton) {
+			// 	firstDistractorButton.focus();
+			// }
+
+			// skipQuestionButton.disabled = false;
+			// nextQuestionButton.disabled = true;
 		}
 
 		function playAudio() {
@@ -79,7 +93,6 @@
 		}
 
 		function copyQuestionText() {
-			// const textToCopy = questionParts.map((part) => part.text).join(" ");
 			const questionParts = document.querySelectorAll(".question-part");
 			let textToCopy = "";
 			questionParts.forEach((part) => {
@@ -89,10 +102,6 @@
 			navigator.clipboard.writeText(textToCopy).then(() => {
 				window.alert("Question copied to clipboard");
 			});
-			// .then(
-			// () => toastSuccess("Question copied to clipboard"),
-			// () => toastError("Failed to copy question")
-			// );
 		}
 	</script>
 	<div
@@ -106,11 +115,12 @@
 	>
 		<div
 			id="quiz-card-content"
-			{# hx-on::after-swap="console.log('after swap fired');"
-		hx-on::after-settle="console.log('after settle fired');"
-		hx-on::after-request="console.log('after request fired');"
-		hx-on::load="console.log('load fired');" #}
-			hx-on::after-process-node="afterCardContentLoad()"
+			{# hx-on::after-swap="console.log('after swap fired');" #}
+			{# hx-on::after-request="console.log('after request fired');" #}
+			{# hx-on::load="console.log('load fired');" #}
+			{# hx-on::before-process-node="console.log('beforeCardContentLoad fired');" #}
+			{# hx-on::after-process-node="afterCardContentLoad()" #}
+			{# hx-on::after-settle="console.log('after settle fired');" #}
 		>
 			{# DEBUG BLOCK #}
 			{% if false %}
@@ -140,191 +150,158 @@
 
 			{# CONTROL BUTTONS #}
 			<div id="question-type">{{ quizQuestion.type }}</div>
-			<div id="control-buttons">
-				{# show image #}
-				{% if quizQuestion.imageUrl %}
+			<div class="wrapper card">
+				<div id="control-buttons">
+					{# show image #}
+					{% if quizQuestion.imageUrl %}
+						<button
+							class="icon-button"
+							x-bind:class="isImageVisible ? 'active' : ''"
+							@click="isImageVisible = !isImageVisible"
+						>
+							{% include "icons/photo.njk" %}
+						</button>
+					{% endif %}
+
+					{# play audio #}
+					{% if quizQuestion.audioUrl %}
+						<button class="icon-button" onclick="playAudio()">{% include "icons/audio-wave.njk" %}</button>
+					{% endif %}
+
+					{# show explanation #}
+					{% if quizQuestion.explanation %}
+						<button
+							class="icon-button"
+							x-bind:class="isExplanationVisible ? 'active' : ''"
+							@click="isExplanationVisible = !isExplanationVisible"
+						>
+							{% include "icons/information-circle.njk" %}
+						</button>
+					{% endif %}
+
+					{# force text input #}
 					<button
 						class="icon-button"
-						x-bind:class="isImageVisible ? 'active' : ''"
-						@click="isImageVisible = !isImageVisible"
+						x-bind:class="isForceTextInput ? 'active' : ''"
+						@click="isForceTextInput = !isForceTextInput"
 					>
-						{% include "icons/photo.njk" %}
+						{% include "icons/bars-3-center-left.njk" %}
 					</button>
-				{% endif %}
-
-				{# play audio #}
-				{% if quizQuestion.audioUrl %}
-					<button class="icon-button" onclick="playAudio()">{% include "icons/audio-wave.njk" %}</button>
-				{% endif %}
-
-				{# show explanation #}
-				{% if quizQuestion.explanation %}
+					{# copy question without special characters #}
+					<button class="icon-button" onclick="copyQuestionText()">
+						{% include "icons/clipboard-document.njk" %}
+					</button>
+					{# edit question #}
 					<button
+						hx-get="/ui/exercises/{{ quizQuestion.id }}/edit"
+						hx-target="body"
+						hx-swap="innerHTML"
 						class="icon-button"
-						x-bind:class="isExplanationVisible ? 'active' : ''"
-						@click="isExplanationVisible = !isExplanationVisible"
 					>
-						{% include "icons/information-circle.njk" %}
+						{% include "icons/pencil.njk" %}
 					</button>
-				{% endif %}
+				</div>
 
-				{# force text input #}
-				<button
-					class="icon-button"
-					x-bind:class="isForceTextInput ? 'active' : ''"
-					@click="isForceTextInput = !isForceTextInput"
-				>
-					{% include "icons/bars-3-center-left.njk" %}
-				</button>
-				{# copy question without special characters #}
-				<button class="icon-button" onclick="copyQuestionText()">
-					{% include "icons/clipboard-document.njk" %}
-				</button>
-				{# edit question #}
-				<button
-					hx-get="/ui/exercises/{{ quizQuestion.id }}/edit"
-					hx-target="body"
-					hx-swap="innerHTML"
-					class="icon-button"
-					onclick="editQuestion()"
-				>
-					{% include "icons/pencil.njk" %}
-				</button>
-			</div>
+				{# QUESTION TEXT #}
+				<div class="question-text">
+					{# a directive from main.ts #}
+					{% set parts = quizQuestion.question | parseQuestion %}
+					{% for part in parts %}
+						<span class="question-part {{ 'answer' if part.isAnswer }}">{{ part.text }}</span>
+						{% if not loop.last %}{% endif %}
+					{% endfor %}
+				</div>
 
-			{# QUESTION TEXT #}
-			<div class="question-text">
-				{# a directive from main.ts #}
-				{% set parts = quizQuestion.question | parseQuestion %}
-				{% for part in parts %}
-					<span class="question-part {{ 'answer' if part.isAnswer }}">{{ part.text }}</span>
-					{% if not loop.last %}{% endif %}
-				{% endfor %}
-			</div>
+				{# QUESTION TRANSLATION #}
+				<div id="question-translation">{{ quizQuestion.translation }}</div>
 
-			{# QUESTION TRANSLATION #}
-			<div id="question-translation">{{ quizQuestion.translation }}</div>
-
-			{# ANSWER INPUTS #}
-			{% if quizQuestion.type === "CHOICE_SINGLE" %}
-				<template x-if="true">
-					<div x-show="!isForceTextInput" class="question-container" id="distractor-buttons-container">
-						{% for distractor in quizQuestion.distractors %}
-							<button
-								class="distractor distractor_{{ loop.index }}"
-								hx-post="/exercises/drill/{{ collectionId }}/submit"
-								hx-vals='{"userAnswer": "{{ distractor }}" , "exerciseId" : "{{ quizQuestion.id }}" }'
-								hx-swap="none"
-								hx-trigger="
+				{# ANSWER INPUTS #}
+				{% if quizQuestion.type === "CHOICE_SINGLE" %}
+						<div class="question-container" id="distractor-buttons-container">
+							{% for distractor in quizQuestion.distractors %}
+								<button
+									class="distractor distractor_{{ loop.index }}"
+									hx-post="/exercises/drill/{{ collectionId }}/submit"
+									hx-vals='{"userAnswer": "{{ distractor }}" , "exerciseId" : "{{ quizQuestion.id }}" }'
+									hx-swap="none"
+									hx-trigger="
 								click once, 
 								keyup[
 									(key=='{{ distractorsHotKeyMapFunction(loop.index) }}') && 
 									event.target.matches('.distractor:not([disabled])')
 									]
 								from:body once"
-								hx-on::before-request="event.target.classList.add('distractor--selected')"
-								hx-on::after-request="htmxAfterSubmit(event);"
-								x-bind:class="isForceTextInput ? 'not-used' : 'is-used'"
-							>
-								{{ distractor }}
-							</button>
-						{% endfor %}
+									hx-disabled-elt=".distractor, #answer-input, #submit-answer-button"
+									hx-on::before-request="htmxBeforeSubmit(event);"
+									hx-on::after-request="htmxAfterSubmit(event);"
+								>
+									{{ distractor | lower }}
+								</button>
+							{% endfor %}
+						</div>
+				{% elif quizQuestion.type === "FILL_IN_THE_BLANK" %}
+						<div
+							id="text-input-container"
+							class="question-container"
+							hx-post="/exercises/drill/{{ collectionId }}/submit"
+							hx-on::after-request="htmxAfterSubmit(event);"
+							hx-include="#answer-input, #exerciseId"
+							hx-swap="none"
+							hx-trigger="keydown[key==='Enter'] from:#answer-input, click from:#submit-answer-button"
+							hx-disabled-elt=".distractor, #answer-input, #submit-answer-button"
+						>
+							<input
+								id="answer-input"
+								type="text"
+								name="userAnswer"
+								autocomplete="off"
+								x-model="userAnswerAlpine"
+							/>
+
+							<button id="submit-answer-button" x-bind:disabled="!userAnswerAlpine.length">Submit</button>
+						</div>
+					{# {% elif quizQuestion.type === "CHOICE_MULTIPLE" %} #}
+				{% else %}
+					<div class="mt">Unknown question type</div>
+				{% endif %}
+
+				{# FEEDBACK CARD #}
+				<div id="feedback-card" aria-live="polite">
+					<div id="feedback--success" class="card" {# x-bind:hidden="!isSubmitted || !isCorrect" #}>
+						Correct! Well done.
 					</div>
-				</template>
-
-				<br />
-				<template x-if="true">
-					<div
-						id="text-input-container"
-						class="question-container"
-						hx-post="/exercises/drill/{{ collectionId }}/submit"
-						hx-on::after-request="htmxAfterSubmit(event);"
-						hx-include="#answer-input, #exerciseId"
-						hx-swap="none"
-						hx-trigger="keydown[key==='Enter'] from:#answer-input, click from:#submit-answer-button"
-						x-show="isForceTextInput"
-					>
-						<input
-							id="answer-input"
-							type="text"
-							name="userAnswer"
-							autocomplete="off"
-							x-model="userAnswerAlpine"
-							x-bind:class="isForceTextInput ? 'is-used' : 'not-used'"
-							{# x-bind:disabled="isSubmitted" #}
-						/>
-
-						<button id="submit-answer-button" x-bind:disabled="!userAnswerAlpine.length">Submit</button>
-					</div>
-				</template>
-			{% elif quizQuestion.type === "FILL_IN_THE_BLANK" %}
-				<template x-if="true">
-					<div
-						id="text-input-container"
-						class="question-container"
-						hx-post="/exercises/drill/{{ collectionId }}/submit"
-						hx-on::after-request="htmxAfterSubmit(event);"
-						hx-include="#answer-input, #exerciseId"
-						hx-swap="none"
-						hx-trigger="keydown[key==='Enter'] from:#answer-input, click from:#submit-answer-button"
-					>
-						<input
-							id="answer-input"
-							type="text"
-							name="userAnswer"
-							autocomplete="off"
-							x-model="userAnswerAlpine"
-							x-bind:class="'is-used'"
-							{# x-bind:disabled="isSubmitted" #}
-						/>
-
-						<button id="submit-answer-button" x-bind:disabled="!userAnswerAlpine.length">Submit</button>
-					</div>
-				</template>
-
-				{# {% elif quizQuestion.type === "CHOICE_MULTIPLE" %} #}
-			{% else %}
-				<div class="mt">Unknown question type</div>
-			{% endif %}
-
-			{# FEEDBACK CARD #}
-			<div id="feedback-card">
-				<div class="card feedback--success" {# x-bind:hidden="!isSubmitted || !isCorrect" #}>
-					Correct! Well done.
+					<div id="feedback--error" class="card" {# x-bind:hidden="!isSubmitted || isCorrect" #}></div>
 				</div>
-				<div class="card feedback--error" {# x-bind:hidden="!isSubmitted || isCorrect" #}>
-					Incorrect. The correct answer is highlighted above.
-				</div>
-			</div>
 
-			{# IMAGE CARD #}
-			{% if quizQuestion.imageUrl %}
-				<template x-if="true">
+				{# IMAGE CARD #}
+				{% if quizQuestion.imageUrl %}
+					{# <template x-if="true"> #}
+						<div
+							x-cloak
+							id="image-card"
+							class="card"
+							x-show="isImageVisible"
+							x-transition
+							{# @click.outside="isImageVisible = false" #}
+						>
+							<img src="/exercises/files/image/{{ quizQuestion.imageUrl }}" alt="Question Image" />
+						</div>
+					{# </template> #}
+				{% endif %}
+
+				{# EXPLANATION CARD #}
+				{% if quizQuestion.explanation %}
 					<div
-						x-cloak
-						id="image-card"
-						class="card"
-						x-show="isImageVisible"
+						class="explanation-card"
+						x-show="isExplanationVisible"
 						x-transition
-						{# @click.outside="isImageVisible = false" #}
+						{# @click.outside="isExplanationVisible = false" #}
 					>
-						<img src="/exercises/files/image/{{ quizQuestion.imageUrl }}" alt="Question Image" />
+						<strong>Explanation:</strong>
+						<div class="content">{{ quizQuestion.explanation | filterMarkdown | safe }}</div>
 					</div>
-				</template>
-			{% endif %}
-
-			{# EXPLANATION CARD #}
-			{% if quizQuestion.explanation %}
-				<div
-					class="explanation-card"
-					x-show="isExplanationVisible"
-					x-transition
-					{# @click.outside="isExplanationVisible = false" #}
-				>
-					<strong>Explanation:</strong>
-					<div class="content">{{ quizQuestion.explanation | filterMarkdown | safe }}</div>
-				</div>
-			{% endif %}
+				{% endif %}
+			</div>
 		</div>
 
 		{# NEXT QUESTION BUTTON #}
@@ -335,7 +312,9 @@
 			hx-select="#quiz-card-content"
 			hx-trigger="click from:#next-question-button, click from:#skip-question-button"
 			hx-swap="outerHTML"
+			hx-on::before-request="htmxBeforeNextQuestionLoad(event)"
 			hx-on::after-request="htmxAfterNextQuestionLoad(event)"
+			hx-disabled-elt="this"
 		>
 			<button
 				id="skip-question-button"
@@ -379,6 +358,12 @@
 				color: #3b82f6;
 				user-select: none;
 			}
+			.quiz-card--correct .question-part.answer,
+			.quiz-card--incorrect .question-part.answer {
+				color: #4ade80;
+				text-shadow: none;
+			}
+
 			.quiz-card--correct .question-part.answer,
 			.quiz-card--incorrect .question-part.answer {
 				color: #4ade80;
@@ -442,16 +427,32 @@
 				color: #d1fae5;
 			}
 
-			.quiz-card--correct .card.feedback--success {
+			#feedback--success {
+				background-color: #d1fae5;
+				color: #065f46;
+				border: 1px solid #10b981;
+				padding: 0.75rem;
+				border-radius: 4px;
+			}
+
+			#feedback--error {
+				background-color: #fecaca;
+				color: #991b1b;
+				border: 1px solid #f87171;
+				padding: 0.75rem;
+				border-radius: 4px;
+			}
+
+			.quiz-card--correct #feedback--success {
 				display: block;
 			}
-			.feedback--success {
+			#feedback--success {
 				display: none;
 			}
-			.quiz-card--incorrect .card.feedback--error {
+			.quiz-card--incorrect #feedback--error {
 				display: block;
 			}
-			.card.feedback--error {
+			#feedback--error {
 				display: none;
 			}
 
