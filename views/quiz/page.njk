@@ -7,16 +7,8 @@
 			return document.getElementById(id);
 		}
 
-		function htmxBeforeNextQuestionLoad(event) {
-			console.log("htmxBeforeNextQuestionLoad fired");
-		}
-
-		function htmxAfterNextQuestionLoad(event) {
-			console.log("htmxAfterNextQuestionLoad fired");
-		}
 		function htmxBeforeSubmit(event) {
 			console.log("htmxBeforeSubmit fired");
-			event.target.classList.add('distractor--selected')
 		}
 		function htmxAfterSubmit(event) {
 			console.log("htmxAfterSubmit fired");
@@ -64,25 +56,39 @@
 			nextQuestionButton.disabled = false;
 			nextQuestionButton.focus();
 		}
+		function htmxBeforeNextQuestionLoad(event) {
+			console.log("htmxBeforeNextQuestionLoad fired");
+			const quizCardElement = ElementWithId("quiz-card-content");
+			quizCardElement.classList.remove("quiz-card--submitted");
+			quizCardElement.classList.remove("quiz-card--correct");
+			quizCardElement.classList.remove("quiz-card--incorrect");
+		}
+
+		function htmxAfterNextQuestionLoad(event) {
+			console.log("htmxAfterNextQuestionLoad fired");
+		}
 
 		function afterCardContentLoad() {
 			console.log("afterCardContentLoad fired");
+		}
 
-			// const inputElement = document.querySelector("#answer-input.is-used");
-			// const firstDistractorButton = document.querySelector(".distractor.is-used");
+		function alpineAfterCardContentLoad() {
+			console.log("alpineAfterCardContentLoad fired");
+			const inputElement = document.querySelector("#answer-input");
+			const firstDistractorButton = document.querySelector(".distractor");
 
-			// const skipQuestionButton = ElementWithId("skip-question-button");
-			// const nextQuestionButton = ElementWithId("next-question-button");
-			// // console.log("Input el is here:", !!inputElement);
-			// // console.log("First distractor button is here:", !!firstDistractorButton);
-			// if (inputElement) {
-			// 	inputElement.focus();
-			// } else if (firstDistractorButton) {
-			// 	firstDistractorButton.focus();
-			// }
+			const skipQuestionButton = ElementWithId("skip-question-button");
+			const nextQuestionButton = ElementWithId("next-question-button");
+			// console.log("Input el is here:", !!inputElement);
+			// console.log("First distractor button is here:", !!firstDistractorButton);
+			if (inputElement) {
+				inputElement.focus();
+			} else if (firstDistractorButton) {
+				firstDistractorButton.focus();
+			}
 
-			// skipQuestionButton.disabled = false;
-			// nextQuestionButton.disabled = true;
+			skipQuestionButton.disabled = false;
+			nextQuestionButton.disabled = true;
 		}
 
 		function playAudio() {
@@ -112,6 +118,7 @@
 			isForceTextInput: false,
 			userAnswerAlpine: '',
 		}"
+		x-disabled-elt=".distractor, #answer-input, #submit-answer-button, #skip-question-button, #next-question-button, #control-buttons button"
 	>
 		<div
 			id="quiz-card-content"
@@ -121,6 +128,7 @@
 			{# hx-on::before-process-node="console.log('beforeCardContentLoad fired');" #}
 			{# hx-on::after-process-node="afterCardContentLoad()" #}
 			{# hx-on::after-settle="console.log('after settle fired');" #}
+			x-init="$nextTick(() => { alpineAfterCardContentLoad() })"
 		>
 			{# DEBUG BLOCK #}
 			{% if false %}
@@ -217,49 +225,49 @@
 
 				{# ANSWER INPUTS #}
 				{% if quizQuestion.type === "CHOICE_SINGLE" %}
-						<div class="question-container" id="distractor-buttons-container">
-							{% for distractor in quizQuestion.distractors %}
-								<button
-									class="distractor distractor_{{ loop.index }}"
-									hx-post="/exercises/drill/{{ collectionId }}/submit"
-									hx-vals='{"userAnswer": "{{ distractor }}" , "exerciseId" : "{{ quizQuestion.id }}" }'
-									hx-swap="none"
-									hx-trigger="
+					<div class="question-container" id="distractor-buttons-container">
+						{% for distractor in quizQuestion.distractors %}
+							<button
+								class="distractor distractor_{{ loop.index }}"
+								hx-post="/exercises/drill/{{ collectionId }}/submit"
+								hx-vals='{"userAnswer": "{{ distractor }}" , "exerciseId" : "{{ quizQuestion.id }}" }'
+								hx-swap="none"
+								hx-trigger="
 								click once, 
 								keyup[
 									(key=='{{ distractorsHotKeyMapFunction(loop.index) }}') && 
 									event.target.matches('.distractor:not([disabled])')
 									]
 								from:body once"
-									hx-disabled-elt=".distractor, #answer-input, #submit-answer-button"
-									hx-on::before-request="htmxBeforeSubmit(event);"
-									hx-on::after-request="htmxAfterSubmit(event);"
-								>
-									{{ distractor | lower }}
-								</button>
-							{% endfor %}
-						</div>
+								hx-on::before-request="this.classList.add('distractor--selected'); htmxBeforeSubmit(event);"
+								hx-on::after-request="htmxAfterSubmit(event);"
+							>
+								{{ distractor | lower }}
+							</button>
+						{% endfor %}
+					</div>
 				{% elif quizQuestion.type === "FILL_IN_THE_BLANK" %}
-						<div
-							id="text-input-container"
-							class="question-container"
-							hx-post="/exercises/drill/{{ collectionId }}/submit"
-							hx-on::after-request="htmxAfterSubmit(event);"
-							hx-include="#answer-input, #exerciseId"
-							hx-swap="none"
-							hx-trigger="keydown[key==='Enter'] from:#answer-input, click from:#submit-answer-button"
-							hx-disabled-elt=".distractor, #answer-input, #submit-answer-button"
-						>
-							<input
-								id="answer-input"
-								type="text"
-								name="userAnswer"
-								autocomplete="off"
-								x-model="userAnswerAlpine"
-							/>
+					<div
+						id="text-input-container"
+						class="question-container"
+						hx-post="/exercises/drill/{{ collectionId }}/submit"
 
-							<button id="submit-answer-button" x-bind:disabled="!userAnswerAlpine.length">Submit</button>
-						</div>
+						hx-include="#answer-input, #exerciseId"
+						hx-swap="none"
+						hx-trigger="keydown[key==='Enter'] from:#answer-input, click from:#submit-answer-button"
+						hx-on::before-request="htmxBeforeSubmit(event);"
+						hx-on::after-request="htmxAfterSubmit(event);"
+					>
+						<input
+							id="answer-input"
+							type="text"
+							name="userAnswer"
+							autocomplete="off"
+							x-model="userAnswerAlpine"
+						/>
+
+						<button id="submit-answer-button" x-bind:disabled="!userAnswerAlpine.length">Submit</button>
+					</div>
 					{# {% elif quizQuestion.type === "CHOICE_MULTIPLE" %} #}
 				{% else %}
 					<div class="mt">Unknown question type</div>
@@ -275,31 +283,21 @@
 
 				{# IMAGE CARD #}
 				{% if quizQuestion.imageUrl %}
-					{# <template x-if="true"> #}
-						<div
-							x-cloak
-							id="image-card"
-							class="card"
-							x-show="isImageVisible"
-							x-transition
-							{# @click.outside="isImageVisible = false" #}
-						>
+					<template x-if="true">
+						<div x-cloak id="image-card" class="card" x-show="!!isImageVisible" x-transition>
 							<img src="/exercises/files/image/{{ quizQuestion.imageUrl }}" alt="Question Image" />
 						</div>
-					{# </template> #}
+					</template>
 				{% endif %}
 
 				{# EXPLANATION CARD #}
 				{% if quizQuestion.explanation %}
-					<div
-						class="explanation-card"
-						x-show="isExplanationVisible"
-						x-transition
-						{# @click.outside="isExplanationVisible = false" #}
-					>
-						<strong>Explanation:</strong>
-						<div class="content">{{ quizQuestion.explanation | filterMarkdown | safe }}</div>
-					</div>
+					<template x-if="true">
+						<div class="explanation-card" x-show="isExplanationVisible" x-transition>
+							<strong>Explanation:</strong>
+							<div class="content">{{ quizQuestion.explanation | filterMarkdown | safe }}</div>
+						</div>
+					</template>
 				{% endif %}
 			</div>
 		</div>
