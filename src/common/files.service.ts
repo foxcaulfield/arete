@@ -15,7 +15,8 @@ interface HandleSingleFileUploadsParams {
 }
 
 const ALLOWED_MIME_TYPES: Record<ExerciseFileType, string[]> = {
-	[ExerciseFileType.AUDIO]: ["audio/mpeg", "audio/wav", "audio/ogg"],
+	// include m4a
+	[ExerciseFileType.AUDIO]: ["audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a"],
 	[ExerciseFileType.IMAGE]: ["image/jpeg", "image/png", "image/gif"],
 };
 
