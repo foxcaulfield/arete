@@ -1,5 +1,5 @@
 {% extends "layouts/base.njk" %}
-{% import "collections/components.njk" as components %}
+{% import "partials/components.njk" as components %}
 
 {% block content %}
     <h1 >Collection: {{ collection.name }}</h1>
@@ -103,7 +103,7 @@
             type="button"
             onclick="window.location.href='/ui/exercises/create?collectionId={{ collection.id }}'"
         >Add Exercise</button>
-        <button>Start Quiz</button>
+        <button type="button" onclick="window.location.href='/ui/quiz/{{ collection.id }}'">Start Quiz</button>
         <div>
             {# <div id="dialog-trigger">Delete Collection</div> #}
             {# <dialog id="delete-collection-dialog" aria-labelledby="delete-dialog-title"

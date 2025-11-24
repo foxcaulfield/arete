@@ -1,5 +1,6 @@
 {% extends "layouts/base.njk" %}
-{% import "collections/components.njk" as components %}
+
+{% import "partials/components.njk" as components %}
 {# {"statusCode":400,"error":"Bad Request","message":"Validation failed","fields":{"name":["name must be longer than or equal to 3 characters"],"description":["description must be longer than or equal to 5 characters"]}} #}
 {% block content %}
     <h1>Create New Collection</h1>
