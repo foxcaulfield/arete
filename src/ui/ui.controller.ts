@@ -7,6 +7,8 @@ import { ResponseCollectionDto } from "src/collections/dto/response-collection.d
 import { PaginatedResponseDto } from "src/common/types";
 import { ResponseExerciseDto } from "src/exercises/dto/response-exercise.dto";
 import { FilterExerciseDto } from "src/exercises/dto/filter-exercise.dto";
+import { QuizService } from "src/exercises/quiz.service";
+import { QuizQuestionDto } from "src/exercises/dto/quiz.dto";
 
 type Paginated<T> = PaginatedResponseDto<T>;
 
@@ -14,7 +16,8 @@ type Paginated<T> = PaginatedResponseDto<T>;
 export class UiController {
 	public constructor(
 		private readonly collectionsService: CollectionsService,
-		private readonly exercisesService: ExercisesService
+		private readonly exercisesService: ExercisesService,
+		private readonly quizService: QuizService
 	) {}
 
 	@Get("/")
@@ -139,5 +142,39 @@ export class UiController {
 	): Promise<{ exercise: ResponseExerciseDto }> {
 		const exercise = await this.exercisesService.getExerciseById(session.user.id, exerciseId);
 		return { exercise };
+	}
+
+	@Get("/quiz/:collectionId")
+	@Render("quiz/page.njk")
+	public async startQuiz(
+		@Param("collectionId") collectionId: string,
+		@Session() session: UserSession
+	): Promise<{
+		quizQuestion: QuizQuestionDto;
+		collectionId: string;
+		distractorsHotKeyMapFunction: (index: number) => number;
+	}> {
+		const quizQuestion = await this.quizService.getDrillExercise(session.user.id, collectionId);
+		return {
+			// quizQuestion: {
+			// 	...quizQuestion,
+			// 	explanation: quizQuestion.explanation ? await marked.parse(quizQuestion.explanation) : null,
+			// },
+			quizQuestion,
+			collectionId,
+			distractorsHotKeyMapFunction: this.distractorsHotKeyMapFunction,
+		};
+	}
+
+	public distractorsHotKeyMapFunction(index: number): number {
+		if (index === 1)
+			return 5; // Key '5'
+		else if (index === 2)
+			return 6; // Key '6'
+		else if (index === 3)
+			return 2; // Key '2'
+		else if (index === 4)
+			return 3; // Key '3'
+		else return index + 100; // Disable hotkey for other buttons
 	}
 }
