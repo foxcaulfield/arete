@@ -1,0 +1,159 @@
+/* PRIMARY */
+button,
+button.primary {
+	background: var(--accent);
+	color: #001627;
+	font-weight: 700;
+	border: 0;
+	border-radius: 3px;
+	padding: 8px 16px;
+	cursor: pointer;
+	transition: filter 0.4s;
+}
+
+button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	filter: none;
+}
+
+button:not(:disabled):hover {
+	filter: brightness(1.55);
+}
+
+/* SECONDARY */
+button.secondary {
+	background: var(--secondary);
+	color: #fff;
+}
+
+/* GHOST */
+button.ghost {
+	background: transparent;
+	color: var(--text);
+	border: 0;
+}
+
+button.ghost:hover {
+	filter: brightness(1.2);
+	background: var(--panel-alt);
+}
+
+/* OUTLINE */
+button.outline {
+	background: transparent;
+	color: var(--accent);
+	border: 2px solid var(--accent);
+}
+
+/* DANGER, SUCCESS, WARNING */
+button.danger {
+	background: var(--danger);
+	color: #fff;
+}
+
+button.success {
+	background: var(--success);
+	color: #001627;
+}
+
+button.warning {
+	background: var(--warning);
+	color: #001627;
+}
+
+/* LINK */
+button.link {
+	background: transparent;
+	color: var(--accent);
+	border: 0;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+/* SURFACE */
+button.surface {
+	background: var(--panel-alt);
+	color: var(--text);
+	border: 0;
+}
+
+/* ICON BUTTON */
+button.icon-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	padding: 0;
+	border: 0;
+	border-radius: 9999px;
+	background: none;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		transform 0.05s ease;
+}
+
+button.icon-button .icon,
+button.icon-button svg {
+	width: 1.25rem;
+	height: 1.25rem;
+	/* color: var(--ghost); */
+}
+
+button.icon-button:not(.active) {
+	color: var(--ghost);
+}
+
+button.icon-button:focus-visible {
+	outline: 2px solid #2563eb;
+	outline-offset: 2px;
+}
+
+button.icon-button.active {
+	color: red;
+	/* bold */
+	font-weight: 700;
+	background-color: #1e40af33;
+}
+
+/* button.secondary:hover {
+	filter: brightness(1.2);
+} */
+/* button.outline:hover {
+	background: var(--accent);
+	color: #001627;
+} */
+
+/* button.danger:hover {
+	filter: brightness(1.2);
+} */
+/* button.success:hover {
+	filter: brightness(1.2);
+} */
+/* button.warning:hover {
+	filter: brightness(1.2);
+} */
+/* 
+button.link:hover {
+	text-decoration: none;
+}
+
+button.link:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	text-decoration: none;
+}
+
+button.link:hover:disabled {
+	text-decoration: none;
+} */
+/* button.surface:hover {
+	background: var(--panel);
+} */
+/* button.icon-button:hover {
+  background-color: rgba(0,0,0,.06);
+} */

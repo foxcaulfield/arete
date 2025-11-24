@@ -2,12 +2,24 @@
 :root {
 	--bg: #0b0f14;
 	--panel: #121822;
+	--panel-alt: #171f2c;
 	--text: #e6edf3;
 	--muted: #9fb1c1;
-	--accent: #a1caff;
-	/* --accent: #3b82f6; */
-	--border: #1f2a38;
 	--ghost: #7c7c7c;
+
+	--primary: #1d4ed8;
+	--secondary: #0ea5e9;
+	--tertiary: #10b981;
+	--accent: #a1caff;
+	--accent-hover: #7fb3ff;
+	--accent-muted: #20304b;
+
+	--success: #22c55e;
+	--warning: #fbbf24;
+	--danger: #ef4444;
+
+	--border: #1f2a38;
+	--shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -68,24 +80,7 @@ body {
 	margin: 0;
 }
 
-button{
-	background: var(--accent);
-	color: #001627;
-	font-weight: 700;
-	border: none;
-	border-radius: 3px;
-	padding: 8px 16px;
-	cursor: pointer;
-	transition: filter 0.4s;	
-}
-button:hover {
-	filter: brightness(1.55);
-}
-button:disabled {
-	opacity: 0.6;
-	cursor: not-allowed;
-	filter: none;
-}
+
 
 .mt {
 	margin-top: 12px;
@@ -213,45 +208,3 @@ progress {
 	margin-bottom: 12px;
 }
 
-.icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding: 0;
-  border: 0;
-  border-radius: 9999px;
-  background: none;
-  cursor: pointer;
-  transition: background-color .15s ease, transform .05s ease;
-}
-
-.icon-button .icon,
-.icon-button svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  /* color: var(--ghost); */
-}
-
-.icon-button:not(.active) {
-	color: var(--ghost);
-}
-
-.icon-button:hover {
-  background-color: rgba(0,0,0,.06);
-}
-
-.icon-button:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
-[x-cloak] { display: none !important; }
-
-.icon-button.active {
-  color: red;
-  /* bold */
-  font-weight: 700;
-  background-color: #1e40af33;
-}
