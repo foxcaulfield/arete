@@ -120,16 +120,7 @@
 		}"
 		x-disabled-elt=".distractor, #answer-input, #submit-answer-button, #skip-question-button, #next-question-button, #control-buttons button"
 	>
-		<div
-			id="quiz-card-content"
-			{# hx-on::after-swap="console.log('after swap fired');" #}
-			{# hx-on::after-request="console.log('after request fired');" #}
-			{# hx-on::load="console.log('load fired');" #}
-			{# hx-on::before-process-node="console.log('beforeCardContentLoad fired');" #}
-			{# hx-on::after-process-node="afterCardContentLoad()" #}
-			{# hx-on::after-settle="console.log('after settle fired');" #}
-			x-init="$nextTick(() => { alpineAfterCardContentLoad() })"
-		>
+		<div id="quiz-card-content" x-init="$nextTick(() => { alpineAfterCardContentLoad() })">
 			{# DEBUG BLOCK #}
 			{% if false %}
 				<div id="debug">
@@ -149,16 +140,24 @@
 				></audio>
 			{% endif %}
 
-			{# EXIT BUTTON #}
-			<button hx-get="/ui/collections/{{ collectionId }}" hx-target="body" hx-swap="innerHTML">Exit</button>
-
 			{# HIDDEN INPUTS #}
 			<input id="collectionId" value="{{ collectionId }}" type="hidden" />
 			<input id="exerciseId" name="exerciseId" value="{{ quizQuestion.id }}" type="hidden" />
 
+			<div id="quiz-card-top-bar">
+				{# EXIT BUTTON #}
+				<button class="ghost" hx-get="/ui/collections/{{ collectionId }}" hx-target="body" hx-swap="innerHTML">
+					Exit
+				</button>
+
+				{# QUESTION TYPE BLOCK #}
+				{{ components.questionTypeBlock(quizQuestion.type) }}
+			</div>
+
+			{# <div id="question-type">{{ quizQuestion.type }}</div> #}
+
 			{# CONTROL BUTTONS #}
-			<div id="question-type">{{ quizQuestion.type }}</div>
-			<div class="wrapper card">
+			<div class="card">
 				<div id="control-buttons">
 					{# show image #}
 					{% if quizQuestion.imageUrl %}
@@ -211,17 +210,18 @@
 				</div>
 
 				{# QUESTION TEXT #}
-				<div class="question-text">
+				<h2>
 					{# a directive from main.ts #}
 					{% set parts = quizQuestion.question | parseQuestion %}
 					{% for part in parts %}
 						<span class="question-part {{ 'answer' if part.isAnswer }}">{{ part.text }}</span>
 						{% if not loop.last %}{% endif %}
 					{% endfor %}
-				</div>
+				</h2>
 
+				<hr />
 				{# QUESTION TRANSLATION #}
-				<div id="question-translation">{{ quizQuestion.translation }}</div>
+				<h6 style="font-weight: normal;">Translation: {{ quizQuestion.translation }}</h6>
 
 				{# ANSWER INPUTS #}
 				{% if quizQuestion.type === "CHOICE_SINGLE" %}
@@ -247,16 +247,16 @@
 						{% endfor %}
 					</div>
 				{% elif quizQuestion.type === "FILL_IN_THE_BLANK" %}
-					<div
+					<fieldset
 						id="text-input-container"
 						class="question-container"
 						hx-post="/exercises/drill/{{ collectionId }}/submit"
-
 						hx-include="#answer-input, #exerciseId"
 						hx-swap="none"
 						hx-trigger="keydown[key==='Enter'] from:#answer-input, click from:#submit-answer-button"
 						hx-on::before-request="htmxBeforeSubmit(event);"
 						hx-on::after-request="htmxAfterSubmit(event);"
+						role="group"
 					>
 						<input
 							id="answer-input"
@@ -266,8 +266,10 @@
 							x-model="userAnswerAlpine"
 						/>
 
-						<button id="submit-answer-button" x-bind:disabled="!userAnswerAlpine.length">Submit</button>
-					</div>
+						<button id="submit-answer-button" x-bind:disabled="!userAnswerAlpine.length" class="primary">
+							Submit
+						</button>
+					</fieldset>
 					{# {% elif quizQuestion.type === "CHOICE_MULTIPLE" %} #}
 				{% else %}
 					<div class="mt">Unknown question type</div>
@@ -316,6 +318,7 @@
 		>
 			<button
 				id="skip-question-button"
+				class="ghost"
 				@click="userAnswerAlpine=''; isImageVisible=false; isExplanationVisible=false;"
 			>
 				Skip
@@ -328,52 +331,29 @@
 			</button>
 		</div>
 		<style>
-			.question-text {
-				font-size: 1.25rem;
-				line-height: 1.75;
-				font-weight: 600;
-				color: #e2e8f0;
-				/* display: grid;
-				gap: 0.25rem;
-				grid-template-columns: repeat(auto-fit, minmax(100px, auto));
-				justify-content: start;
-				margin-bottom: 1rem; */
-			}
-
-			@media (min-width: 768px) {
-				.question-text {
-					font-size: 1.5rem;
-				}
-			}
-
 			.question-part {
 				border-radius: 4px;
 				padding: 0 4px;
 			}
 
 			.question-part.answer {
-				background-color: #3b82f6;
-				color: #3b82f6;
+				background-color: var(--pico-primary-background);
+				color: transparent;
 				user-select: none;
 			}
 			.quiz-card--correct .question-part.answer,
 			.quiz-card--incorrect .question-part.answer {
-				color: #4ade80;
+				color: var(--success);
+				background-color: rgba(74, 222, 128, 0.1);
 				text-shadow: none;
 			}
 
-			.quiz-card--correct .question-part.answer,
-			.quiz-card--incorrect .question-part.answer {
-				color: #4ade80;
-				background-color: rgba(74, 222, 128, 0.1);
-			}
-
-			.question-container {
+			/* .question-container {
 				margin-top: 1rem;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
-			}
+			} */
 
 			#distractor-buttons-container {
 				/* grid 2 cols */
@@ -395,53 +375,52 @@
 				padding: 0.75rem;
 				font-size: 1rem;
 				font-weight: 600;
-				color: #1f2937;
-				background-color: #e5e7eb;
-				border: none;
-				border-radius: 4px;
-				cursor: pointer;
-				transition:
-					background-color 0.3s,
-					color 0.3s;
 			}
 
+			.distractor:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+				border: 0px;
+			}
+
+			/* incorrect answer (user selected) */
 			.quiz-card--incorrect .distractor--selected {
-				/* incorrect answer (user selected) */
-				background-color: #f87171;
-				color: #1f2937;
+				background-color: var(--danger);
+				color: var(--panel);
 			}
 
+			/* correct answer (user selected) */
 			.quiz-card--correct .distractor--selected {
-				/* correct answer (user selected) */
-				background-color: #4ade80;
-				color: #1f2937;
+				background-color: var(--success);
+				color: var(--panel);
 			}
 
+			/* correct answer (but user selected the wrong one) */
 			.quiz-card--incorrect .distractor--correct {
-				/* correct answer (but user selected the wrong one) */
-				border: 2px solid #4ade80;
-				/* invert background color and text color */
-				background-color: #1f2937;
-				color: #d1fae5;
+				border: 2px solid var(--success);
+				background-color: var(--panel);
+				color: var(--text);
 			}
 
 			#feedback--success {
-				background-color: #d1fae5;
-				color: #065f46;
-				border: 1px solid #10b981;
+				background-color: var(--panel);
+				color: var(--success);
+				border: 1px solid var(--success);
 				padding: 0.75rem;
 				border-radius: 4px;
 			}
 
 			#feedback--error {
-				background-color: #fecaca;
-				color: #991b1b;
-				border: 1px solid #f87171;
+				background-color: var(--panel);
+				color: var(--danger);
+				border: 1px solid var(--danger);
 				padding: 0.75rem;
 				border-radius: 4px;
 			}
 
 			.quiz-card--correct #feedback--success {
+				background: transparent;
+				filter: brightness(0.75);
 				display: block;
 			}
 			#feedback--success {
@@ -449,6 +428,8 @@
 			}
 			.quiz-card--incorrect #feedback--error {
 				display: block;
+				background: transparent;
+				filter: brightness(0.75);
 			}
 			#feedback--error {
 				display: none;
@@ -478,7 +459,7 @@
 				overflow-wrap: break-word;
 				margin-top: 1rem;
 				padding: 1rem;
-				background-color: var(--panel);
+				background-color: var(--pico-secondary-background);
 				color: var(--text);
 				/* subtle shadow */
 				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -504,7 +485,7 @@
 			#question-type {
 				text-align: right;
 				font-size: 0.875rem;
-				color: #9ca3af;
+				color: var(--muted);
 			}
 
 			#control-buttons {
@@ -522,6 +503,12 @@
 				display: flex;
 				justify-content: space-between;
 				gap: 1rem;
+			}
+
+			#quiz-card-top-bar {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
 			}
 		</style>
 	</div>
