@@ -1,22 +1,22 @@
 /* Minimal styles for SSR demo */
 :root {
-	--bg: #0b0f14;
+	/* --bg: #0b0f14;
 	--panel: #121822;
 	--panel-alt: #171f2c;
 	--text: #e6edf3;
 	--muted: #9fb1c1;
-	--ghost: #7c7c7c;
+	--ghost: #7c7c7c; */
 
-	--primary: #1d4ed8;
+	/* --primary: #1d4ed8;
 	--secondary: #0ea5e9;
 	--tertiary: #10b981;
 	--accent: #a1caff;
 	--accent-hover: #7fb3ff;
-	--accent-muted: #20304b;
+	--accent-muted: #20304b; */
 
-	--success: #22c55e;
-	--warning: #fbbf24;
-	--danger: #ef4444;
+	--success: var(--pico-color-jade-500);
+	--warning: var(--pico-color-amber-500);
+	--danger: var(--pico-color-red-500);
 
 	--border: #1f2a38;
 	--shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
@@ -38,15 +38,10 @@ body {
 		Arial,
 		"Apple Color Emoji",
 		"Segoe UI Emoji";
-	background: var(--bg);
+	background: var(--pico-background-color);
 	color: var(--text);
 }
 
-.container {
-	max-width: 920px;
-	margin: 0 auto;
-	padding: 24px;
-}
 
 .navbar {
 	display: flex;
@@ -71,31 +66,13 @@ body {
 	gap: 16px;
 }
 
-.hero h1 {
-	margin: 0 0 8px;
-	font-size: 28px;
-}
-.muted {
-	color: var(--muted);
-	margin: 0;
-}
-
-
-
-.mt {
-	margin-top: 12px;
-}
-
 .card {
-	background: var(--panel);
+	background: var(--pico-card-background-color);
 	border: 1px solid var(--border);
 	border-radius: 8px;
 	padding: 12px;
 }
-.card__title {
-	font-weight: 700;
-	margin-bottom: 6px;
-}
+
 
 tr:nth-child(even) {
 	background-color: #555555ff;
@@ -113,83 +90,8 @@ tr:nth-child(odd) {
 	visibility: visible;
 }
 
-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-th, td {
-	text-align: left;
-	padding: 8px;
-}
-th {
-	background-color: var(--border);
-}
-
-tr:hover {
-	background-color: #666666ff;
-}
-
-select {
-	background: var(--panel);
-	color: var(--text);
-	border: 1px solid var(--border);
-	border-radius: 4px;
-	padding: 6px 8px;
-}
-option {
-	background: var(--panel);
-	color: var(--text);
-}
-
-select:focus {
-	outline: none;
-	border-color: var(--accent);
-	box-shadow: 0 0 0 2px var(--accent);
-}
-select:hover {
-	border-color: var(--accent);
-}
-select:disabled {
-	opacity: 0.6;
-	cursor: not-allowed;
-}
-
-input {
-	background: var(--panel);
-	color: var(--text);
-	border: 1px solid var(--border);
-	border-radius: 4px;
-	padding: 6px 8px;
-	width: 100%;
-	box-sizing: border-box;
-}
-input:focus {
-	outline: none;
-	border-color: var(--accent);
-	box-shadow: 0 0 0 2px var(--accent);
-}
-input::placeholder {
-	color: var(--muted);
-}
-
-textarea {
-	background: var(--panel);
-	color: var(--text);
-	border: 1px solid var(--border);
-	border-radius: 4px;
-	padding: 6px 8px;
-	width: 100%;
-	box-sizing: border-box;
-	resize: vertical;
-	min-height: 100px;
-}
-textarea:focus {
-	outline: none;
-	border-color: var(--accent);
-	box-shadow: 0 0 0 2px var(--accent);
-}
-textarea::placeholder {
-	color: var(--muted);
+tr:hover td {
+	background-color: var(--accent);
 }
 
 .form-group {
@@ -207,4 +109,3 @@ progress {
 	height: 20px;
 	margin-bottom: 12px;
 }
-
