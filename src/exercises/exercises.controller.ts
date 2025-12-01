@@ -26,13 +26,17 @@ import { UserAnswerDto, QuizQuestionDto, UserAnswerFeedbackDto } from "./dto/qui
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { multerConfig, multerField as field } from "src/configs/multer.config";
 import { ExerciseFileType } from "../common/enums/exercise-file-type.enum";
+import { QuizService } from "./quiz.service";
 
 type MulterFiles = Express.Multer.File[];
 type UploadedExerciseFiles = { audio?: MulterFiles; image?: MulterFiles };
 
 @Controller("exercises")
 export class ExercisesController {
-	public constructor(private readonly exercisesService: ExercisesService) {}
+	public constructor(
+		private readonly exercisesService: ExercisesService,
+		private readonly quizService: QuizService
+	) {}
 
 	@Post("create")
 	@HttpCode(HttpStatus.CREATED)
@@ -87,7 +91,7 @@ export class ExercisesController {
 		@Param("collectionId") collectionId: string,
 		@Session() session: UserSession
 	): Promise<QuizQuestionDto> {
-		return this.exercisesService.getDrillExercise(session.user.id, collectionId);
+		return this.quizService.getDrillExercise(session.user.id, collectionId);
 	}
 
 	@Post("drill/:collectionId/submit")
@@ -97,7 +101,7 @@ export class ExercisesController {
 		@Session() session: UserSession,
 		@Body() dto: UserAnswerDto
 	): Promise<UserAnswerFeedbackDto> {
-		return this.exercisesService.submitDrillAnswer(session.user.id, collectionId, dto);
+		return this.quizService.submitDrillAnswer(session.user.id, collectionId, dto);
 	}
 
 	@Get("files/:type/:filename")

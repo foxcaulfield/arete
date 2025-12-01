@@ -1,0 +1,111 @@
+/* Minimal styles for SSR demo */
+:root {
+	/* --bg: #0b0f14;
+	--panel: #121822;
+	--panel-alt: #171f2c;
+	--text: #e6edf3;
+	--muted: #9fb1c1;
+	--ghost: #7c7c7c; */
+
+	/* --primary: #1d4ed8;
+	--secondary: #0ea5e9;
+	--tertiary: #10b981;
+	--accent: #a1caff;
+	--accent-hover: #7fb3ff;
+	--accent-muted: #20304b; */
+
+	--success: var(--pico-color-jade-500);
+	--warning: var(--pico-color-amber-500);
+	--danger: var(--pico-color-red-500);
+
+	--border: #1f2a38;
+	--shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+* {
+	box-sizing: border-box;
+}
+body {
+	margin: 0;
+	font-family:
+		system-ui,
+		-apple-system,
+		Segoe UI,
+		Roboto,
+		Ubuntu,
+		Cantarell,
+		Noto Sans,
+		Arial,
+		"Apple Color Emoji",
+		"Segoe UI Emoji";
+	background: var(--pico-background-color);
+	color: var(--text);
+}
+
+
+.navbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 16px;
+	background: var(--panel);
+	border-bottom: 1px solid var(--border);
+}
+.navbar a {
+	color: var(--text);
+	text-decoration: none;
+}
+.navbar__brand a {
+	font-weight: 700;
+}
+.navbar__links {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	gap: 16px;
+}
+
+.card {
+	background: var(--pico-card-background-color);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: 12px;
+}
+
+
+tr:nth-child(even) {
+	background-color: #555555ff;
+}
+tr:nth-child(odd) {
+	background-color: #444444ff;
+}
+
+#loading {
+	opacity: 0;
+	visibility: hidden;
+}
+#loading.htmx-request {
+	opacity: 1;
+	visibility: visible;
+}
+
+tr:hover td {
+	background-color: var(--accent);
+}
+
+.form-group {
+	margin-bottom: 12px;
+	width: 100%;
+}
+.form-group label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+
+progress {
+	width: 100%;
+	height: 20px;
+	margin-bottom: 12px;
+}

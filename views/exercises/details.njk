@@ -1,0 +1,48 @@
+{% extends "layouts/base.njk" %}
+{% block content %}
+  <h1>Exercise</h1>
+  <div class="card">
+    <div><strong>Type:</strong> {{ exercise.type }}</div>
+    <div><strong>Question:</strong> {{ exercise.question }}</div>
+    <div><strong>Correct Answer:</strong> {{ exercise.correctAnswer }}</div>
+    {% if exercise.additionalCorrectAnswers and exercise.additionalCorrectAnswers.length %}
+      <div><strong>Also correct:</strong> {{ exercise.additionalCorrectAnswers | join(', ') }}</div>
+    {% endif %}
+    {% if exercise.distractors and exercise.distractors.length %}
+      <div><strong>Distractors:</strong> {{ exercise.distractors | join(', ') }}</div>
+    {% endif %}
+    {% if exercise.translation %}<div><strong>Translation:</strong> {{ exercise.translation }}</div>{% endif %}
+    {% if exercise.explanation %}<div><strong>Explanation:</strong> {{ exercise.explanation }}</div>{% endif %}
+    {% if exercise.imageUrl %}
+    	{# const safeType = encodeURIComponent(fileType);
+				const safeName = encodeURIComponent(filename);
+				const response = await this.request("GET", `/exercises/files/${safeType}/${safeName}`);
+				return response; #}
+      <div class="mt"><img 
+        style="max-width: 200px;"
+        src="/exercises/files/image/{{ exercise.imageUrl }}" alt="exercise image" style="max-width:100%"/></div>
+    {% endif %}
+    {% if exercise.audioUrl %}
+      <div class="mt"><audio controls src="/exercises/files/audio/{{ exercise.audioUrl }}"></audio></div>
+    {% endif %}
+    <div class="mt">
+      <a href="/ui/exercises/{{ exercise.id }}/edit">Edit</a>
+      <button
+        type="button"
+        hx-delete="/exercises/delete/{{ exercise.id }}"
+        hx-swap="none"
+        hx-disabled-elt="this"
+        hx-confirm="Delete this exercise?"
+        hx-on::after-request="
+          if (event.detail.xhr.status===200 || event.detail.xhr.status===204) {
+            window.location='/ui/collections/' + '{{ exercise.collectionId }}';
+          } else {
+            try { const err=JSON.parse(event.detail.xhr.responseText); alert(err.message||'Delete failed'); }
+            catch(e){ alert('Delete failed'); }
+          }">
+        Delete
+      </button>
+      <button type="button" onclick="window.location.href='/ui/collections/{{ exercise.collectionId }}'">Back to collection</button>
+    </div>
+  </div>
+{% endblock %}

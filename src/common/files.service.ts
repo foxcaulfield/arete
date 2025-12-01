@@ -14,6 +14,12 @@ interface HandleSingleFileUploadsParams {
 	setNull?: boolean;
 }
 
+const ALLOWED_MIME_TYPES: Record<ExerciseFileType, string[]> = {
+	// include m4a
+	[ExerciseFileType.AUDIO]: ["audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a"],
+	[ExerciseFileType.IMAGE]: ["image/jpeg", "image/png", "image/gif"],
+};
+
 @Injectable()
 export class FilesService {
 	private readonly logger = new Logger(FilesService.name);
@@ -23,18 +29,10 @@ export class FilesService {
 		[ExerciseFileType.IMAGE]: "images",
 	} as const;
 
-	private readonly mimeTypeMap = {
-		[ExerciseFileType.AUDIO]: "audio/mpeg",
-		[ExerciseFileType.IMAGE]: "image/jpeg",
-	} as const satisfies Record<ExerciseFileType, string>;
-
 	public constructor(private readonly fileStorageService: FileStorageService<StorageType.FS>) {}
 
 	/**
 	 * Streams a file back to the caller based on the requested exercise file type and file name.
-	 * @param filetype The type of exercise file (audio or image) so that we look up the correct folder and MIME type.
-	 * @param filename The stored filename to load from the backing store.
-	 * @returns A {@link StreamableFile} wrapper that includes the appropriate MIME type header.
 	 */
 	public async getFile({
 		filetype,
@@ -49,14 +47,12 @@ export class FilesService {
 		});
 
 		return new StreamableFile(stream, {
-			type: this.mimeTypeMap[filetype],
+			type: filetype === ExerciseFileType.AUDIO ? "audio/mpeg" : "image/jpeg",
 		});
 	}
 
 	/**
 	 * Deletes a previously stored file if it exists.
-	 * @param fileType The type of exercise file so the correct folder can be targeted.
-	 * @param filename The stored filename to delete.
 	 */
 	public async deleteFile(fileType: ExerciseFileType, filename: string): Promise<void> {
 		const folder = this.fileTypeToFolderMap[fileType];
@@ -71,9 +67,6 @@ export class FilesService {
 
 	/**
 	 * Uploads a file buffer to the configured storage backend.
-	 * @param fileType The exercise file type determining the destination folder.
-	 * @param filename The target filename to store within the folder.
-	 * @param buffer Raw file bytes to upload.
 	 */
 	public async uploadFile(fileType: ExerciseFileType, filename: string, buffer: Buffer): Promise<void> {
 		const folder = this.fileTypeToFolderMap[fileType];
@@ -85,8 +78,6 @@ export class FilesService {
 
 	/**
 	 * Handles a single upload request, deleting any previous file and optionally clearing the stored reference.
-	 * @param params Upload parameters controlling the new file, clearing behavior, and previous file reference.
-	 * @returns The filename that should be stored after processing, or {@code null} when clearing.
 	 */
 	public async handleFileUpload({
 		fileType,
@@ -98,6 +89,23 @@ export class FilesService {
 		const shouldClearExisting = setNull === true;
 		const hasPrevious = !!previousUrl;
 		const newFilename = file ? this.generateUniqueFilename(file) : null;
+		const incomingMimeType = file?.mimetype;
+		const fileSize = file?.size || 0;
+
+		// Validate incoming file
+		if (hasNewFile && fileSize === 0) {
+			throw new BadRequestException("File is empty");
+		}
+
+		if (hasNewFile && !incomingMimeType) {
+			throw new BadRequestException("Invalid file type");
+		}
+
+		if (hasNewFile && incomingMimeType && !ALLOWED_MIME_TYPES[fileType].includes(incomingMimeType)) {
+			throw new BadRequestException(
+				`Unsupported file type for ${fileType}. Allowed: ${ALLOWED_MIME_TYPES[fileType].join(", ")}`
+			);
+		}
 
 		try {
 			// Delete previous files if new ones are uploaded OR if explicitly cleared (null incoming)
@@ -126,11 +134,6 @@ export class FilesService {
 
 	/**
 	 * Generates a unique filename for uploaded files
-	 */
-	/**
-	 * Creates a collision-resistant filename based on a UUID and the incoming file extension.
-	 * @param file The uploaded file whose original name and mimetype yield an extension.
-	 * @returns A unique filename that preserves the original extension when available.
 	 */
 	public generateUniqueFilename(file: Express.Multer.File): string {
 		const extension = extname(file.originalname) || file.mimetype.split("/")[1];

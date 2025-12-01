@@ -1,0 +1,134 @@
+{% macro collectionTableHeader() %}
+	<tr>
+		<th>Name</th>
+		<th>Description</th>
+		<th>Owner</th>
+		{# <th>ID</th> #}
+		{# <th>Created At</th>
+    <th>Updated At</th> #}
+		<th>Exercises</th>
+		<th>Attempts</th>
+	</tr>
+{% endmacro %}
+
+{% macro collectionTableRow(collectionUnit) %}
+	<tr
+		hx-get="/ui/collections/{{ collectionUnit.id }}"
+		hx-trigger="click"
+		hx-target="body"
+		hx-swap="innerHTML"
+		hx-push-url="true"
+	>
+		<td>{{ collectionUnit.name }}</td>
+		<td>{{ collectionUnit.description }}</td>
+		<td>{{ collectionUnit.user.name or "N/A" }}</td>
+		{# <td>{{ collectionUnit.id }}</td> #}
+		{# <td>{{ collectionUnit.createdAt }}</td>
+    <td>{{ collectionUnit.updatedAt }}</td> #}
+		<td>{{ collectionUnit.exerciseCount or 0 }}</td>
+		<td>{{ collectionUnit.attemptCount or 0 }}</td>
+	</tr>
+{% endmacro %}
+
+{% macro exerciseTableHeader() %}
+	<tr>
+		{# <th>ID</th> #}
+		<th>Question</th>
+		<th>Correct Answer</th>
+		<th>Type</th>
+		<th>Total Attempts</th>
+		<th>Correct Attempts</th>
+	</tr>
+{% endmacro %}
+
+{% macro exerciseTableRow(exerciseUnit) %}
+	<tr
+		hx-get="/ui/exercises/{{ exerciseUnit.id }}"
+		hx-trigger="click"
+		hx-target="body"
+		hx-swap="innerHTML"
+		hx-push-url="true"
+	>
+		{# <td>{{ exerciseUnit.id }}</td> #}
+		<td>{{ exerciseUnit.question }}</td>
+		<td>{{ exerciseUnit.correctAnswer }}</td>
+		<td>{{ exerciseUnit.type }}</td>
+		<td>{{ exerciseUnit.totalAttempts }}</td>
+		<td>{{ exerciseUnit.correctAttempts }}</td>
+	</tr>
+{% endmacro %}
+
+{% macro questionTypeBlock(questionType) %}
+	<div class="question-type-block">
+		<span class="question-type-icon-wrap">
+			{% if questionType === "CHOICE_SINGLE" %}
+				{% include "icons/squares-2x2.njk" %}
+			{% elif questionType === "FILL_IN_THE_BLANK" %}
+				{% include "icons/document-text.njk" %}
+			{% else %}
+				{% include "icons/question-mark-circle.njk" %}
+			{% endif %}
+		</span>
+
+		<div class="question-type-text">
+			<div class="question-type-title">
+				{% if questionType === "CHOICE_SINGLE" %}
+					Single choice
+				{% elif questionType === "FILL_IN_THE_BLANK" %}
+					Fill in the blank
+				{% else %}
+					Unknown type
+				{% endif %}
+			</div>
+			<div class="question-type-desc">
+				{% if questionType === "CHOICE_SINGLE" %}
+					Choose one correct answer.
+				{% elif questionType === "FILL_IN_THE_BLANK" %}
+					Type the missing word or phrase.
+				{% else %}
+					Question type information.
+				{% endif %}
+			</div>
+		</div>
+	</div>
+	<style>
+		.question-type-block {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.6rem; /* similar to gap-2.4 */
+			margin: 0.25rem 0;
+			justify-content: end;
+		}
+
+		.question-type-icon-wrap {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 2.5rem; /* w-10 */
+			height: 2.5rem; /* h-10 */
+			border-radius: 0.5rem; /* rounded-lg */
+			color: var(--muted); /* text-slate-500 */
+			flex-shrink: 0;
+		}
+
+		.question-type-icon-wrap svg {
+			width: 1.5rem; /* ~24px */
+			height: 1.5rem;
+		}
+
+		.question-type-text {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.question-type-title {
+			font-weight: 600;
+			font-size: 0.875rem;
+		}
+
+		.question-type-desc {
+			font-size: 0.75rem;
+			color: var(--muted);
+		}
+	</style>
+{% endmacro %}

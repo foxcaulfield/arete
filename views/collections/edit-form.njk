@@ -1,0 +1,39 @@
+{% extends "layouts/base.njk" %}
+{% import "partials/components.njk" as components %}
+
+{% block content %}
+    <h1>Edit Collection: {{ collection.name }}</h1>
+    <form 
+        id="edit-collection-form" 
+        hx-patch="/collections/update/{{ collection.id }}"
+        hx-encoding="json"
+        hx-trigger="submit"
+        hx-swap="none"
+        hx-on::after-request="
+        console.log(event.detail);
+            if(event.detail.successful){ 
+                window.location='/ui/collections/{{ collection.id }}'; 
+            } else {
+                try { 
+                    const err=JSON.parse(event.detail.xhr.responseText); 
+                    document.getElementById('edit-collection-form-errors').textContent = err.message + ' Fields: ' + (err.fields ? Object.values(err.fields).flat().join(', ') : 'N/A'); 
+                } catch(e){
+                    document.getElementById('edit-collection-form-errors').textContent='Update failed'; 
+                }
+            }"
+        class="card">
+        <div>
+            <label for="collection-name-input">Collection Name</label>
+            <input type="text" id="collection-name-input" name="name" value="{{ collection.name }}" required/>
+        </div>
+        <div>
+            <label for="collection-description-input">Description</label>
+            <textarea id="collection-description-input" name="description" rows="4">{{ collection.description }}</textarea>
+        </div>
+        <div>
+            <button type="submit">Save Changes</button>
+            <button type="button" onclick="window.location.href='/ui/collections/{{ collection.id }}'">Cancel</button>
+        </div>
+    </form>
+    <div id="edit-collection-form-errors" class="error mt"></div>
+{% endblock %}

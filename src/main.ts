@@ -5,9 +5,13 @@ import { ConfigService } from "@nestjs/config";
 import { EnvConfig } from "./configs/joi-env.config";
 import { ValidationPipe, BadRequestException } from "@nestjs/common";
 import { ValidationError } from "class-validator";
+import nunjucks from "nunjucks";
+import { join } from "path";
+import { NestExpressApplication } from "@nestjs/platform-express";
+import { marked } from "marked";
 
 async function bootstrap(): Promise<void> {
-	const app = await NestFactory.create(AppModule, {
+	const app = await NestFactory.create<NestExpressApplication>(AppModule, {
 		bodyParser: false,
 	});
 
@@ -15,6 +19,41 @@ async function bootstrap(): Promise<void> {
 	const appMode = configService.get("NODE_ENV", { infer: true });
 	const isProduction = appMode === "production";
 	console.log("App running in", appMode, "mode");
+
+	const viewsDir = join(process.cwd(), "views");
+	const staticDir = join(process.cwd(), "public");
+
+	app.useStaticAssets(staticDir);
+	app.setBaseViewsDir(viewsDir);
+	const expressInstance = app.getHttpAdapter().getInstance();
+	nunjucks
+		.configure(viewsDir, {
+			express: expressInstance,
+			autoescape: true,
+			noCache: !isProduction,
+			watch: !isProduction,
+		})
+		.addFilter("parseQuestion", function (question: string) {
+			if (!question) return [];
+
+			const result = [];
+			const regEx = /{{(.*?)}}|([^{}]+)/g;
+			let match;
+
+			while ((match = regEx.exec(question)) !== null) {
+				if (match[1]) {
+					result.push({ text: match[1].trim(), isAnswer: true });
+				} else if (match[2]) {
+					result.push({ text: match[2].trim(), isAnswer: false });
+				}
+			}
+			return result;
+		})
+		.addFilter("filterMarkdown", function (text: string) {
+			return marked.parse(text);
+		});
+
+	app.setViewEngine("njk");
 
 	app.enableCors({
 		origin: isProduction ? configService.get("CORS_ORIGINS", { infer: true }).split(",") : "*",

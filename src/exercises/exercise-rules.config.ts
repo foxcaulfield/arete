@@ -1,0 +1,8 @@
+export type ExerciseRulesConfig = {
+	DISTRACTORS_PER_QUESTION: number;
+	MIN_DISTRACTORS_FOR_EXERCISE: number;
+	MIN_DISTRACTOR_CHAR_LENGTH: number;
+	MAX_DISTRACTOR_CHAR_LENGTH: number;
+};
+
+export const EXERCISE_RULES_SYMBOL = Symbol("EXERCISE_RULES_CONFIG_KEY");

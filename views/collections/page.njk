@@ -1,0 +1,64 @@
+{% extends "layouts/base.njk" %}
+{% import "partials/components.njk" as components %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+    {% if data.length == 0 %}
+        <p>No collections found.</p>
+    {% else %}
+        <div id="collections-wrapper" hx-disabled-elt="#collection-limit-select, #prev-collections-button, #next-collections-button">
+            <button onclick="window.location.href='/ui/collections/create'"> New Collection</button>
+            <hr/>
+            <select 
+                id="collection-limit-select" 
+                name="limit" 
+                hx-get="/ui/collections" 
+                hx-trigger="change" 
+                hx-select="#collections-wrapper"
+                hx-target="#collections-wrapper" 
+                hx-push-url="true" 
+                hx-disabled-elt="inherit">
+                <option value="5" {% if pagination.limit==5 %}selected{% endif %}>5</option>
+                <option value="10" {% if pagination.limit==10 %}selected{% endif %}>10</option>
+                <option value="25" {% if pagination.limit==25 %}selected{% endif %}>25</option>
+            </select>
+            <div>Total Items: {{ pagination.totalItems }}</div>
+            <div>Total Pages: {{ pagination.totalPages }}</div>
+            <div>
+                {% if pagination.hasPreviousPage %}
+                    <button id="prev-collections-button"
+                        hx-get="/ui/collections?page={{ pagination.page - 1 }}&limit={{ pagination.limit }}"
+                        hx-select="#collections-wrapper" 
+                        hx-target="#collections-wrapper" 
+                        hx-push-url="true"
+                        hx-disabled-elt="inherit">Previous</button>
+                {% else %}
+                    <button disabled>Previous</button>
+                {% endif %}
+
+                <span> Page: {{ pagination.page }} / {{ pagination.totalPages }}</span>
+                
+                {% if pagination.hasNextPage %}
+                    <button id="next-collections-button"
+                        hx-get="/ui/collections?page={{ pagination.page + 1 }}&limit={{ pagination.limit }}"
+                        hx-select="#collections-wrapper"
+                        hx-target="#collections-wrapper"
+                        hx-push-url="true"
+                        hx-disabled-elt="inherit">Next</button>
+                {% else %}
+                    <button disabled>Next</button>
+                {% endif %}
+            </div>
+            <table id="collections-table">
+                <thead>
+                    {{ components.collectionTableHeader() }}
+                </thead>
+                <tbody>
+                    {% for collectionItem in data %}
+                        {{ components.collectionTableRow(collectionItem) }}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% endblock %}

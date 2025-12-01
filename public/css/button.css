@@ -1,0 +1,115 @@
+
+/* GHOST */
+button.ghost {
+	background: transparent;
+	/* color: var(--pico-color); */
+	color: var(--muted);
+	border: 0;
+}
+
+button.ghost:hover {
+	filter: brightness(1.2);
+	background: var(--pico-muted-color);
+}
+
+
+/* SUCCESS */
+button.success {
+	background: var(--success);
+	color: white;
+	border: 0;
+}
+
+button.success.outline {
+	background: transparent;
+	color: var(--success);
+	border: 2px solid var(--success);
+}
+
+button.success.outline:hover {
+	/* background: var(--success); */
+	color: white;
+}
+
+button.success.ghost {
+	background: transparent;
+	color: var(--success);
+	/* border: 2px solid var(--success); */
+}
+
+/* WARNING */
+button.warning {
+	background: var(--warning);
+	color: white;
+	border: 0;
+}
+
+button.warning.outline {
+	background: transparent;
+	color: var(--warning);
+	border: 2px solid var(--warning);
+}
+
+button.warning.outline:hover {
+	/* background: var(--warning); */
+	color: white;
+}
+
+button.warning.ghost {
+	background: transparent;
+	color: var(--warning);
+	/* border: 2px solid var(--warning); */
+}
+
+/* DANGER */
+button.danger {
+	background: var(--danger);
+	color: white;
+	border: 0;
+}
+
+button.danger.outline {
+	background: transparent;
+	color: var(--danger);
+	border: 2px solid var(--danger);
+}
+
+button.danger.outline:hover {
+	/* background: var(--danger); */
+	color: white;
+}
+button.danger.ghost {
+	background: transparent;
+	color: var(--danger);
+	/* border: 2px solid var(--danger); */
+}
+
+/* ICON BUTTON */
+button.icon-button .icon,
+button.icon-button svg {
+	width: 1.25rem;
+	height: 1.25rem;
+	/* color: var(--ghost); */
+}
+/* 
+button.icon-button:not(.active) {
+	color: var(--pico-primary-color);
+}
+
+button.icon-button:focus-visible {
+	outline: 2px solid #2563eb;
+	outline-offset: 2px;
+}
+
+button.icon-button.active {
+	color: var(--accent);
+	font-weight: 700;
+	background-color: #1e40af33;
+} */
+
+button.active {
+	color: var(--pico-primary) !important;
+	font-weight: 700;
+	background-color: #1e40af33;
+
+}

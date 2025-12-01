@@ -1,0 +1,45 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+    {# <form 
+    method="POST" 
+    action="/api/auth/sign-in/email" 
+    class="auth-form"
+    > #}
+    <form
+    hx-post="/api/auth/sign-in/email"
+    hx-trigger="submit"
+    hx-swap="none"
+    hx-on::after-request="
+        if(event.detail.xhr.status===200){ 
+            window.location='/ui/profile'; 
+        } else {
+            try { 
+                const err=JSON.parse(event.detail.xhr.responseText); 
+                document.getElementById('login-form-errors').textContent = err.message || 'Login failed'; 
+            } catch(e){
+                document.getElementById('login-form-errors').textContent='Login failed'; 
+            }
+        }"
+    hx-on::response-error="
+        try { 
+            const err = JSON.parse(event.detail.xhr.responseText);
+            document.getElementById('login-form-errors').textContent = err.message || 'Login failed';
+        } catch(e){
+            document.getElementById('login-form-errors').textContent='Login failed';
+        }">
+        <h1>Login</h1>
+        <div>
+            <label for="email">Email</label>
+            <input type="text" id="email" name="email" required/>
+        </div>
+        <div>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required/>
+        </div>
+        <div id="login-form-errors" class="error"></div>
+        <button type="submit" class="btn">Login</button>
+    </form>
+    <p class="muted">No account? <a href="/ui/auth/signup">Sign up</a>
+    </p>
+{% endblock %}

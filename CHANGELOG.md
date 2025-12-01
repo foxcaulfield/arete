@@ -1,3 +1,117 @@
+## 1.4.0-rc.1 (2025-12-01)
+
+* feat: add audio wave SVG icon ([567ca72](https://github.com/foxcaulfield/arete/commit/567ca72))
+* feat: add button styles and integrate button.css into the layout ([45e9b55](https://github.com/foxcaulfield/arete/commit/45e9b55))
+* feat: add CollectionAnalyticsService for enriching collections with user-specific attempt and exerci ([a90664c](https://github.com/foxcaulfield/arete/commit/a90664c))
+* feat: add collections page and components, enhance navbar for authenticated users ([66a3369](https://github.com/foxcaulfield/arete/commit/66a3369))
+* feat: add create exercise form and update UI components for collections ([e28672c](https://github.com/foxcaulfield/arete/commit/e28672c))
+* feat: add edit functionality for collections with form and controller updates ([b9adcf4](https://github.com/foxcaulfield/arete/commit/b9adcf4))
+* feat: add edit functionality for exercises with form and controller updates ([ecc67db](https://github.com/foxcaulfield/arete/commit/ecc67db))
+* feat: add ExerciseQueryService for enhanced exercise retrieval methods ([022be7c](https://github.com/foxcaulfield/arete/commit/022be7c))
+* feat: add ExerciseRulesConfig type for exercise configuration settings ([b845487](https://github.com/foxcaulfield/arete/commit/b845487))
+* feat: add markdown parsing filter and question parsing filter to nunjucks configuration ([fba4521](https://github.com/foxcaulfield/arete/commit/fba4521))
+* feat: add quiz service integration and new quiz route in UI controller ([a23dd9a](https://github.com/foxcaulfield/arete/commit/a23dd9a))
+* feat: add SSR (nunjucks) lib ([cf6f129](https://github.com/foxcaulfield/arete/commit/cf6f129))
+* feat: add SVG icon for bars 3 center left ([d3e6746](https://github.com/foxcaulfield/arete/commit/d3e6746))
+* feat: add SVG icon for pencil ([549f57a](https://github.com/foxcaulfield/arete/commit/549f57a))
+* feat: add SVG icon for photo ([9718099](https://github.com/foxcaulfield/arete/commit/9718099))
+* feat: add SVG icons for document text, question, and squares layout ([73ee081](https://github.com/foxcaulfield/arete/commit/73ee081))
+* feat: add SVG icons: clipboard document and information circle ([2665c6a](https://github.com/foxcaulfield/arete/commit/2665c6a))
+* feat: add UtilsService and refactor QuizService to utilize utility methods ([bcc4cbd](https://github.com/foxcaulfield/arete/commit/bcc4cbd))
+* feat: add VSCode settings for nunjucks file associations and syntax highlighting ([3f41046](https://github.com/foxcaulfield/arete/commit/3f41046))
+* feat: create ExerciseRulesConfig for configurable exercise settings and update imports ([7516251](https://github.com/foxcaulfield/arete/commit/7516251))
+* feat: enhance collection and exercise tables with improved layout and question type block ([23a5c10](https://github.com/foxcaulfield/arete/commit/23a5c10))
+* feat: enhance file upload handling with MIME type validation and error handling ([a643c1a](https://github.com/foxcaulfield/arete/commit/a643c1a))
+* feat: enhance quiz page interactivity with improved feedback and event logging ([5976d08](https://github.com/foxcaulfield/arete/commit/5976d08))
+* feat: enhance quiz page layout with improved button styles and question type display ([1fed200](https://github.com/foxcaulfield/arete/commit/1fed200))
+* feat: enhance UI components and forms for collections, add exercise details and create functionality ([a0afce8](https://github.com/foxcaulfield/arete/commit/a0afce8))
+* feat: implement authentication views and middleware for user sessions ([d26abba](https://github.com/foxcaulfield/arete/commit/d26abba))
+* feat: implement CollectionAccessService for validating user access to collections ([b38111c](https://github.com/foxcaulfield/arete/commit/b38111c))
+* feat: implement exercise detail view and enhance UI for exercise interactions ([e87bae9](https://github.com/foxcaulfield/arete/commit/e87bae9))
+* feat: implement ExerciseValidationService for answer and distractor validation ([41fc822](https://github.com/foxcaulfield/arete/commit/41fc822))
+* feat: implement rate limiting with RateLimitGuard and associated exceptions ([e85d049](https://github.com/foxcaulfield/arete/commit/e85d049))
+* feat: improve quiz page functionality with enhanced event handling and state management ([9226d17](https://github.com/foxcaulfield/arete/commit/9226d17))
+* feat: integrate PaginationService for consistent pagination handling across collections and exercise ([0cd53a0](https://github.com/foxcaulfield/arete/commit/0cd53a0))
+* feat: integrate QuizService into ExercisesController and ExercisesModule ([75f20df](https://github.com/foxcaulfield/arete/commit/75f20df))
+* feat: introduce ExerciseRulesConfig for configurable distractor settings in exercises ([10e6529](https://github.com/foxcaulfield/arete/commit/10e6529))
+* feat: move macros ([666a024](https://github.com/foxcaulfield/arete/commit/666a024))
+* feat: refactor component imports and add quiz page with functionality ([f3f78be](https://github.com/foxcaulfield/arete/commit/f3f78be))
+* feat: refactor file upload handling in ExercisesService ([ad099a6](https://github.com/foxcaulfield/arete/commit/ad099a6))
+* feat: refactor getTopMostAttemptedExercises method and move query logic to a dedicated function ([1f8db24](https://github.com/foxcaulfield/arete/commit/1f8db24))
+* feat: update allowed MIME types to include m4a for audio uploads ([ce896a0](https://github.com/foxcaulfield/arete/commit/ce896a0))
+* feat: update delete button to use hx-delete for collection removal ([b9ec7b1](https://github.com/foxcaulfield/arete/commit/b9ec7b1))
+* feat: update Prettier and ESLint configurations, add new dependencies for Jinja template support ([194f2b9](https://github.com/foxcaulfield/arete/commit/194f2b9))
+* Refactor code structure for improved readability and maintainability ([836d981](https://github.com/foxcaulfield/arete/commit/836d981))
+* Refactor CSS styles and update layout templates ([65f0051](https://github.com/foxcaulfield/arete/commit/65f0051))
+* Refactor UI handling and improve server-side rendering ([d38206d](https://github.com/foxcaulfield/arete/commit/d38206d))
+* refactor: remove rate limiting functionality and update UI controller for anonymous access ([b2eef43](https://github.com/foxcaulfield/arete/commit/b2eef43))
+* chore(merge): back-merge main into develop ([4e05242](https://github.com/foxcaulfield/arete/commit/4e05242))
+* chore(release): v1.4.0-beta.1 [skip ci] ([e75c9a4](https://github.com/foxcaulfield/arete/commit/e75c9a4))
+* chore(release): v1.4.0-beta.10 [skip ci] ([8c67fec](https://github.com/foxcaulfield/arete/commit/8c67fec))
+* chore(release): v1.4.0-beta.11 [skip ci] ([0125c27](https://github.com/foxcaulfield/arete/commit/0125c27))
+* chore(release): v1.4.0-beta.12 [skip ci] ([408fa31](https://github.com/foxcaulfield/arete/commit/408fa31))
+* chore(release): v1.4.0-beta.2 [skip ci] ([2b3bfda](https://github.com/foxcaulfield/arete/commit/2b3bfda))
+* chore(release): v1.4.0-beta.3 [skip ci] ([3ac3292](https://github.com/foxcaulfield/arete/commit/3ac3292))
+* chore(release): v1.4.0-beta.4 [skip ci] ([95ba8d8](https://github.com/foxcaulfield/arete/commit/95ba8d8))
+* chore(release): v1.4.0-beta.5 [skip ci] ([c2384bb](https://github.com/foxcaulfield/arete/commit/c2384bb))
+* chore(release): v1.4.0-beta.6 [skip ci] ([3a7f5e9](https://github.com/foxcaulfield/arete/commit/3a7f5e9))
+* chore(release): v1.4.0-beta.7 [skip ci] ([6663527](https://github.com/foxcaulfield/arete/commit/6663527))
+* chore(release): v1.4.0-beta.8 [skip ci] ([d2b0ca5](https://github.com/foxcaulfield/arete/commit/d2b0ca5))
+* chore(release): v1.4.0-beta.9 [skip ci] ([0547ebe](https://github.com/foxcaulfield/arete/commit/0547ebe))
+* fix: update import paths for ExerciseRulesConfig to use correct file name ([7b787af](https://github.com/foxcaulfield/arete/commit/7b787af))
+
+## 1.4.0-beta.12 (2025-11-15)
+
+* feat: implement CollectionAccessService for validating user access to collections ([b38111c](https://github.com/foxcaulfield/arete/commit/b38111c))
+
+## 1.4.0-beta.11 (2025-11-15)
+
+* fix: update import paths for ExerciseRulesConfig to use correct file name ([7b787af](https://github.com/foxcaulfield/arete/commit/7b787af))
+* feat: add ExerciseRulesConfig type for exercise configuration settings ([b845487](https://github.com/foxcaulfield/arete/commit/b845487))
+
+## 1.4.0-beta.10 (2025-11-15)
+
+* feat: create ExerciseRulesConfig for configurable exercise settings and update imports ([7516251](https://github.com/foxcaulfield/arete/commit/7516251))
+
+## 1.4.0-beta.9 (2025-11-15)
+
+* feat: introduce ExerciseRulesConfig for configurable distractor settings in exercises ([10e6529](https://github.com/foxcaulfield/arete/commit/10e6529))
+
+## 1.4.0-beta.8 (2025-11-15)
+
+* feat: add CollectionAnalyticsService for enriching collections with user-specific attempt and exerci ([a90664c](https://github.com/foxcaulfield/arete/commit/a90664c))
+
+## 1.4.0-beta.7 (2025-11-15)
+
+* feat: implement ExerciseValidationService for answer and distractor validation ([41fc822](https://github.com/foxcaulfield/arete/commit/41fc822))
+* feat: integrate PaginationService for consistent pagination handling across collections and exercise ([0cd53a0](https://github.com/foxcaulfield/arete/commit/0cd53a0))
+
+## 1.4.0-beta.6 (2025-11-15)
+
+* feat: add ExerciseQueryService for enhanced exercise retrieval methods ([022be7c](https://github.com/foxcaulfield/arete/commit/022be7c))
+
+## 1.4.0-beta.5 (2025-11-15)
+
+* feat: enhance file upload handling with MIME type validation and error handling ([a643c1a](https://github.com/foxcaulfield/arete/commit/a643c1a))
+
+## 1.4.0-beta.4 (2025-11-15)
+
+* feat: implement rate limiting with RateLimitGuard and associated exceptions ([e85d049](https://github.com/foxcaulfield/arete/commit/e85d049))
+* feat: refactor getTopMostAttemptedExercises method and move query logic to a dedicated function ([1f8db24](https://github.com/foxcaulfield/arete/commit/1f8db24))
+
+## 1.4.0-beta.3 (2025-11-15)
+
+* feat: refactor file upload handling in ExercisesService ([ad099a6](https://github.com/foxcaulfield/arete/commit/ad099a6))
+
+## 1.4.0-beta.2 (2025-11-15)
+
+* feat: add UtilsService and refactor QuizService to utilize utility methods ([bcc4cbd](https://github.com/foxcaulfield/arete/commit/bcc4cbd))
+
+## 1.4.0-beta.1 (2025-11-15)
+
+* feat: integrate QuizService into ExercisesController and ExercisesModule ([75f20df](https://github.com/foxcaulfield/arete/commit/75f20df))
+* chore(merge): back-merge main into develop ([4e05242](https://github.com/foxcaulfield/arete/commit/4e05242))
+
 ## 1.3.0 (2025-11-14)
 
 * Merge branch 'main' into release/1.3.0 ([8bd81a0](https://github.com/foxcaulfield/arete/commit/8bd81a0))

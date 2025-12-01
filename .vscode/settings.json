@@ -1,0 +1,92 @@
+{
+    // "files.associations": {
+    //     "*.njk": "html"
+    // },
+    // "emmet.includeLanguages": {
+    //     "njk": "html",
+    //     "jinja": "html",
+    //     "html": "html",
+    //     "nunjucks": "html",
+    //     "jinja-html": "html",
+    //     "html-nunjucks": "html",
+    //     "htmlnunjucks": "html",
+    //     "html.njk": "html"
+    // },
+    "files.associations": {
+        "*.njk": "html"
+    },
+    "emmet.includeLanguages": {
+        "njk": "html"
+    },
+    "prettier.documentSelectors": [
+        "**/*.njk"
+    ],
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    // default njk formatter to prettier
+    "html.customData": [
+        "./.vscode/htmx-custom-data.json"
+    ],
+    "html.validate.scripts": false,
+    // "prettier.embeddedLanguageFormatting": "off",
+    // "editor.semanticHighlighting.enabled": true,
+    "workbench.colorCustomizations": {
+        "window.activeBorder": "#00FF00", // Bright Green for active window
+        "editorGroup.border": "#FF0000", // Red border between editor panels
+        "contrastBorder": "#888888", // Light gray for general contrast borders
+        // "tab.border": "#0000FF" // Blue border for tabs
+        "panel.border": "#FF0000" // Red border for bottom panel
+    },
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": [
+                    "entity.name.tag.njk",
+                    "punctuation.tag.njk",
+                    "punctuation.definition.tag.begin.njk",
+                    "punctuation.definition.tag.end.njk"
+                ],
+                "settings": {
+                    "foreground": "#C678DD",
+                    "fontStyle": ""
+                }
+            },
+            {
+                "scope": [
+                    "variable.other.njk",
+                    "meta.output.njk"
+                ],
+                "settings": {
+                    "foreground": "#ffd866"
+                }
+            },
+            {
+                "scope": [
+                    "text.html.derivative meta.block.njk",
+                    "meta.block.njk",
+                    "keyword.control.njk",
+                    "punctuation.definition.template.njk",
+                    "punctuation.definition.template.begin.njk",
+                    "punctuation.definition.template.end.njk",
+                    "punctuation.section.embedded.begin.njk",
+                    "punctuation.section.embedded.end.njk"
+                ],
+                "settings": {
+                    "foreground": "#ff5f87",
+                    "fontStyle": "bold"
+                }
+            },
+            {
+                "scope": [
+                    "comment.block.njk",
+                    "comment.line.njk"
+                ],
+                "settings": {
+                    "foreground": "#40464d",
+                    "fontStyle": "italic"
+                }
+            }
+        ]
+    }
+}
