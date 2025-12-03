@@ -1,3 +1,14 @@
+## 1.5.0-beta.1 (2025-12-03)
+
+* feat: add exercise components including input fields and selection options ([31efc69](https://github.com/foxcaulfield/arete/commit/31efc69))
+* feat: enhance exercise components with dynamic tags for additional correct answers and distractors ([6294b59](https://github.com/foxcaulfield/arete/commit/6294b59))
+* feat: enhance exercise form components with UUID generation and dynamic input values ([cb9b405](https://github.com/foxcaulfield/arete/commit/cb9b405))
+* feat: move form styling to CSS for exercise creation form and enhance grid layout ([abcbb45](https://github.com/foxcaulfield/arete/commit/abcbb45))
+* feat: refactor exercise form and components for improved structure and dynamic behavior ([4972d15](https://github.com/foxcaulfield/arete/commit/4972d15))
+* feat: update exercise component macros to accept dynamic names for input fields ([9e83bfc](https://github.com/foxcaulfield/arete/commit/9e83bfc))
+* Merge branch 'develop' of github.com:foxcaulfield/arete into develop ([d36093f](https://github.com/foxcaulfield/arete/commit/d36093f))
+* chore(release): v1.4.0-beta.13 [skip ci] ([9cd99a1](https://github.com/foxcaulfield/arete/commit/9cd99a1))
+
 ## 1.4.0 (2025-12-01)
 
 * Merge pull request #48 from foxcaulfield/release/1.4.0 ([be8e22b](https://github.com/foxcaulfield/arete/commit/be8e22b)), closes [#48](https://github.com/foxcaulfield/arete/issues/48)
