@@ -1,0 +1,193 @@
+{% macro collectionIdInput(id) %}
+	<div class="form-group">
+		<label for="collectionId">Collection ID dd</label>
+		<input id="collectionId" value="{{ id | default('') }}" type="text" name="collectionId" />
+	</div>
+{% endmacro %}
+
+{% macro typeSelect() %}
+	<div class="form-group">
+		<label for="exercise-type">Exercise Type</label>
+		<select name="type" id="exercise-type">
+			<option value="FILL_IN_THE_BLANK">Fill in the blank</option>
+			<option value="CHOICE_SINGLE">Choice</option>
+		</select>
+	</div>
+{% endmacro %}
+
+{% macro questionText() %}
+	<div class="form-group">
+		<label for="question-input">Question</label>
+		<input type="text" name="question" />
+	</div>
+{% endmacro %}
+
+{% macro translationText() %}
+	<div class="form-group">
+		<label for="translation-input">Translation</label>
+		<input type="text" name="translation" id="translation-input" />
+	</div>
+{% endmacro %}
+
+{% macro correctAnswerInput() %}
+	<div class="form-group">
+		<label for="correct-answer-input">Correct Answer</label>
+		<input type="text" name="correctAnswer" id="correct-answer-input" />
+	</div>
+{% endmacro %}
+
+{% macro additionalCorrectAnswersInput() %}
+	<div class="form-group" x-data="additionalCorrectAnswersComponent()">
+		<div id="additional-correct-answers-input">
+			<div>
+				<label>Additional Correct Answers</label>
+				<button type="button" @click="clearAnswers">Clear</button>
+			</div>
+
+			<input type="text" placeholder="paris, PARIS, Île de France..." x-model="input" @keydown="handleKeydown" />
+		</div>
+
+		<div id="additional-correct-answers-container">
+			<template x-for="(answer, index) in answers" :key="index">
+				<div class="tag">
+					<input type="hidden" name="additionalCorrectAnswers" :value="answer" />
+					<span x-text="answer"></span>
+					<button type="button" @click="removeAnswer(index)">×</button>
+				</div>
+			</template>
+		</div>
+
+		<script>
+			function additionalCorrectAnswersComponent() {
+				return {
+					input: "",
+					answers: [],
+
+					handleKeydown(event) {
+						if (event.key === "Enter" || event.key === ",") {
+							event.preventDefault();
+							let v = this.input.trim().replace(/,$/, "");
+							if (v) {
+								this.answers.push(v);
+								this.input = "";
+							}
+						}
+					},
+
+					clearAnswers() {
+						this.answers = [];
+					},
+
+					removeAnswer(index) {
+						this.answers.splice(index, 1);
+					},
+				};
+			}
+		</script>
+		<style>
+			#additional-correct-answers-container .tag {
+				background: var(--success);
+			}
+		</style>
+	</div>
+{% endmacro %}
+
+{% macro distractionAnswersInput() %}
+	<div class="form-group" x-data="distractorsComponent()">
+		<div id="distractors-input">
+			<div>
+				<label>Wrong Answers</label>
+				<button type="button" @click="clearDistractors">Clear</button>
+			</div>
+
+			<input type="text" placeholder="london, berlin, madrid..." x-model="input" @keydown="handleKeydown" />
+		</div>
+
+		<div id="distractors-container">
+			<template x-for="(distractor, index) in distractors" :key="index">
+				<div class="tag">
+					<input type="hidden" name="distractors" :value="distractor" />
+					<span x-text="distractor"></span>
+					<button type="button" @click="removeDistractor(index)">×</button>
+				</div>
+			</template>
+		</div>
+
+		<script>
+			function distractorsComponent() {
+				return {
+					input: "",
+					distractors: [],
+
+					handleKeydown(event) {
+						if (event.key === "Enter" || event.key === ",") {
+							event.preventDefault();
+							let v = this.input.trim().replace(/,$/, "");
+							if (v) {
+								this.distractors.push(v);
+								this.input = "";
+							}
+						}
+					},
+
+					clearDistractors() {
+						this.distractors = [];
+					},
+
+					removeDistractor(index) {
+						this.distractors.splice(index, 1);
+					},
+				};
+			}
+		</script>
+		<style>
+			#distractors-container .tag {
+				background: var(--danger);
+			}
+		</style>
+	</div>
+{% endmacro %}
+
+{% macro explanationText() %}
+	<div class="form-group">
+		<label for="exercise-explanation">Explanation</label>
+		<textarea name="explanation" id="exercise-explanation"></textarea>
+	</div>
+{% endmacro %}
+
+{% macro imageInput() %}
+	<div class="form-group">
+		<label for="exercise-image-input">Image (optional)</label>
+		<input
+			type="file"
+			name="image"
+			id="exercise-image-input"
+			accept="image/*"
+			onchange="let r=new FileReader(),p=document.getElementById('img-preview');r.onload=e=>p.src=e.target.result;if(this.files[0])r.readAsDataURL(this.files[0]);p.hidden=false"
+		/>
+		<img id="img-preview" hidden style="max-width:200px;margin-top:8px;border-radius:4px" />
+	</div>
+{% endmacro %}
+
+{% macro audioInput() %}
+	<div class="form-group">
+		<label for="audio-input">Audio</label>
+		<input
+			type="file"
+			name="audio"
+			id="audio-input"
+			accept="audio/*"
+			hx-on:change="let a=document.getElementById('audio-player'); a.src=URL.createObjectURL(event.target.files[0]); a.style.display='block'"
+		/>
+		<audio id="audio-player" controls style="display:none; margin-top:8px;"></audio>
+	</div>
+{% endmacro %}
+
+{% macro actionButtons(collectionId='') %}
+	<div class="form-group">
+		<button type="submit">Create Exercise</button>
+		<button type="button" onclick="window.location.href='/ui/collections/{{ collectionId or \'\' }}'">
+			Cancel
+		</button>
+	</div>
+{% endmacro %}
