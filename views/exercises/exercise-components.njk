@@ -118,8 +118,8 @@
 		</div>
 
 		<div class="distractors-container">
-			<template x-for="(distractor, index) in distractors" :key="index">
-				<div class="tag distractor-tag">
+			<template x-for="(distractor, index) in distractors" :key="index" >
+				<div class="tag distractor-tag" >
 					<input type="hidden" name="{{ name }}" :value="distractor" />
 					<span x-text="distractor"></span>
 					<button type="button" @click="distractors.splice(index, 1)">×</button>

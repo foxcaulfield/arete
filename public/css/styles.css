@@ -114,8 +114,7 @@ progress {
 	gap: 1rem;
 }
 
-.tag,
-#distractors-container div {
+.tag {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.4rem;
@@ -142,8 +141,8 @@ progress {
 	background: var(--success);
 }
 
-#exercise-create-form #form-content,
-#exercise-edit-form #form-content {
+#exercise-create-form .form-content,
+#exercise-edit-form .form-content {
 	display: grid;
 	grid-template-columns: repeat(6, 1fr);
 	grid-template-areas:
