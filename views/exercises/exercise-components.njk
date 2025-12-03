@@ -5,40 +5,50 @@
 	</div>
 {% endmacro %}
 
-{% macro typeSelect(name) %}
+{% macro typeSelect(name, selected) %}
 	<div class="form-group">
 		<label for="exercise-type">Exercise Type</label>
 		<select name="{{ name }}" id="exercise-type">
-			<option value="FILL_IN_THE_BLANK">Fill in the blank</option>
-			<option value="CHOICE_SINGLE">Choice</option>
+			<option value="FILL_IN_THE_BLANK" {% if selected=="FILL_IN_THE_BLANK" %}selected{% endif %}>
+				Fill in the blank
+			</option>
+			<option value="CHOICE_SINGLE" {% if selected=="CHOICE_SINGLE" %}selected{% endif %}>Choice</option>
 		</select>
 	</div>
 {% endmacro %}
 
-{% macro questionText(name) %}
+{% macro questionText(name, value="") %}
 	<div class="form-group">
 		<label for="question-input">Question</label>
-		<input type="text" name="{{ name }}" />
+		<input type="text" name="{{ name }}" value="{{ value }}" />
 	</div>
 {% endmacro %}
 
-{% macro translationText(name) %}
+{% macro translationText(name, value="") %}
 	<div class="form-group">
 		<label for="translation-input">Translation</label>
-		<input type="text" name="{{ name }}" id="translation-input" />
+		<input type="text" name="{{ name }}" value="{{ value }}" />
 	</div>
 {% endmacro %}
 
-{% macro correctAnswerInput(name) %}
+{% macro correctAnswerInput(name, value="") %}
+	{% set localId = "correct-answer-input-" ~ uuid(8) %}
 	<div class="form-group">
-		<label for="correct-answer-input">Correct Answer</label>
-		<input type="text" name="{{ name }}" id="correct-answer-input" />
+		<label for="{{ localId }}">Correct Answer</label>
+		<input type="text" name="{{ name }}" id="{{ localId }}" value="{{ value }}" />
 	</div>
 {% endmacro %}
 
 {# Additional Correct Answers – Alpine, no functions, configurable name/label/placeholder #}
-{% macro additionalCorrectAnswersInput(name, label, placeholder="Enter additional answers...") %}
-	<div class="form-group" x-data="{ input: '', answers: [] }">
+{%
+	macro additionalCorrectAnswersInput(
+	    name,
+	    label,
+	    placeholder="Enter additional answers...",
+	    value=[]
+	)
+%}
+	<div class="form-group" x-data="{ input: '', answers: {{ value | dump }} }">
 		<div class="additional-correct-answers-input">
 			<div>
 				<label>{{ label }}</label>
@@ -75,8 +85,15 @@
 {% endmacro %}
 
 {# Wrong / distractor answers – Alpine, no functions #}
-{% macro distractionAnswersInput(name, label, placeholder="Enter wrong answers...") %}
-	<div class="form-group" x-data="{ input: '', distractors: [] }">
+{%
+	macro distractionAnswersInput(
+	    name,
+	    label,
+	    placeholder="Enter wrong answers...",
+	    value=[]
+	)
+%}
+	<div class="form-group" x-data="{ input: '', distractors: {{ value | dump }} }">
 		<div class="distractors-input">
 			<div>
 				<label>{{ label }}</label>
@@ -112,22 +129,26 @@
 	</div>
 {% endmacro %}
 
-{% macro explanationText(name) %}
+{% macro explanationText(name, value="") %}
 	<div class="form-group">
 		<label for="exercise-explanation">Explanation</label>
-		<textarea name="{{ name }}" id="exercise-explanation"></textarea>
+		<textarea name="{{ name }}">{{ value }}</textarea>
 	</div>
 {% endmacro %}
 
-{% macro imageInput(
-	name,
-	label = "Image",
-	withClearButton = false,
-	id = "image-input-" ~ name
-) %}
+{%
+	macro imageInput(
+		name,
+		label = "Image",
+		withClearButton = false,
+		withSetNullButton = false,
+		id = "image-input-" ~ name,
+	    currentImageUrl = ""
+	)
+%}
 	<div
 		class="form-group"
-		x-data="{ previewSrc: '' }"
+		x-data="{ previewSrc: '{{ IMAGE_ENDPOINT ~ '/' ~ currentImageUrl if currentImageUrl else '' }}' }"
 	>
 		<label for="{{ id }}">{{ label }}</label>
 
@@ -164,23 +185,32 @@
 			</button>
 		{% endif %}
 
-		<img
-			x-show="previewSrc"
-			:src="previewSrc"
-			style="max-width:200px;margin-top:8px;border-radius:4px"
-		/>
+		{% if withSetNullButton %}
+			<template x-if="true">
+				<div x-show="previewSrc || '{{ currentImageUrl }}'">
+					<span> Set image to null </span>
+					<input class="checkbox" type="checkbox" name="setNullImage" id="setNullImage" />
+				</div>
+			</template>
+		{% endif %}
+
+		<img x-show="previewSrc" :src="previewSrc" style="max-width:200px;margin-top:8px;border-radius:4px" />
 	</div>
 {% endmacro %}
 
-{% macro audioInput(
-	name,
-	label = "Audio",
-	withClearButton = false,
-	id = "audio-input-" ~ name
-) %}
+{%
+	macro audioInput(
+		name,
+		label = "Audio",
+		withClearButton = false,
+	    withSetNullButton = false,
+		id = "audio-input-" ~ name,
+	    currentAudioUrl = ""
+	)
+%}
 	<div
 		class="form-group"
-		x-data="{ audioSrc: '' }"
+		x-data="{ audioSrc: '{{ AUDIO_ENDPOINT ~ '/' ~ currentAudioUrl if currentAudioUrl else '' }}' }"
 	>
 		<label for="{{ id }}">{{ label }}</label>
 
@@ -222,12 +252,15 @@
 			</button>
 		{% endif %}
 
-		<audio
-			x-show="audioSrc"
-			:src="audioSrc"
-			controls
-			style="margin-top:8px;"
-		></audio>
+		{% if withSetNullButton %}
+			<template x-if="true">
+				<div x-show="audioSrc || '{{ currentAudioUrl }}'">
+					<span> Set audio to null </span>
+					<input class="checkbox" type="checkbox" name="setNullAudio" id="setNullAudio" />
+				</div>
+			</template>
+		{% endif %}
+		<audio x-show="audioSrc" :src="audioSrc" controls style="margin-top:8px;"></audio>
 	</div>
 {% endmacro %}
 

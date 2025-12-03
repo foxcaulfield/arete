@@ -51,7 +51,17 @@ async function bootstrap(): Promise<void> {
 		})
 		.addFilter("filterMarkdown", function (text: string) {
 			return marked.parse(text);
-		});
+		})
+		.addGlobal("uuid", function (length: number) {
+			const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+			let result = "";
+			for (let i = 0; i < length; i++) {
+				result += chars.charAt(Math.floor(Math.random() * chars.length));
+			}
+			return result;
+		})
+		.addGlobal("IMAGE_ENDPOINT", "/exercises/files/image")
+		.addGlobal("AUDIO_ENDPOINT", "/exercises/files/audio");
 
 	app.setViewEngine("njk");
 
