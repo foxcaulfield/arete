@@ -1,56 +1,56 @@
-{% macro collectionIdInput(id) %}
+{% macro collectionIdInput(id, name) %}
 	<div class="form-group">
 		<label for="collectionId">Collection ID dd</label>
-		<input id="collectionId" value="{{ id | default('') }}" type="text" name="collectionId" />
+		<input id="collectionId" value="{{ id | default('') }}" type="text" name="{{ name }}" />
 	</div>
 {% endmacro %}
 
-{% macro typeSelect() %}
+{% macro typeSelect(name) %}
 	<div class="form-group">
 		<label for="exercise-type">Exercise Type</label>
-		<select name="type" id="exercise-type">
+		<select name="{{ name }}" id="exercise-type">
 			<option value="FILL_IN_THE_BLANK">Fill in the blank</option>
 			<option value="CHOICE_SINGLE">Choice</option>
 		</select>
 	</div>
 {% endmacro %}
 
-{% macro questionText() %}
+{% macro questionText(name) %}
 	<div class="form-group">
 		<label for="question-input">Question</label>
-		<input type="text" name="question" />
+		<input type="text" name="{{ name }}" />
 	</div>
 {% endmacro %}
 
-{% macro translationText() %}
+{% macro translationText(name) %}
 	<div class="form-group">
 		<label for="translation-input">Translation</label>
-		<input type="text" name="translation" id="translation-input" />
+		<input type="text" name="{{ name }}" id="translation-input" />
 	</div>
 {% endmacro %}
 
-{% macro correctAnswerInput() %}
+{% macro correctAnswerInput(name) %}
 	<div class="form-group">
 		<label for="correct-answer-input">Correct Answer</label>
-		<input type="text" name="correctAnswer" id="correct-answer-input" />
+		<input type="text" name="{{ name }}" id="correct-answer-input" />
 	</div>
 {% endmacro %}
 
-{% macro additionalCorrectAnswersInput() %}
+{% macro additionalCorrectAnswersInput(name, label, placeholder="Enter additional answers...") %}
 	<div class="form-group" x-data="additionalCorrectAnswersComponent()">
 		<div id="additional-correct-answers-input">
 			<div>
-				<label>Additional Correct Answers</label>
+				<label>{{ label }}</label>
 				<button type="button" @click="clearAnswers">Clear</button>
 			</div>
 
-			<input type="text" placeholder="paris, PARIS, Île de France..." x-model="input" @keydown="handleKeydown" />
+			<input type="text" placeholder="{{ placeholder }}" x-model="input" @keydown="handleKeydown" />
 		</div>
 
 		<div id="additional-correct-answers-container">
 			<template x-for="(answer, index) in answers" :key="index">
 				<div class="tag">
-					<input type="hidden" name="additionalCorrectAnswers" :value="answer" />
+					<input type="hidden" name="{{ name }}" :value="answer" />
 					<span x-text="answer"></span>
 					<button type="button" @click="removeAnswer(index)">×</button>
 				</div>
@@ -92,21 +92,21 @@
 	</div>
 {% endmacro %}
 
-{% macro distractionAnswersInput() %}
+{% macro distractionAnswersInput(name, label, placeholder="Enter wrong answers...") %}
 	<div class="form-group" x-data="distractorsComponent()">
 		<div id="distractors-input">
 			<div>
-				<label>Wrong Answers</label>
+				<label>{{ label }}</label>
 				<button type="button" @click="clearDistractors">Clear</button>
 			</div>
 
-			<input type="text" placeholder="london, berlin, madrid..." x-model="input" @keydown="handleKeydown" />
+			<input type="text" placeholder="{{ placeholder }}" x-model="input" @keydown="handleKeydown" />
 		</div>
 
 		<div id="distractors-container">
 			<template x-for="(distractor, index) in distractors" :key="index">
 				<div class="tag">
-					<input type="hidden" name="distractors" :value="distractor" />
+					<input type="hidden" name="{{ name }}" :value="distractor" />
 					<span x-text="distractor"></span>
 					<button type="button" @click="removeDistractor(index)">×</button>
 				</div>
@@ -148,14 +148,14 @@
 	</div>
 {% endmacro %}
 
-{% macro explanationText() %}
+{% macro explanationText(name) %}
 	<div class="form-group">
 		<label for="exercise-explanation">Explanation</label>
-		<textarea name="explanation" id="exercise-explanation"></textarea>
+		<textarea name="{{ name }}" id="exercise-explanation"></textarea>
 	</div>
 {% endmacro %}
 
-{% macro imageInput() %}
+{# {% macro imageInput() %}
 	<div class="form-group">
 		<label for="exercise-image-input">Image (optional)</label>
 		<input
@@ -167,9 +167,58 @@
 		/>
 		<img id="img-preview" hidden style="max-width:200px;margin-top:8px;border-radius:4px" />
 	</div>
+{% endmacro %} #}
+{% macro imageInput(name, label="Image", withClearButton=false) %}
+	<div class="form-group" x-data="imageInputComponent()">
+		<label for="exercise-image-input">{{ label }}</label>
+
+		<input
+			type="file"
+			name="{{ name }}"
+			id="exercise-image-input"
+			accept="image/*"
+			@change="handleFileChange"
+			x-ref="fileInput"
+		/>
+
+		{% if withClearButton %}
+			<button type="button" @click="$refs.fileInput.value = ''; previewSrc = '';" :disabled="!previewSrc">
+				Clear
+			</button>
+		{% endif %}
+
+		<img
+			x-ref="preview"
+			:hidden="!previewSrc"
+			:src="previewSrc"
+			style="max-width:200px;margin-top:8px;border-radius:4px"
+		/>
+
+		<script>
+			function imageInputComponent() {
+				return {
+					previewSrc: "",
+
+					handleFileChange(event) {
+						const file = event.target.files[0];
+						if (!file) {
+							this.previewSrc = "";
+							return;
+						}
+
+						const reader = new FileReader();
+						reader.onload = (e) => {
+							this.previewSrc = e.target.result;
+						};
+						reader.readAsDataURL(file);
+					},
+				};
+			}
+		</script>
+	</div>
 {% endmacro %}
 
-{% macro audioInput() %}
+{# {% macro audioInput() %}
 	<div class="form-group">
 		<label for="audio-input">Audio</label>
 		<input
@@ -180,6 +229,53 @@
 			hx-on:change="let a=document.getElementById('audio-player'); a.src=URL.createObjectURL(event.target.files[0]); a.style.display='block'"
 		/>
 		<audio id="audio-player" controls style="display:none; margin-top:8px;"></audio>
+	</div>
+{% endmacro %} #}
+
+{% macro audioInput(name, label="Audio", withClearButton=false) %}
+	<div class="form-group" x-data="audioInputComponent()">
+		<label for="audio-input">{{ label }}</label>
+		<input type="file" name="{{ name }}" id="audio-input" accept="audio/*" @change="handleFileChange" />
+
+		{% if withClearButton %}
+			<button
+				type="button"
+				@click="
+                    $refs.fileInput.value = '';
+                    if (audioSrc && audioSrc.startsWith('blob:')) {
+                        URL.revokeObjectURL(audioSrc);
+                    }
+                    audioSrc = '';
+                "
+				:disabled="!audioSrc"
+			>
+				Clear
+			</button>
+		{% endif %}
+		<audio x-ref="player" x-show="audioSrc" :src="audioSrc" controls style="margin-top:8px;"></audio>
+
+		<script>
+			function audioInputComponent() {
+				return {
+					audioSrc: "",
+
+					handleFileChange(event) {
+						const file = event.target.files[0];
+						if (!file) {
+							this.audioSrc = "";
+							return;
+						}
+
+						// Revoke previous object URL to avoid leaks
+						if (this.audioSrc && this.audioSrc.startsWith("blob:")) {
+							URL.revokeObjectURL(this.audioSrc);
+						}
+
+						this.audioSrc = URL.createObjectURL(file);
+					},
+				};
+			}
+		</script>
 	</div>
 {% endmacro %}
 
