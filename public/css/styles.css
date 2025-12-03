@@ -141,3 +141,20 @@ progress {
 .additional-correct-answer-tag {
 	background: var(--success);
 }
+
+#exercise-create-form #form-content,
+#exercise-edit-form #form-content {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	grid-template-areas:
+		"a a b b b b"
+		"o o c c c c"
+		"d d e e e e"
+		"f f f f f f"
+		"btn btn btn btn btn btn";
+	gap: 1rem 1.5rem;
+}
+
+.grid-item {
+	grid-area: var(--area);
+}
