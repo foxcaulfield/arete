@@ -36,115 +36,79 @@
 	</div>
 {% endmacro %}
 
+{# Additional Correct Answers – Alpine, no functions, configurable name/label/placeholder #}
 {% macro additionalCorrectAnswersInput(name, label, placeholder="Enter additional answers...") %}
-	<div class="form-group" x-data="additionalCorrectAnswersComponent()">
-		<div id="additional-correct-answers-input">
+	<div class="form-group" x-data="{ input: '', answers: [] }">
+		<div class="additional-correct-answers-input">
 			<div>
 				<label>{{ label }}</label>
-				<button type="button" @click="clearAnswers">Clear</button>
+				<button type="button" @click="answers = []">Clear</button>
 			</div>
 
-			<input type="text" placeholder="{{ placeholder }}" x-model="input" @keydown="handleKeydown" />
+			<input
+				type="text"
+				placeholder="{{ placeholder }}"
+				x-model="input"
+				@keydown="
+					if ($event.key === 'Enter' || $event.key === ',') {
+						$event.preventDefault();
+						let v = input.trim().replace(/,$/, '');
+						if (v) {
+							answers.push(v);
+							input = '';
+						}
+					}
+				"
+			/>
 		</div>
 
-		<div id="additional-correct-answers-container">
+		<div class="additional-correct-answers-container">
 			<template x-for="(answer, index) in answers" :key="index">
-				<div class="tag">
+				<div class="tag additional-correct-answer-tag">
 					<input type="hidden" name="{{ name }}" :value="answer" />
 					<span x-text="answer"></span>
-					<button type="button" @click="removeAnswer(index)">×</button>
+					<button type="button" @click="answers.splice(index, 1)">×</button>
 				</div>
 			</template>
 		</div>
-
-		<script>
-			function additionalCorrectAnswersComponent() {
-				return {
-					input: "",
-					answers: [],
-
-					handleKeydown(event) {
-						if (event.key === "Enter" || event.key === ",") {
-							event.preventDefault();
-							let v = this.input.trim().replace(/,$/, "");
-							if (v) {
-								this.answers.push(v);
-								this.input = "";
-							}
-						}
-					},
-
-					clearAnswers() {
-						this.answers = [];
-					},
-
-					removeAnswer(index) {
-						this.answers.splice(index, 1);
-					},
-				};
-			}
-		</script>
-		<style>
-			#additional-correct-answers-container .tag {
-				background: var(--success);
-			}
-		</style>
 	</div>
 {% endmacro %}
 
+{# Wrong / distractor answers – Alpine, no functions #}
 {% macro distractionAnswersInput(name, label, placeholder="Enter wrong answers...") %}
-	<div class="form-group" x-data="distractorsComponent()">
-		<div id="distractors-input">
+	<div class="form-group" x-data="{ input: '', distractors: [] }">
+		<div class="distractors-input">
 			<div>
 				<label>{{ label }}</label>
-				<button type="button" @click="clearDistractors">Clear</button>
+				<button type="button" @click="distractors = []">Clear</button>
 			</div>
 
-			<input type="text" placeholder="{{ placeholder }}" x-model="input" @keydown="handleKeydown" />
+			<input
+				type="text"
+				placeholder="{{ placeholder }}"
+				x-model="input"
+				@keydown="
+					if ($event.key === 'Enter' || $event.key === ',') {
+						$event.preventDefault();
+						let v = input.trim().replace(/,$/, '');
+						if (v) {
+							distractors.push(v);
+							input = '';
+						}
+					}
+				"
+			/>
 		</div>
 
-		<div id="distractors-container">
+		<div class="distractors-container">
 			<template x-for="(distractor, index) in distractors" :key="index">
-				<div class="tag">
+				<div class="tag distractor-tag">
 					<input type="hidden" name="{{ name }}" :value="distractor" />
 					<span x-text="distractor"></span>
-					<button type="button" @click="removeDistractor(index)">×</button>
+					<button type="button" @click="distractors.splice(index, 1)">×</button>
 				</div>
 			</template>
 		</div>
-
-		<script>
-			function distractorsComponent() {
-				return {
-					input: "",
-					distractors: [],
-
-					handleKeydown(event) {
-						if (event.key === "Enter" || event.key === ",") {
-							event.preventDefault();
-							let v = this.input.trim().replace(/,$/, "");
-							if (v) {
-								this.distractors.push(v);
-								this.input = "";
-							}
-						}
-					},
-
-					clearDistractors() {
-						this.distractors = [];
-					},
-
-					removeDistractor(index) {
-						this.distractors.splice(index, 1);
-					},
-				};
-			}
-		</script>
-		<style>
-			#distractors-container .tag {
-				background: var(--danger);
-			}
-		</style>
 	</div>
 {% endmacro %}
 
@@ -207,7 +171,6 @@
 		/>
 	</div>
 {% endmacro %}
-
 
 {% macro audioInput(
 	name,

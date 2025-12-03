@@ -134,3 +134,10 @@ progress {
 	padding: 2px 6px;
 	font-size: 1.05rem;
 }
+
+.distractor-tag {
+	background: var(--danger);
+}
+.additional-correct-answer-tag {
+	background: var(--success);
+}
