@@ -155,127 +155,116 @@
 	</div>
 {% endmacro %}
 
-{# {% macro imageInput() %}
-	<div class="form-group">
-		<label for="exercise-image-input">Image (optional)</label>
-		<input
-			type="file"
-			name="image"
-			id="exercise-image-input"
-			accept="image/*"
-			onchange="let r=new FileReader(),p=document.getElementById('img-preview');r.onload=e=>p.src=e.target.result;if(this.files[0])r.readAsDataURL(this.files[0]);p.hidden=false"
-		/>
-		<img id="img-preview" hidden style="max-width:200px;margin-top:8px;border-radius:4px" />
-	</div>
-{% endmacro %} #}
-{% macro imageInput(name, label="Image", withClearButton=false) %}
-	<div class="form-group" x-data="imageInputComponent()">
-		<label for="exercise-image-input">{{ label }}</label>
+{% macro imageInput(
+	name,
+	label = "Image",
+	withClearButton = false,
+	id = "image-input-" ~ name
+) %}
+	<div
+		class="form-group"
+		x-data="{ previewSrc: '' }"
+	>
+		<label for="{{ id }}">{{ label }}</label>
 
 		<input
 			type="file"
 			name="{{ name }}"
-			id="exercise-image-input"
+			id="{{ id }}"
 			accept="image/*"
-			@change="handleFileChange"
 			x-ref="fileInput"
+			x-on:change="
+				const file = $event.target.files[0];
+				if (!file) {
+					previewSrc = '';
+					return;
+				}
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					previewSrc = e.target.result;
+				};
+				reader.readAsDataURL(file);
+			"
 		/>
 
 		{% if withClearButton %}
-			<button type="button" @click="$refs.fileInput.value = ''; previewSrc = '';" :disabled="!previewSrc">
+			<button
+				type="button"
+				x-on:click="
+					$refs.fileInput.value = '';
+					previewSrc = '';
+				"
+				:disabled="!previewSrc"
+			>
 				Clear
 			</button>
 		{% endif %}
 
 		<img
-			x-ref="preview"
-			:hidden="!previewSrc"
+			x-show="previewSrc"
 			:src="previewSrc"
 			style="max-width:200px;margin-top:8px;border-radius:4px"
 		/>
-
-		<script>
-			function imageInputComponent() {
-				return {
-					previewSrc: "",
-
-					handleFileChange(event) {
-						const file = event.target.files[0];
-						if (!file) {
-							this.previewSrc = "";
-							return;
-						}
-
-						const reader = new FileReader();
-						reader.onload = (e) => {
-							this.previewSrc = e.target.result;
-						};
-						reader.readAsDataURL(file);
-					},
-				};
-			}
-		</script>
 	</div>
 {% endmacro %}
 
-{# {% macro audioInput() %}
-	<div class="form-group">
-		<label for="audio-input">Audio</label>
+
+{% macro audioInput(
+	name,
+	label = "Audio",
+	withClearButton = false,
+	id = "audio-input-" ~ name
+) %}
+	<div
+		class="form-group"
+		x-data="{ audioSrc: '' }"
+	>
+		<label for="{{ id }}">{{ label }}</label>
+
 		<input
 			type="file"
-			name="audio"
-			id="audio-input"
+			name="{{ name }}"
+			id="{{ id }}"
 			accept="audio/*"
-			hx-on:change="let a=document.getElementById('audio-player'); a.src=URL.createObjectURL(event.target.files[0]); a.style.display='block'"
+			x-ref="fileInput"
+			x-on:change="
+				const file = $event.target.files[0];
+				if (!file) {
+					if (audioSrc && audioSrc.startsWith('blob:')) {
+						URL.revokeObjectURL(audioSrc);
+					}
+					audioSrc = '';
+					return;
+				}
+				if (audioSrc && audioSrc.startsWith('blob:')) {
+					URL.revokeObjectURL(audioSrc);
+				}
+				audioSrc = URL.createObjectURL(file);
+			"
 		/>
-		<audio id="audio-player" controls style="display:none; margin-top:8px;"></audio>
-	</div>
-{% endmacro %} #}
-
-{% macro audioInput(name, label="Audio", withClearButton=false) %}
-	<div class="form-group" x-data="audioInputComponent()">
-		<label for="audio-input">{{ label }}</label>
-		<input type="file" name="{{ name }}" id="audio-input" accept="audio/*" @change="handleFileChange" />
 
 		{% if withClearButton %}
 			<button
 				type="button"
-				@click="
-                    $refs.fileInput.value = '';
-                    if (audioSrc && audioSrc.startsWith('blob:')) {
-                        URL.revokeObjectURL(audioSrc);
-                    }
-                    audioSrc = '';
-                "
+				x-on:click="
+					$refs.fileInput.value = '';
+					if (audioSrc && audioSrc.startsWith('blob:')) {
+						URL.revokeObjectURL(audioSrc);
+					}
+					audioSrc = '';
+				"
 				:disabled="!audioSrc"
 			>
 				Clear
 			</button>
 		{% endif %}
-		<audio x-ref="player" x-show="audioSrc" :src="audioSrc" controls style="margin-top:8px;"></audio>
 
-		<script>
-			function audioInputComponent() {
-				return {
-					audioSrc: "",
-
-					handleFileChange(event) {
-						const file = event.target.files[0];
-						if (!file) {
-							this.audioSrc = "";
-							return;
-						}
-
-						// Revoke previous object URL to avoid leaks
-						if (this.audioSrc && this.audioSrc.startsWith("blob:")) {
-							URL.revokeObjectURL(this.audioSrc);
-						}
-
-						this.audioSrc = URL.createObjectURL(file);
-					},
-				};
-			}
-		</script>
+		<audio
+			x-show="audioSrc"
+			:src="audioSrc"
+			controls
+			style="margin-top:8px;"
+		></audio>
 	</div>
 {% endmacro %}
 
