@@ -115,12 +115,11 @@
 
 				{# GRID ITEM BUTTONS #}
 				<div class="grid-item" style="--area: btn;">
-					<div class="form-group">
-						<button type="submit">Save</button>
-						<button type="button" onclick="window.location.href='/ui/exercises/{{ exercise.id }}'">
-							Cancel
-						</button>
-					</div>
+					{{ exerciseComponents.actionButtons(
+						collectionId or exercise.collectionId, 
+						submitLabel="Save Changes", 
+						cancelLabel="Cancel", 
+						cancelUrl=EXERCISES_UI_ENDPOINT ~ "/" ~ exercise.id) }}
 				</div>
 			</div>
 

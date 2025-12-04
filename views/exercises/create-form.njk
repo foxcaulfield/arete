@@ -87,7 +87,12 @@
 				</div>
 
 				{# GRID ITEM BUTTONS #}
-				<div class="grid-item" style="--area: btn;">{{ exerciseComponents.actionButtons(collectionId) }}</div>
+				<div class="grid-item" style="--area: btn;">{{ 
+					exerciseComponents.actionButtons(
+						collectionId, 
+						submitLabel="Submit", 
+						cancelLabel="Cancel", 
+						cancelUrl=COLLECTIONS_UI_ENDPOINT ~ "/" ~ collectionId) }}</div>
 			</div>
 			<div id="exercise-form-errors"></div>
 		</form>

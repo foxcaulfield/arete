@@ -97,7 +97,7 @@ progress {
 .flex-row {
 	display: flex;
 	flex-direction: row;
-	gap: 1rem;
+	gap: 0.4rem;
 }
 
 .tag {
@@ -137,6 +137,7 @@ progress {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
+	min-height: 2.5rem;
 	/* margin-top: 0.5rem; */
 }
 
@@ -150,7 +151,7 @@ progress {
 		"d d e e e e"
 		"f f f f f f"
 		"btn btn btn btn btn btn";
-	gap: 1rem 1.5rem;
+	gap: 0.4rem;
 }
 
 .grid-item {
@@ -197,4 +198,20 @@ progress {
 
 .justify-between {
 	justify-content: space-between;
+}
+
+.width-100 {
+	width: 100%;
+}
+
+.audio-wrapper {
+	margin-top: var(--pico-spacing);
+}
+
+/* Image preview styling */
+.preview-image {
+	max-width: 200px;
+	margin-top: var(--pico-spacing);
+	border-radius: var(--pico-border-radius);
+	display: block;
 }

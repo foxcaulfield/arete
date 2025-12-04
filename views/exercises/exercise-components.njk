@@ -1,6 +1,6 @@
 {% macro collectionIdInput(id, name) %}
 	{% set localId = "collection-id-" ~ uuid(8) %}
-	<div class="form-group">
+	<div class="form-group card">
 		<label for="{{ localId }}">Collection ID dd</label>
 		<input id="{{ localId }}" value="{{ id | default('') }}" type="text" name="{{ name }}" />
 	</div>
@@ -8,7 +8,7 @@
 
 {% macro typeSelect(name, selected) %}
 	{% set localId = "exercise-type-" ~ uuid(8) %}
-	<div class="form-group">
+	<div class="form-group card">
 		<label for="{{ localId }}">Exercise Type</label>
 		<select name="{{ name }}" id="{{ localId }}">
 			<option value="FILL_IN_THE_BLANK" {% if selected=="FILL_IN_THE_BLANK" %}selected{% endif %}>
@@ -21,7 +21,7 @@
 
 {% macro questionText(name, value="") %}
 	{% set localId = "question-input-" ~ uuid(8) %}
-	<div class="form-group">
+	<div class="form-group card">
 		<label for="{{ localId }}">Question</label>
 		<input type="text" name="{{ name }}" id="{{ localId }}" value="{{ value }}" />
 	</div>
@@ -29,7 +29,7 @@
 
 {% macro translationText(name, value="") %}
 	{% set localId = "translation-input-" ~ uuid(8) %}
-	<div class="form-group">
+	<div class="form-group card">
 		<label for="{{ localId }}">Translation</label>
 		<input type="text" name="{{ name }}" id="{{ localId }}" value="{{ value }}" />
 	</div>
@@ -37,7 +37,7 @@
 
 {% macro correctAnswerInput(name, value="") %}
 	{% set localId = "correct-answer-input-" ~ uuid(8) %}
-	<div class="form-group">
+	<div class="form-group card">
 		<label for="{{ localId }}">Correct Answer</label>
 		<input type="text" name="{{ name }}" id="{{ localId }}" value="{{ value }}" />
 	</div>
@@ -45,7 +45,7 @@
 
 {% macro explanationText(name, value="") %}
 	{% set localId = "exercise-explanation-" ~ uuid(8) %}
-	<div class="form-group">
+	<div class="form-group card">
 		<label for="{{ localId }}">Explanation</label>
 		<textarea name="{{ name }}" id="{{ localId }}">{{ value }}</textarea>
 	</div>
@@ -115,7 +115,7 @@
 		containerClass = ""
 	)
 %}
-	<div class="form-group {{ containerClass }}" x-data="{ input: '', tags: {{ value | dump }} }">
+	<div class="form-group card {{ containerClass }}" x-data="{ input: '', tags: {{ value | dump }} }">
 		<div class="tags-input-header">
 			<label>{{ label }}</label>
 			<button type="button" class="text-button" @click="tags = []">Clear</button>
@@ -169,30 +169,39 @@
 	>
 		<div class="flex justify-between align-center">
 			<label for="{{ id }}">{{ label }}</label>
-
 			{% if withClearButton %}
 				<button
 					type="button"
 					class="text-button"
 					x-on:click="
-					$refs.fileInput.value = '';
-					previewSrc = '';
+						$refs.fileInput.value = '';
+						previewSrc = '';
 					"
 					:disabled="!previewSrc"
 				>
 					Clear
 				</button>
 			{% endif %}
+			{% if withSetNullButton %}
+				<template x-if="previewSrc || '{{ currentImageUrl }}'">
+					<label>
+						<input type="checkbox" name="setNullImage" id="setNullImage" />
+						Set null
+					</label>
+				</template>
+			{% endif %}
 		</div>
 
+		<!-- Hidden file input -->
 		<input
 			type="file"
 			name="{{ name }}"
 			id="{{ id }}"
 			accept="image/*"
 			x-ref="fileInput"
+			style="display: none;"
 			x-on:change="
-				const file = $event.target.files[0];
+				const file = $event. target.files[0];
 				if (!file) {
 					previewSrc = '';
 					return;
@@ -205,16 +214,16 @@
 			"
 		/>
 
-		{% if withSetNullButton %}
-			<template x-if="true">
-				<div x-show="previewSrc || '{{ currentImageUrl }}'">
-					<span> Set image to null </span>
-					<input class="checkbox" type="checkbox" name="setNullImage" id="setNullImage" />
-				</div>
-			</template>
-		{% endif %}
+		<!-- Custom styled button to trigger file input -->
+		<button type="button" class="secondary" x-on:click="$refs.fileInput.click()">
+			<span x-show="!previewSrc">🖼️ Choose Image File</span>
+			<span x-show="previewSrc">🔄 Change Image File</span>
+		</button>
 
-		<img x-show="previewSrc" :src="previewSrc" style="max-width:200px;margin-top:8px;border-radius:4px" />
+		<!-- Image preview -->
+		<div x-show="previewSrc" x-cloak class="image-wrapper">
+			<img :src="previewSrc" class="preview-image" />
+		</div>
 	</div>
 {% endmacro %}
 
@@ -239,27 +248,37 @@
 					type="button"
 					class="text-button"
 					x-on:click="
-					$refs.fileInput.value = '';
-					if (audioSrc && audioSrc.startsWith('blob:')) {
-						URL.revokeObjectURL(audioSrc);
-					}
-					audioSrc = '';
-				"
+						$refs.fileInput.value = '';
+						if (audioSrc && audioSrc.startsWith('blob:')) {
+							URL. revokeObjectURL(audioSrc);
+						}
+						audioSrc = '';
+					"
 					:disabled="!audioSrc"
 				>
 					Clear
 				</button>
 			{% endif %}
+			{% if withSetNullButton %}
+				<template x-if="audioSrc || '{{ currentAudioUrl }}'">
+					<label>
+						<input type="checkbox" name="setNullAudio" id="setNullAudio" />
+						Set null
+					</label>
+				</template>
+			{% endif %}
 		</div>
 
+		<!-- Hidden file input -->
 		<input
 			type="file"
 			name="{{ name }}"
 			id="{{ id }}"
 			accept="audio/*"
 			x-ref="fileInput"
+			style="display: none;"
 			x-on:change="
-				const file = $event.target.files[0];
+				const file = $event. target.files[0];
 				if (!file) {
 					if (audioSrc && audioSrc.startsWith('blob:')) {
 						URL.revokeObjectURL(audioSrc);
@@ -274,15 +293,18 @@
 			"
 		/>
 
-		{% if withSetNullButton %}
-			<template x-if="true">
-				<div x-show="audioSrc || '{{ currentAudioUrl }}'">
-					<span> Set audio to null </span>
-					<input class="checkbox" type="checkbox" name="setNullAudio" id="setNullAudio" />
-				</div>
-			</template>
-		{% endif %}
-		<audio x-show="audioSrc" :src="audioSrc" controls style="margin-top:8px;"></audio>
+		<!-- Custom styled button to trigger file input -->
+		<button type="button" class="secondary" x-on:click="$refs.fileInput.click()">
+			<span x-show="!audioSrc">📁 Choose Audio File</span>
+			<span x-show="audioSrc">🔄 Change Audio File</span>
+		</button>
+
+		<!-- Set to null option -->
+
+		<!-- Audio player preview -->
+		<div x-show="audioSrc" x-cloak class="audio-wrapper">
+			<audio :src="audioSrc" controls class="width-100"></audio>
+		</div>
 	</div>
 {% endmacro %}
 
@@ -290,11 +312,18 @@
 {# ACTIONS #}
 {#         #}
 
-{% macro actionButtons(collectionId='') %}
-	<div class="form-group">
-		<button type="submit">Create Exercise</button>
-		<button type="button" onclick="window.location.href='/ui/collections/{{ collectionId or \'\' }}'">
-			Cancel
+{%
+	macro actionButtons(
+		collectionId='',
+		submitLabel='Submit',
+		cancelLabel='Cancel',
+		cancelUrl=''
+	)
+%}
+	<div class="form-group flex justify-between align-center">
+		<button type="button" class="secondary" onclick="window.location.href='{{ cancelUrl or '/' }}'">
+			{{ cancelLabel }}
 		</button>
+		<button type="submit" class="primary" style="width: 200px;">{{ submitLabel }}</button>
 	</div>
 {% endmacro %}

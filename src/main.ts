@@ -61,7 +61,9 @@ async function bootstrap(): Promise<void> {
 			return result;
 		})
 		.addGlobal("IMAGE_ENDPOINT", "/exercises/files/image")
-		.addGlobal("AUDIO_ENDPOINT", "/exercises/files/audio");
+		.addGlobal("AUDIO_ENDPOINT", "/exercises/files/audio")
+		.addGlobal("EXERCISES_UI_ENDPOINT", "/ui/exercises")
+		.addGlobal("COLLECTIONS_UI_ENDPOINT", "/ui/collections");
 
 	app.setViewEngine("njk");
 
