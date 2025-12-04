@@ -1,14 +1,16 @@
 {% macro collectionIdInput(id, name) %}
+	{% set localId = "collection-id-" ~ uuid(8) %}
 	<div class="form-group">
-		<label for="collectionId">Collection ID dd</label>
-		<input id="collectionId" value="{{ id | default('') }}" type="text" name="{{ name }}" />
+		<label for="{{ localId }}">Collection ID dd</label>
+		<input id="{{ localId }}" value="{{ id | default('') }}" type="text" name="{{ name }}" />
 	</div>
 {% endmacro %}
 
 {% macro typeSelect(name, selected) %}
+	{% set localId = "exercise-type-" ~ uuid(8) %}
 	<div class="form-group">
-		<label for="exercise-type">Exercise Type</label>
-		<select name="{{ name }}" id="exercise-type">
+		<label for="{{ localId }}">Exercise Type</label>
+		<select name="{{ name }}" id="{{ localId }}">
 			<option value="FILL_IN_THE_BLANK" {% if selected=="FILL_IN_THE_BLANK" %}selected{% endif %}>
 				Fill in the blank
 			</option>
@@ -18,16 +20,18 @@
 {% endmacro %}
 
 {% macro questionText(name, value="") %}
+	{% set localId = "question-input-" ~ uuid(8) %}
 	<div class="form-group">
-		<label for="question-input">Question</label>
-		<input type="text" name="{{ name }}" value="{{ value }}" />
+		<label for="{{ localId }}">Question</label>
+		<input type="text" name="{{ name }}" id="{{ localId }}" value="{{ value }}" />
 	</div>
 {% endmacro %}
 
 {% macro translationText(name, value="") %}
+	{% set localId = "translation-input-" ~ uuid(8) %}
 	<div class="form-group">
-		<label for="translation-input">Translation</label>
-		<input type="text" name="{{ name }}" value="{{ value }}" />
+		<label for="{{ localId }}">Translation</label>
+		<input type="text" name="{{ name }}" id="{{ localId }}" value="{{ value }}" />
 	</div>
 {% endmacro %}
 
@@ -40,9 +44,10 @@
 {% endmacro %}
 
 {% macro explanationText(name, value="") %}
+	{% set localId = "exercise-explanation-" ~ uuid(8) %}
 	<div class="form-group">
-		<label for="exercise-explanation">Explanation</label>
-		<textarea name="{{ name }}">{{ value }}</textarea>
+		<label for="{{ localId }}">Explanation</label>
+		<textarea name="{{ name }}" id="{{ localId }}">{{ value }}</textarea>
 	</div>
 {% endmacro %}
 
@@ -113,7 +118,7 @@
 	<div class="form-group {{ containerClass }}" x-data="{ input: '', tags: {{ value | dump }} }">
 		<div class="tags-input-header">
 			<label>{{ label }}</label>
-			<button type="button" @click="tags = []">Clear</button>
+			<button type="button" class="text-button" @click="tags = []">Clear</button>
 		</div>
 
 		<input
@@ -159,10 +164,26 @@
 	)
 %}
 	<div
-		class="form-group"
+		class="form-group card"
 		x-data="{ previewSrc: '{{ IMAGE_ENDPOINT ~ '/' ~ currentImageUrl if currentImageUrl else '' }}' }"
 	>
-		<label for="{{ id }}">{{ label }}</label>
+		<div class="flex justify-between align-center">
+			<label for="{{ id }}">{{ label }}</label>
+
+			{% if withClearButton %}
+				<button
+					type="button"
+					class="text-button"
+					x-on:click="
+					$refs.fileInput.value = '';
+					previewSrc = '';
+					"
+					:disabled="!previewSrc"
+				>
+					Clear
+				</button>
+			{% endif %}
+		</div>
 
 		<input
 			type="file"
@@ -183,19 +204,6 @@
 				reader.readAsDataURL(file);
 			"
 		/>
-
-		{% if withClearButton %}
-			<button
-				type="button"
-				x-on:click="
-					$refs.fileInput.value = '';
-					previewSrc = '';
-				"
-				:disabled="!previewSrc"
-			>
-				Clear
-			</button>
-		{% endif %}
 
 		{% if withSetNullButton %}
 			<template x-if="true">
@@ -221,10 +229,28 @@
 	)
 %}
 	<div
-		class="form-group"
+		class="form-group card"
 		x-data="{ audioSrc: '{{ AUDIO_ENDPOINT ~ '/' ~ currentAudioUrl if currentAudioUrl else '' }}' }"
 	>
-		<label for="{{ id }}">{{ label }}</label>
+		<div class="flex justify-between align-center">
+			<label for="{{ id }}">{{ label }}</label>
+			{% if withClearButton %}
+				<button
+					type="button"
+					class="text-button"
+					x-on:click="
+					$refs.fileInput.value = '';
+					if (audioSrc && audioSrc.startsWith('blob:')) {
+						URL.revokeObjectURL(audioSrc);
+					}
+					audioSrc = '';
+				"
+					:disabled="!audioSrc"
+				>
+					Clear
+				</button>
+			{% endif %}
+		</div>
 
 		<input
 			type="file"
@@ -248,22 +274,6 @@
 			"
 		/>
 
-		{% if withClearButton %}
-			<button
-				type="button"
-				x-on:click="
-					$refs.fileInput.value = '';
-					if (audioSrc && audioSrc.startsWith('blob:')) {
-						URL.revokeObjectURL(audioSrc);
-					}
-					audioSrc = '';
-				"
-				:disabled="!audioSrc"
-			>
-				Clear
-			</button>
-		{% endif %}
-
 		{% if withSetNullButton %}
 			<template x-if="true">
 				<div x-show="audioSrc || '{{ currentAudioUrl }}'">
@@ -275,7 +285,6 @@
 		<audio x-show="audioSrc" :src="audioSrc" controls style="margin-top:8px;"></audio>
 	</div>
 {% endmacro %}
-
 
 {#         #}
 {# ACTIONS #}
