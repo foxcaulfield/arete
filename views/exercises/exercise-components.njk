@@ -39,7 +39,18 @@
 	</div>
 {% endmacro %}
 
-{# Additional Correct Answers – Alpine, no functions, configurable name/label/placeholder #}
+{% macro explanationText(name, value="") %}
+	<div class="form-group">
+		<label for="exercise-explanation">Explanation</label>
+		<textarea name="{{ name }}">{{ value }}</textarea>
+	</div>
+{% endmacro %}
+
+{#        #}
+{#  TAGS  #}
+{#        #}
+
+{# Additional Correct Answers #}
 {%
 	macro additionalCorrectAnswersInput(
 	    name,
@@ -48,43 +59,19 @@
 	    value=[]
 	)
 %}
-	<div class="form-group" x-data="{ input: '', answers: {{ value | dump }} }">
-		<div class="additional-correct-answers-input">
-			<div>
-				<label>{{ label }}</label>
-				<button type="button" @click="answers = []">Clear</button>
-			</div>
-
-			<input
-				type="text"
-				placeholder="{{ placeholder }}"
-				x-model="input"
-				@keydown="
-					if ($event.key === 'Enter' || $event.key === ',') {
-						$event.preventDefault();
-						let v = input.trim().replace(/,$/, '');
-						if (v) {
-							answers.push(v);
-							input = '';
-						}
-					}
-				"
-			/>
-		</div>
-
-		<div class="additional-correct-answers-container">
-			<template x-for="(answer, index) in answers" :key="index">
-				<div class="tag additional-correct-answer-tag">
-					<input type="hidden" name="{{ name }}" :value="answer" />
-					<span x-text="answer"></span>
-					<button type="button" @click="answers.splice(index, 1)">×</button>
-				</div>
-			</template>
-		</div>
-	</div>
+	{{
+		tagsInput(
+			name = name,
+			label = label,
+			placeholder = placeholder,
+			value = value,
+			tagClass = "additional-correct-answer-tag",
+			containerClass = "additional-correct-answers-container"
+		)
+	}}
 {% endmacro %}
 
-{# Wrong / distractor answers – Alpine, no functions #}
+{# Wrong / distractor answers #}
 {%
 	macro distractionAnswersInput(
 	    name,
@@ -93,48 +80,73 @@
 	    value=[]
 	)
 %}
-	<div class="form-group" x-data="{ input: '', distractors: {{ value | dump }} }">
-		<div class="distractors-input">
-			<div>
-				<label>{{ label }}</label>
-				<button type="button" @click="distractors = []">Clear</button>
-			</div>
+	{{
+		tagsInput(
+			name = name,
+			label = label,
+			placeholder = placeholder,
+			value = value,
+			tagClass = "distractor-tag",
+			containerClass = "distractors-container"
+		)
+	}}
+{% endmacro %}
 
-			<input
-				type="text"
-				placeholder="{{ placeholder }}"
-				x-model="input"
-				@keydown="
-					if ($event.key === 'Enter' || $event.key === ',') {
-						$event.preventDefault();
-						let v = input.trim().replace(/,$/, '');
-						if (v) {
-							distractors.push(v);
-							input = '';
-						}
-					}
-				"
-			/>
+{#
+  Generic tag input:
+  - name: name for hidden inputs
+  - label: field label
+  - placeholder: input placeholder
+  - value: initial tags array from server (e.g. ['foo', 'bar'])
+  - tagClass / containerClass: css hooks to style differently
+#}
+{%
+	macro tagsInput(
+		name,
+		label,
+		placeholder = "Enter values...",
+		value = [],
+		tagClass = "",
+		containerClass = ""
+	)
+%}
+	<div class="form-group {{ containerClass }}" x-data="{ input: '', tags: {{ value | dump }} }">
+		<div class="tags-input-header">
+			<label>{{ label }}</label>
+			<button type="button" @click="tags = []">Clear</button>
 		</div>
 
-		<div class="distractors-container">
-			<template x-for="(distractor, index) in distractors" :key="index" >
-				<div class="tag distractor-tag" >
-					<input type="hidden" name="{{ name }}" :value="distractor" />
-					<span x-text="distractor"></span>
-					<button type="button" @click="distractors.splice(index, 1)">×</button>
+		<input
+			type="text"
+			placeholder="{{ placeholder }}"
+			x-model="input"
+			@keydown="
+				if ($event.key === 'Enter' || $event.key === ',') {
+					$event.preventDefault();
+					let v = input.trim().replace(/,$/, '');
+					if (v) {
+						tags.push(v);
+						input = '';
+					}
+				}
+			"
+		/>
+
+		<div class="tags-container">
+			<template x-for="(tag, index) in tags" :key="index">
+				<div class="tag {{ tagClass }}">
+					<input type="hidden" name="{{ name }}" :value="tag" />
+					<span x-text="tag"></span>
+					<button class="tag-remove-button" type="button" @click="tags.splice(index, 1)">×</button>
 				</div>
 			</template>
 		</div>
 	</div>
 {% endmacro %}
 
-{% macro explanationText(name, value="") %}
-	<div class="form-group">
-		<label for="exercise-explanation">Explanation</label>
-		<textarea name="{{ name }}">{{ value }}</textarea>
-	</div>
-{% endmacro %}
+{#         #}
+{#  MEDIA  #}
+{#         #}
 
 {%
 	macro imageInput(
@@ -263,6 +275,11 @@
 		<audio x-show="audioSrc" :src="audioSrc" controls style="margin-top:8px;"></audio>
 	</div>
 {% endmacro %}
+
+
+{#         #}
+{# ACTIONS #}
+{#         #}
 
 {% macro actionButtons(collectionId='') %}
 	<div class="form-group">

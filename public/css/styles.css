@@ -1,22 +1,8 @@
 /* Minimal styles for SSR demo */
 :root {
-	/* --bg: #0b0f14;
-	--panel: #121822;
-	--panel-alt: #171f2c;
-	--text: #e6edf3;
-	--muted: #9fb1c1;
-	--ghost: #7c7c7c; */
-
-	/* --primary: #1d4ed8;
-	--secondary: #0ea5e9;
-	--tertiary: #10b981;
-	--accent: #a1caff;
-	--accent-hover: #7fb3ff;
-	--accent-muted: #20304b; */
-
-	--success: var(--pico-color-jade-500);
-	--warning: var(--pico-color-amber-500);
-	--danger: var(--pico-color-red-500);
+	--success: var(--pico-ins-color);
+	--warning: var(--pico-color-amber-600);
+	--danger: var(--pico-del-color);
 
 	--border: #1f2a38;
 	--shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
@@ -115,16 +101,22 @@ progress {
 }
 
 .tag {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.4rem;
-	padding: 0rem 0.6rem;
-	border-radius: 6px;
-	font-size: 0.95rem;
-	border: 1px solid;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--pico-border-radius);
+  /* border: 1px solid color-mix(in srgb, var(--pico-primary) 60%, transparent); */
+  /* background-color: color-mix(in srgb, var(--pico-primary) 35%, #000); */
+  color: var(--pico-color);
+  font-size: 0.9rem;
 }
 
-.tag button {
+.tag-remove-button:hover {
+	background-color: color-mix(in srgb, var(--pico-primary) 45%, #000);
+}
+
+.tag-remove-button {
 	border: none;
 	background: transparent;
 	color: inherit;
@@ -135,10 +127,17 @@ progress {
 }
 
 .distractor-tag {
-	background: var(--danger);
+	background: color-mix(in srgb, var(--danger) 60%, transparent);
 }
 .additional-correct-answer-tag {
-	background: var(--success);
+	background: color-mix(in srgb, var(--success) 60%, transparent);
+}
+
+.tags-container {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	/* margin-top: 0.5rem; */
 }
 
 #exercise-create-form .form-content,
