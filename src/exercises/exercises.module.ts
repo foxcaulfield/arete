@@ -8,6 +8,7 @@ import { QuizService } from "./quiz.service";
 import { ExerciseQueryService } from "./exercise-query.service";
 import { ExerciseValidationService } from "./exercise-validation.service";
 import { EXERCISE_RULES_SYMBOL, ExerciseRulesConfig } from "src/exercises/exercise-rules.config";
+// import { QuizSessionStore } from "./quiz-session.store";
 
 export const exerciseRulesSettings: ExerciseRulesConfig = {
 	DISTRACTORS_PER_QUESTION: 3,
@@ -24,6 +25,7 @@ export const exerciseRulesSettings: ExerciseRulesConfig = {
 		ExercisesService,
 		PrismaService,
 		QuizService,
+		// QuizSessionStore,
 		ExerciseQueryService,
 		ExerciseValidationService,
 	],
