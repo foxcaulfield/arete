@@ -7,8 +7,12 @@ import { ResponseCollectionDto } from "src/collections/dto/response-collection.d
 import { PaginatedResponseDto } from "src/common/types";
 import { ResponseExerciseDto } from "src/exercises/dto/response-exercise.dto";
 import { FilterExerciseDto } from "src/exercises/dto/filter-exercise.dto";
+import { FilterCollectionDto } from "src/collections/dto/filter-collection.dto";
 import { QuizService } from "src/exercises/quiz.service";
 import { QuizQuestionDto } from "src/exercises/dto/quiz.dto";
+import { UiService } from "./ui.service";
+
+import { DashboardStats } from "./dashboard-stats.interface";
 
 type Paginated<T> = PaginatedResponseDto<T>;
 
@@ -17,7 +21,8 @@ export class UiController {
 	public constructor(
 		private readonly collectionsService: CollectionsService,
 		private readonly exercisesService: ExercisesService,
-		private readonly quizService: QuizService
+		private readonly quizService: QuizService,
+		private readonly uiService: UiService
 	) {}
 
 	@Get("/")
@@ -55,17 +60,17 @@ export class UiController {
 
 	@Get("/dashboard")
 	@Render("dashboard.njk")
-	public dashboard(): { title: string } {
-		return { title: "dashboard" };
+	public async dashboard(
+		@Session() session: UserSession,
+		@Query("view") view?: string
+	): Promise<{ title: string; stats: DashboardStats; randomCollectionId: string | null; isAdmin: boolean; viewMode: string }> {
+		return this.uiService.getDashboard(session, view);
 	}
 
 	@Get("/profile")
 	@Render("profile.njk")
-	public profile(@Session() session: UserSession): { name: string; email: string } {
-		return {
-			name: session.user.name,
-			email: session.user.email,
-		};
+	public async profile(@Session() session: UserSession): Promise<object> {
+		return this.uiService.getProfile(session);
 	}
 
 	/* collection */
@@ -87,16 +92,12 @@ export class UiController {
 
 	@Get("/collections")
 	@Render("collections/page.njk")
-	public collections(
+	public async collections(
 		@Session() session: UserSession,
-		@Query("page") page?: string,
-		@Query("limit") limit?: string
-	): Promise<Paginated<ResponseCollectionDto>> {
-		return this.collectionsService.getCollectionsByUserId(
-			session.user.id,
-			page ? parseInt(page) : 1,
-			limit ? parseInt(limit) : 10
-		);
+		@Query() filter: FilterCollectionDto
+	): Promise<Paginated<ResponseCollectionDto> & { filter: FilterCollectionDto }> {
+		const result = await this.collectionsService.getCollectionsByUserId(session.user.id, filter);
+		return { ...result, filter };
 	}
 
 	@Get("/collections/:id")
@@ -108,13 +109,14 @@ export class UiController {
 	): Promise<{
 		collection: ResponseCollectionDto;
 		exercises: PaginatedResponseDto<ResponseExerciseDto>;
+		filter: FilterExerciseDto;
 	}> {
 		const [collection, exercises] = await Promise.all([
 			this.collectionsService.getCollectionById(id, session.user.id),
 			this.exercisesService.getExercisesInCollection(session.user.id, id, filter),
 		]);
 
-		return { collection, exercises };
+		return { collection, exercises, filter };
 	}
 
 	/* exercises */
@@ -152,16 +154,20 @@ export class UiController {
 	): Promise<{
 		quizQuestion: QuizQuestionDto;
 		collectionId: string;
+		collectionName: string;
+		sessionStats: { correct: number; total: number; streak: number; maxStreak: number }; /* mock */
 		distractorsHotKeyMapFunction: (index: number) => number;
 	}> {
-		const quizQuestion = await this.quizService.getDrillExercise(session.user.id, collectionId);
+		const [quizQuestion, collection, sessionStats] = await Promise.all([
+			this.quizService.getDrillExercise(session.user.id, collectionId),
+			this.collectionsService.getCollectionById(collectionId, session.user.id),
+			Promise.resolve(this.quizService.getSessionStats(session.user.id, collectionId)),
+		]);
 		return {
-			// quizQuestion: {
-			// 	...quizQuestion,
-			// 	explanation: quizQuestion.explanation ? await marked.parse(quizQuestion.explanation) : null,
-			// },
 			quizQuestion,
 			collectionId,
+			collectionName: collection.name,
+			sessionStats,
 			distractorsHotKeyMapFunction: this.distractorsHotKeyMapFunction,
 		};
 	}
@@ -177,4 +183,6 @@ export class UiController {
 			return 3; // Key '3'
 		else return index + 100; // Disable hotkey for other buttons
 	}
+
+
 }
