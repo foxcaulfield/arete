@@ -1,3 +1,20 @@
+## 1.5.0-beta.2 (2025-12-07)
+
+* feat: add lastAttemptAt field to ResponseExerciseDto for tracking user attempts ([a4e18a3](https://github.com/foxcaulfield/arete/commit/a4e18a3))
+* feat: enhance answer feedback with additional answers, add collection stats to drill exercise respon ([584428a](https://github.com/foxcaulfield/arete/commit/584428a))
+* feat: enhance collections filtering and analytics with pagination, sorting, and coverage metrics ([7e46132](https://github.com/foxcaulfield/arete/commit/7e46132))
+* feat: enhance exercise components with dynamic IDs and improve button styling ([15652eb](https://github.com/foxcaulfield/arete/commit/15652eb))
+* feat: enhance exercise forms with improved button actions and UI endpoints ([8e5ed13](https://github.com/foxcaulfield/arete/commit/8e5ed13))
+* feat: enhance getExercisesInCollection and getExerciseById methods with sorting, filtering, and atte ([1fe0452](https://github.com/foxcaulfield/arete/commit/1fe0452))
+* feat: enhance TransformToArray function to handle empty string as array clear ([3ce2fe8](https://github.com/foxcaulfield/arete/commit/3ce2fe8))
+* feat: expand FilterExerciseDto with additional filtering options and enums for sorting and media typ ([f7dd394](https://github.com/foxcaulfield/arete/commit/f7dd394))
+* feat: implement admin module with user management functionality including create, update, and delete ([dcbd5a9](https://github.com/foxcaulfield/arete/commit/dcbd5a9))
+* feat: implement betterAuth configuration factory and refactor app module imports ([c4a73b8](https://github.com/foxcaulfield/arete/commit/c4a73b8))
+* feat: refactor exercise components to use reusable tags input macro and add explanation field ([2b63dce](https://github.com/foxcaulfield/arete/commit/2b63dce))
+* feat: update FilterExerciseDto to set minimum page value to 1 and default page to 1 ([3000e73](https://github.com/foxcaulfield/arete/commit/3000e73))
+* feat: update form structure and styling for exercise creation and editing forms ([752cbcd](https://github.com/foxcaulfield/arete/commit/752cbcd))
+* fix: remove unused IsOptional import from class-validator in quiz.dto.ts ([72c15d4](https://github.com/foxcaulfield/arete/commit/72c15d4))
+
 ## 1.5.0-beta.1 (2025-12-03)
 
 * feat: add exercise components including input fields and selection options ([31efc69](https://github.com/foxcaulfield/arete/commit/31efc69))
