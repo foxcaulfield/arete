@@ -3,10 +3,10 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateExerciseDto } from "./dto/update-exercise.dto";
 import { CreateExerciseDto } from "./dto/create-exercise.dto";
 import { ResponseExerciseDto } from "./dto/response-exercise.dto";
-import { FilterExerciseDto } from "./dto/filter-exercise.dto";
+import { ExerciseSortBy, FilterExerciseDto, SortOrder } from "./dto/filter-exercise.dto";
 import { BaseService } from "src/base/base.service";
 import { PaginatedResponseDto } from "src/common/types";
-import { Exercise } from "@prisma/client";
+import { Exercise, Prisma } from "@prisma/client";
 
 import { ExerciseFileType } from "src/common/enums/exercise-file-type.enum";
 import { FilesService } from "src/common/files.service";
@@ -100,45 +100,125 @@ export class ExercisesService extends BaseService {
 	): Promise<PaginatedResponseDto<ResponseExerciseDto>> {
 		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
 
-		const total = await this.prismaService.exercise.count({ where: { collectionId } });
+		const { page = 1, limit = 10, search, type, sortBy = ExerciseSortBy.UPDATED_AT, sortOrder = SortOrder.DESC, hasImage, hasAudio } = filter;
+
+		// Normalize search - treat empty string as undefined
+		const searchTerm = search?.trim() || undefined;
+
+		// Build where clause
+		const where: Prisma.ExerciseWhereInput = {
+			collectionId,
+			...(searchTerm && {
+				OR: [
+					{ question: { contains: searchTerm, mode: "insensitive" } },
+					{ correctAnswer: { contains: searchTerm, mode: "insensitive" } },
+					{ translation: { contains: searchTerm, mode: "insensitive" } },
+				],
+			}),
+			...(type && { type }),
+			...(hasImage === "has" && { imageUrl: { not: null } }),
+			...(hasImage === "none" && { imageUrl: null }),
+			...(hasAudio === "has" && { audioUrl: { not: null } }),
+			...(hasAudio === "none" && { audioUrl: null }),
+		};
+
+		const total = await this.prismaService.exercise.count({ where });
 
 		if (total === 0) {
 			return this.paginationService.buildPaginatedResponse(
 				this.toResponseDto(ResponseExerciseDto, []),
 				total,
-				filter.page,
-				filter.limit
+				page,
+				limit
 			);
 		}
 
-		// const [exercises, total] = await Promise.all([
-		// 	this.prismaService.exercise.findMany({
-		// 		where,
-		// 		skip,
-		// 		take: filter.limit,
-		// 		orderBy: { createdAt: "desc" },
-		// 	}),
-		// 	this.prismaService.exercise.count({ where }),
-		// ]);
-		const skip = this.paginationService.calculateSkip(filter.page, filter.limit);
+		const skip = this.paginationService.calculateSkip(page, limit);
 
-		const rows: Array<
-			Exercise & {
-				totalAttempts: number;
-				correctAttempts: number;
-			}
-		> = await this.exerciseQueryService.getTopMostAttemptedExercises(
-			collectionId,
-			currentUserId,
-			filter.limit,
-			skip
-		);
+		// If searching or filtering, use standard Prisma query
+		if (searchTerm || type || hasImage || hasAudio) {
+			const exercises = await this.prismaService.exercise.findMany({
+				where,
+				skip,
+				take: limit,
+				orderBy: sortBy === ExerciseSortBy.TOTAL_ATTEMPTS 
+					? { createdAt: sortOrder } // fallback for totalAttempts
+					: { [sortBy]: sortOrder },
+			});
+
+			// Enrich with attempt counts
+			const exerciseIds = exercises.map(e => e.id);
+			const attemptCounts = await this.prismaService.attempt.groupBy({
+				by: ["exerciseId", "isCorrect"],
+				where: { userId: currentUserId, exerciseId: { in: exerciseIds } },
+				_count: { id: true },
+			});
+
+			const enriched = exercises.map(e => {
+				const attempts = attemptCounts.filter(a => a.exerciseId === e.id);
+				const totalAttempts = attempts.reduce((sum, a) => sum + a._count.id, 0);
+				const correctAttempts = attempts.find(a => a.isCorrect)?._count.id || 0;
+				return { ...e, totalAttempts, correctAttempts };
+			});
+
+			return this.paginationService.buildPaginatedResponse(
+				this.toResponseDto(ResponseExerciseDto, enriched),
+				total,
+				page,
+				limit
+			);
+		}
+
+		// Use optimized raw query only for default sort (totalAttempts desc)
+		if (sortBy === ExerciseSortBy.TOTAL_ATTEMPTS) {
+			const rows: Array<
+				Exercise & {
+					totalAttempts: number;
+					correctAttempts: number;
+				}
+			> = await this.exerciseQueryService.getTopMostAttemptedExercises(
+				collectionId,
+				currentUserId,
+				limit,
+				skip
+			);
+
+			return this.paginationService.buildPaginatedResponse(
+				this.toResponseDto(ResponseExerciseDto, rows),
+				total,
+				page,
+				limit
+			);
+		}
+
+		// Standard Prisma query with sorting for non-filtered, non-totalAttempts cases
+		const exercises = await this.prismaService.exercise.findMany({
+			where,
+			skip,
+			take: limit,
+			orderBy: { [sortBy]: sortOrder },
+		});
+
+		// Enrich with attempt counts
+		const exerciseIds = exercises.map(e => e.id);
+		const attemptCounts = await this.prismaService.attempt.groupBy({
+			by: ["exerciseId", "isCorrect"],
+			where: { userId: currentUserId, exerciseId: { in: exerciseIds } },
+			_count: { id: true },
+		});
+
+		const enriched = exercises.map(e => {
+			const attempts = attemptCounts.filter(a => a.exerciseId === e.id);
+			const totalAttempts = attempts.reduce((sum, a) => sum + a._count.id, 0);
+			const correctAttempts = attempts.find(a => a.isCorrect)?._count.id || 0;
+			return { ...e, totalAttempts, correctAttempts };
+		});
 
 		return this.paginationService.buildPaginatedResponse(
-			this.toResponseDto(ResponseExerciseDto, rows),
+			this.toResponseDto(ResponseExerciseDto, enriched),
 			total,
-			filter.page,
-			filter.limit
+			page,
+			limit
 		);
 	}
 
@@ -146,7 +226,29 @@ export class ExercisesService extends BaseService {
 		const exercise = await this.findExerciseOrFail(exerciseId);
 		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
 
-		return this.toResponseDto(ResponseExerciseDto, exercise);
+		// Get user's attempt statistics for this exercise
+		const attemptStats = await this.prismaService.attempt.groupBy({
+			by: ["isCorrect"],
+			where: { userId: currentUserId, exerciseId },
+			_count: { id: true },
+		});
+
+		const totalAttempts = attemptStats.reduce((sum, a) => sum + a._count.id, 0);
+		const correctAttempts = attemptStats.find((a) => a.isCorrect)?._count.id || 0;
+
+		// Get last attempt date
+		const lastAttempt = await this.prismaService.attempt.findFirst({
+			where: { userId: currentUserId, exerciseId },
+			orderBy: { createdAt: "desc" },
+			select: { createdAt: true },
+		});
+
+		return this.toResponseDto(ResponseExerciseDto, {
+			...exercise,
+			totalAttempts,
+			correctAttempts,
+			lastAttemptAt: lastAttempt?.createdAt || null,
+		});
 	}
 
 	public async update(
