@@ -1,6 +1,6 @@
 import { ExerciseType } from "@prisma/client";
 import { Expose } from "class-transformer";
-import { IsNotEmpty, IsString, IsOptional } from "class-validator";
+import { IsNotEmpty, IsString } from "class-validator";
 
 export class QuizQuestionDto {
 	@Expose()
