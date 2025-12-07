@@ -7,12 +7,10 @@ export class CollectionAnalyticsService {
 	public async enrichCollectionsForUser<T extends { id: string; _count?: { exercises?: number } }>(
 		collections: Array<T>,
 		userId: string
-	): Promise<Array<T & { attemptCount: number; exerciseCount: number }>> {
+	): Promise<Array<T & { attemptCount: number; exerciseCount: number; uniqueExercisesAttempted: number; coverage: string }>> {
 		if (!collections?.length) {
 			return [];
 		}
-
-		// const collectionsIds = collections.map((c): string => c.id);
 
 		const toIds = (e: { id: string }): string => e.id;
 
@@ -25,10 +23,12 @@ export class CollectionAnalyticsService {
 
 		if (exercises.length === 0) {
 			// No exercises → no attempts
-			return collections.map((c): T & { attemptCount: number; exerciseCount: number } => ({
+			return collections.map((c): T & { attemptCount: number; exerciseCount: number; uniqueExercisesAttempted: number; coverage: string } => ({
 				...c,
 				attemptCount: 0,
 				exerciseCount: c?._count?.exercises ?? 0,
+				uniqueExercisesAttempted: 0,
+				coverage: "0",
 			}));
 		}
 
@@ -41,21 +41,46 @@ export class CollectionAnalyticsService {
 			_count: { id: true },
 		});
 
-		// Aggregate attempts by collection
+		// Aggregate attempts and unique exercises by collection
 		const collectionAttemptMap = new Map<string, number>();
+		const collectionUniqueExercisesMap = new Map<string, Set<string>>();
+
 		for (const { exerciseId, _count } of attemptCounts) {
 			const collectionId = exerciseToCollectionMap.get(exerciseId);
 			if (!collectionId) continue;
-			const current = collectionAttemptMap.get(collectionId) || 0;
-			collectionAttemptMap.set(collectionId, current + _count.id);
+
+			// Total attempts
+			const currentAttempts = collectionAttemptMap.get(collectionId) || 0;
+			collectionAttemptMap.set(collectionId, currentAttempts + _count.id);
+
+			// Unique exercises attempted
+			if (!collectionUniqueExercisesMap.has(collectionId)) {
+				collectionUniqueExercisesMap.set(collectionId, new Set());
+			}
+			collectionUniqueExercisesMap.get(collectionId)!.add(exerciseId);
 		}
 
-		// Enrich collections with attempt counts
-		const collectionsWithAttempts = collections.map((c): T & { attemptCount: number; exerciseCount: number } => ({
-			...c,
-			attemptCount: collectionAttemptMap.get(c.id) || 0,
-			exerciseCount: c?._count?.exercises || 0,
-		}));
+		// Count exercises per collection
+		const collectionExerciseCountMap = new Map<string, number>();
+		for (const exercise of exercises) {
+			const current = collectionExerciseCountMap.get(exercise.collectionId) || 0;
+			collectionExerciseCountMap.set(exercise.collectionId, current + 1);
+		}
+
+		// Enrich collections with attempt counts and coverage
+		const collectionsWithAttempts = collections.map((c): T & { attemptCount: number; exerciseCount: number; uniqueExercisesAttempted: number; coverage: string } => {
+			const exerciseCount = c?._count?.exercises || collectionExerciseCountMap.get(c.id) || 0;
+			const uniqueExercisesAttempted = collectionUniqueExercisesMap.get(c.id)?.size || 0;
+			const coverage = exerciseCount > 0 ? ((uniqueExercisesAttempted / exerciseCount) * 100).toFixed(0) : "0";
+
+			return {
+				...c,
+				attemptCount: collectionAttemptMap.get(c.id) || 0,
+				exerciseCount,
+				uniqueExercisesAttempted,
+				coverage,
+			};
+		});
 
 		return collectionsWithAttempts;
 	}

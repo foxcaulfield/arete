@@ -5,7 +5,7 @@ import {
 	Injectable,
 	NotFoundException,
 } from "@nestjs/common";
-import { Collection, User, UserRole } from "@prisma/client";
+import { Collection, Prisma, User, UserRole } from "@prisma/client";
 import { BaseService } from "src/base/base.service";
 import { PaginatedResponseDto } from "src/common/types";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -15,6 +15,7 @@ import { UpdateCollectionDto } from "./dto/update-collection.dto";
 import { UsersService } from "src/users/users.service";
 import { PaginationService } from "src/common/pagination.service";
 import { CollectionAnalyticsService } from "./collection-analytics.service";
+import { CollectionSortBy, FilterCollectionDto, SortOrder } from "./dto/filter-collection.dto";
 
 type CollectionWithUser = Collection & { user?: Pick<User, "id" | "name"> };
 
@@ -88,14 +89,29 @@ export class CollectionsService extends BaseService {
 	}
 
 	public async getCollectionById(id: string, currentUserId: string): Promise<ResponseCollectionDto> {
-		const collection = await this.findCollection(id);
+		const collection = await this.prismaService.collection.findUnique({
+			where: { id },
+			include: {
+				...this.withUser,
+				_count: { select: { exercises: true } },
+			},
+		});
+
+		if (!collection) {
+			throw new NotFoundException("Collection not found");
+		}
+
 		const user = await this.usersService.findUser(currentUserId);
 
 		if (!this.canAccessCollection(collection, user)) {
 			throw new ForbiddenException("You are not allowed to access this collection.");
 		}
 
-		return this.toResponseDto(ResponseCollectionDto, collection);
+		// Enrich with analytics (coverage, attempt counts)
+		const enrichedCollections = await this.collectionAnalyticsService.enrichCollectionsForUser([collection], currentUserId);
+		const enriched = enrichedCollections[0] ?? collection;
+
+		return this.toResponseDto(ResponseCollectionDto, enriched);
 	}
 
 	public async deleteCollection(collectionId: string, currentUserId: string): Promise<ResponseCollectionDto> {
@@ -177,21 +193,39 @@ export class CollectionsService extends BaseService {
 
 	public async getCollectionsByUserId(
 		targetUserId: string,
-		page = 1,
-		limit = 10
+		filter: FilterCollectionDto
 	): Promise<PaginatedResponseDto<ResponseCollectionDto>> {
+		const { page = 1, limit = 10, search, sortBy = CollectionSortBy.UPDATED_AT, sortOrder = SortOrder.DESC } = filter;
 		const skip = this.paginationService.calculateSkip(page, limit);
+
+		// Build where clause
+		const where: Prisma.CollectionWhereInput = {
+			userId: targetUserId,
+			...(search && {
+				OR: [
+					{ name: { contains: search, mode: "insensitive" } },
+					{ description: { contains: search, mode: "insensitive" } },
+				],
+			}),
+		};
+
+		// Build orderBy
+		const orderBy: Prisma.CollectionOrderByWithRelationInput = {
+			[sortBy]: sortOrder,
+		};
+
 		const [collections, total] = await Promise.all([
 			this.prismaService.collection.findMany({
-				where: { userId: targetUserId },
+				where,
 				skip,
 				take: limit,
+				orderBy,
 				include: {
 					...this.withUser,
 					_count: { select: { exercises: true } },
 				},
 			}),
-			this.prismaService.collection.count({ where: { userId: targetUserId } }),
+			this.prismaService.collection.count({ where }),
 		]);
 
 		const collectionsWithAttempts = await this.collectionAnalyticsService.enrichCollectionsForUser(
