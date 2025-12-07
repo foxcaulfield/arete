@@ -3,10 +3,10 @@ import { IsInt, IsOptional, Max, Min } from "class-validator";
 
 export class FilterExerciseDto {
 	@Type((): typeof Number => Number)
-	@Min(0)
+	@Min(1)
 	@IsInt()
 	@IsOptional()
-	public page: number = 0;
+	public page: number = 1;
 
 	@Type((): typeof Number => Number)
 	@Max(100)
