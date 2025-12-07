@@ -9,6 +9,7 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { AuthGuard, AuthModule } from "@thallesp/nestjs-better-auth";
 import { APP_GUARD } from "@nestjs/core";
 import { CollectionsModule } from "./collections/collections.module";
+import { AdminModule } from "./admin/admin.module";
 import { PermissionsGuard } from "./guards/permissions.guard";
 import { RolesGuard } from "./guards/roles.guard";
 import { SignUpHook } from "./hooks/auth.hook";
@@ -45,6 +46,8 @@ import { betterAuthConfigFactory } from "./configs/better-auth.config";
 		UsersModule,
 		PrismaModule,
 		CollectionsModule,
+		// Admin module contains admin-only endpoints (users management)
+		AdminModule,
 		ExercisesModule,
 		CommonModule,
 		ServeStaticModule.forRoot({
