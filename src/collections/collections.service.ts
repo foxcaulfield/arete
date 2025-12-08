@@ -2,6 +2,7 @@ import {
 	BadRequestException,
 	ConflictException,
 	ForbiddenException,
+	Inject,
 	Injectable,
 	NotFoundException,
 } from "@nestjs/common";
@@ -16,6 +17,8 @@ import { UsersService } from "src/users/users.service";
 import { PaginationService } from "src/common/pagination.service";
 import { CollectionAnalyticsService } from "./collection-analytics.service";
 import { CollectionSortBy, FilterCollectionDto, SortOrder } from "./dto/filter-collection.dto";
+import { APP_LIMITS_SYMBOL } from "src/configs/app-limits.config";
+import type { AppLimitsConfig } from "src/configs/app-limits.config";
 
 type CollectionWithUser = Collection & { user?: Pick<User, "id" | "name"> };
 
@@ -50,12 +53,24 @@ export class CollectionsService extends BaseService {
 		private readonly prismaService: PrismaService,
 		private readonly usersService: UsersService,
 		private readonly paginationService: PaginationService,
-		private readonly collectionAnalyticsService: CollectionAnalyticsService
+		private readonly collectionAnalyticsService: CollectionAnalyticsService,
+		@Inject(APP_LIMITS_SYMBOL) private readonly appLimits: AppLimitsConfig
 	) {
 		super();
 	}
 
 	public async createCollection(dto: CreateCollectionDto, userId: string): Promise<ResponseCollectionDto> {
+		// Check collection limit for non-admin users
+		const user = await this.prismaService.user.findUnique({ where: { id: userId }, select: { role: true } });
+		if (user?.role === UserRole.USER) {
+			const collectionCount = await this.prismaService.collection.count({ where: { userId } });
+			if (collectionCount >= this.appLimits.USER_MAX_COLLECTIONS) {
+				throw new ForbiddenException(
+					`You have reached the maximum limit of ${this.appLimits.USER_MAX_COLLECTIONS} collections.`
+				);
+			}
+		}
+
 		const duplicate = await this.prismaService.collection.findFirst({
 			where: {
 				userId: userId,
@@ -108,7 +123,10 @@ export class CollectionsService extends BaseService {
 		}
 
 		// Enrich with analytics (coverage, attempt counts)
-		const enrichedCollections = await this.collectionAnalyticsService.enrichCollectionsForUser([collection], currentUserId);
+		const enrichedCollections = await this.collectionAnalyticsService.enrichCollectionsForUser(
+			[collection],
+			currentUserId
+		);
 		const enriched = enrichedCollections[0] ?? collection;
 
 		return this.toResponseDto(ResponseCollectionDto, enriched);
@@ -195,7 +213,13 @@ export class CollectionsService extends BaseService {
 		targetUserId: string,
 		filter: FilterCollectionDto
 	): Promise<PaginatedResponseDto<ResponseCollectionDto>> {
-		const { page = 1, limit = 10, search, sortBy = CollectionSortBy.UPDATED_AT, sortOrder = SortOrder.DESC } = filter;
+		const {
+			page = 1,
+			limit = 10,
+			search,
+			sortBy = CollectionSortBy.UPDATED_AT,
+			sortOrder = SortOrder.DESC,
+		} = filter;
 		const skip = this.paginationService.calculateSkip(page, limit);
 
 		// Build where clause

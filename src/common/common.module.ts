@@ -5,6 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import { fileStorageFactory } from "src/configs/file-storage.config";
 import { UtilsService } from "./utils.service";
 import { PaginationService } from "./pagination.service";
+import { APP_LIMITS_SYMBOL, defaultAppLimits } from "src/configs/app-limits.config";
 
 @Module({
 	imports: [
@@ -13,7 +14,12 @@ import { PaginationService } from "./pagination.service";
 			useFactory: fileStorageFactory,
 		}),
 	],
-	providers: [FilesService, UtilsService, PaginationService],
-	exports: [FilesService, UtilsService, PaginationService],
+	providers: [
+		{ provide: APP_LIMITS_SYMBOL, useValue: defaultAppLimits },
+		FilesService,
+		UtilsService,
+		PaginationService,
+	],
+	exports: [APP_LIMITS_SYMBOL, FilesService, UtilsService, PaginationService],
 })
 export class CommonModule {}

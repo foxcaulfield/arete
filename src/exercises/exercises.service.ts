@@ -1,12 +1,20 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException, StreamableFile } from "@nestjs/common";
+import {
+	ForbiddenException,
+	Inject,
+	Injectable,
+	InternalServerErrorException,
+	Logger,
+	NotFoundException,
+	StreamableFile,
+} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateExerciseDto } from "./dto/update-exercise.dto";
 import { CreateExerciseDto } from "./dto/create-exercise.dto";
 import { ResponseExerciseDto } from "./dto/response-exercise.dto";
-import { ExerciseSortBy, FilterExerciseDto, SortOrder } from "./dto/filter-exercise.dto";
+import { ExerciseSortBy, FilterExerciseDto, MediaFilter, SortOrder } from "./dto/filter-exercise.dto";
 import { BaseService } from "src/base/base.service";
 import { PaginatedResponseDto } from "src/common/types";
-import { Exercise, Prisma } from "@prisma/client";
+import { Exercise, Prisma, UserRole } from "@prisma/client";
 
 import { ExerciseFileType } from "src/common/enums/exercise-file-type.enum";
 import { FilesService } from "src/common/files.service";
@@ -14,6 +22,8 @@ import { ExerciseQueryService } from "./exercise-query.service";
 import { ExerciseValidationService } from "./exercise-validation.service";
 import { PaginationService } from "src/common/pagination.service";
 import { CollectionAccessService } from "src/collections/collection-access.service";
+import { APP_LIMITS_SYMBOL } from "src/configs/app-limits.config";
+import type { AppLimitsConfig } from "src/configs/app-limits.config";
 
 type MulterFile = Express.Multer.File;
 
@@ -37,7 +47,8 @@ export class ExercisesService extends BaseService {
 		private readonly exerciseQueryService: ExerciseQueryService,
 		private readonly exerciseValidationService: ExerciseValidationService,
 		private readonly paginationService: PaginationService,
-		private readonly collectionAccessService: CollectionAccessService
+		private readonly collectionAccessService: CollectionAccessService,
+		@Inject(APP_LIMITS_SYMBOL) private readonly appLimits: AppLimitsConfig
 	) {
 		super();
 	}
@@ -50,6 +61,20 @@ export class ExercisesService extends BaseService {
 		files?: UploadedFiles
 	): Promise<ResponseExerciseDto> {
 		await this.collectionAccessService.validateCollectionAccess(currentUserId, dto.collectionId);
+
+		// Check exercise limit for non-admin users
+		const user = await this.prismaService.user.findUnique({ where: { id: currentUserId }, select: { role: true } });
+		if (user?.role === UserRole.USER) {
+			const exerciseCount = await this.prismaService.exercise.count({
+				where: { collectionId: dto.collectionId },
+			});
+			if (exerciseCount >= this.appLimits.USER_MAX_EXERCISES_PER_COLLECTION) {
+				throw new ForbiddenException(
+					`This collection has reached the maximum limit of ${this.appLimits.USER_MAX_EXERCISES_PER_COLLECTION} exercises.`
+				);
+			}
+		}
+
 		this.exerciseValidationService.validateAnswersAndDistractors(
 			dto.correctAnswer,
 			dto.additionalCorrectAnswers,
@@ -100,7 +125,16 @@ export class ExercisesService extends BaseService {
 	): Promise<PaginatedResponseDto<ResponseExerciseDto>> {
 		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
 
-		const { page = 1, limit = 10, search, type, sortBy = ExerciseSortBy.UPDATED_AT, sortOrder = SortOrder.DESC, hasImage, hasAudio } = filter;
+		const {
+			page = 1,
+			limit = 10,
+			search,
+			type,
+			sortBy = ExerciseSortBy.UPDATED_AT,
+			sortOrder = SortOrder.DESC,
+			hasImage,
+			hasAudio,
+		} = filter;
 
 		// Normalize search - treat empty string as undefined
 		const searchTerm = search?.trim() || undefined;
@@ -116,10 +150,10 @@ export class ExercisesService extends BaseService {
 				],
 			}),
 			...(type && { type }),
-			...(hasImage === "has" && { imageUrl: { not: null } }),
-			...(hasImage === "none" && { imageUrl: null }),
-			...(hasAudio === "has" && { audioUrl: { not: null } }),
-			...(hasAudio === "none" && { audioUrl: null }),
+			...(hasImage === MediaFilter.HAS && { imageUrl: { not: null } }),
+			...(hasImage === MediaFilter.NONE && { imageUrl: null }),
+			...(hasAudio === MediaFilter.HAS && { audioUrl: { not: null } }),
+			...(hasAudio === MediaFilter.NONE && { audioUrl: null }),
 		};
 
 		const total = await this.prismaService.exercise.count({ where });
@@ -141,23 +175,24 @@ export class ExercisesService extends BaseService {
 				where,
 				skip,
 				take: limit,
-				orderBy: sortBy === ExerciseSortBy.TOTAL_ATTEMPTS 
-					? { createdAt: sortOrder } // fallback for totalAttempts
-					: { [sortBy]: sortOrder },
+				orderBy:
+					sortBy === ExerciseSortBy.TOTAL_ATTEMPTS
+						? { createdAt: sortOrder } // fallback for totalAttempts
+						: { [sortBy]: sortOrder },
 			});
 
 			// Enrich with attempt counts
-			const exerciseIds = exercises.map(e => e.id);
+			const exerciseIds = exercises.map((e): string => e.id);
 			const attemptCounts = await this.prismaService.attempt.groupBy({
 				by: ["exerciseId", "isCorrect"],
 				where: { userId: currentUserId, exerciseId: { in: exerciseIds } },
 				_count: { id: true },
 			});
 
-			const enriched = exercises.map(e => {
-				const attempts = attemptCounts.filter(a => a.exerciseId === e.id);
-				const totalAttempts = attempts.reduce((sum, a) => sum + a._count.id, 0);
-				const correctAttempts = attempts.find(a => a.isCorrect)?._count.id || 0;
+			const enriched = exercises.map((e): ResponseExerciseDto => {
+				const attempts = attemptCounts.filter((a): boolean => a.exerciseId === e.id);
+				const totalAttempts = attempts.reduce((sum, a): number => sum + a._count.id, 0);
+				const correctAttempts = attempts.find((a): boolean => a.isCorrect)?._count.id || 0;
 				return { ...e, totalAttempts, correctAttempts };
 			});
 
@@ -176,12 +211,7 @@ export class ExercisesService extends BaseService {
 					totalAttempts: number;
 					correctAttempts: number;
 				}
-			> = await this.exerciseQueryService.getTopMostAttemptedExercises(
-				collectionId,
-				currentUserId,
-				limit,
-				skip
-			);
+			> = await this.exerciseQueryService.getTopMostAttemptedExercises(collectionId, currentUserId, limit, skip);
 
 			return this.paginationService.buildPaginatedResponse(
 				this.toResponseDto(ResponseExerciseDto, rows),
@@ -200,17 +230,17 @@ export class ExercisesService extends BaseService {
 		});
 
 		// Enrich with attempt counts
-		const exerciseIds = exercises.map(e => e.id);
+		const exerciseIds = exercises.map((e): string => e.id);
 		const attemptCounts = await this.prismaService.attempt.groupBy({
 			by: ["exerciseId", "isCorrect"],
 			where: { userId: currentUserId, exerciseId: { in: exerciseIds } },
 			_count: { id: true },
 		});
 
-		const enriched = exercises.map(e => {
-			const attempts = attemptCounts.filter(a => a.exerciseId === e.id);
-			const totalAttempts = attempts.reduce((sum, a) => sum + a._count.id, 0);
-			const correctAttempts = attempts.find(a => a.isCorrect)?._count.id || 0;
+		const enriched = exercises.map((e): ResponseExerciseDto => {
+			const attempts = attemptCounts.filter((a): boolean => a.exerciseId === e.id);
+			const totalAttempts = attempts.reduce((sum, a): number => sum + a._count.id, 0);
+			const correctAttempts = attempts.find((a): boolean => a.isCorrect)?._count.id || 0;
 			return { ...e, totalAttempts, correctAttempts };
 		});
 
@@ -233,8 +263,8 @@ export class ExercisesService extends BaseService {
 			_count: { id: true },
 		});
 
-		const totalAttempts = attemptStats.reduce((sum, a) => sum + a._count.id, 0);
-		const correctAttempts = attemptStats.find((a) => a.isCorrect)?._count.id || 0;
+		const totalAttempts = attemptStats.reduce((sum, a): number => sum + a._count.id, 0);
+		const correctAttempts = attemptStats.find((a): boolean => a.isCorrect)?._count.id || 0;
 
 		// Get last attempt date
 		const lastAttempt = await this.prismaService.attempt.findFirst({
@@ -388,6 +418,20 @@ export class ExercisesService extends BaseService {
 	}
 
 	/* Private */
+	private validateFileSize(file: MulterFile | undefined, fileType: ExerciseFileType): void {
+		if (!file) return;
+
+		const maxSize =
+			fileType === ExerciseFileType.AUDIO
+				? this.appLimits.MAX_AUDIO_FILE_SIZE
+				: this.appLimits.MAX_IMAGE_FILE_SIZE;
+
+		if (file.size > maxSize) {
+			const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
+			throw new ForbiddenException(`${fileType} file exceeds maximum size of ${maxSizeMB} MB`);
+		}
+	}
+
 	private async handleExerciseFileUpload({
 		files,
 		prevAudio,
@@ -401,6 +445,10 @@ export class ExercisesService extends BaseService {
 		setNullAudio?: boolean;
 		setNullImage?: boolean;
 	}): Promise<{ audioFilename: string | null; imageFilename: string | null }> {
+		// Validate file sizes before upload
+		this.validateFileSize(files?.audio?.[0], ExerciseFileType.AUDIO);
+		this.validateFileSize(files?.image?.[0], ExerciseFileType.IMAGE);
+
 		const result = await Promise.all(
 			[
 				[files?.audio?.[0], ExerciseFileType.AUDIO, prevAudio, setNullAudio] as const,

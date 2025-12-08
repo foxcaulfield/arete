@@ -7,7 +7,9 @@ export class CollectionAnalyticsService {
 	public async enrichCollectionsForUser<T extends { id: string; _count?: { exercises?: number } }>(
 		collections: Array<T>,
 		userId: string
-	): Promise<Array<T & { attemptCount: number; exerciseCount: number; uniqueExercisesAttempted: number; coverage: string }>> {
+	): Promise<
+		Array<T & { attemptCount: number; exerciseCount: number; uniqueExercisesAttempted: number; coverage: string }>
+	> {
 		if (!collections?.length) {
 			return [];
 		}
@@ -23,13 +25,22 @@ export class CollectionAnalyticsService {
 
 		if (exercises.length === 0) {
 			// No exercises → no attempts
-			return collections.map((c): T & { attemptCount: number; exerciseCount: number; uniqueExercisesAttempted: number; coverage: string } => ({
-				...c,
-				attemptCount: 0,
-				exerciseCount: c?._count?.exercises ?? 0,
-				uniqueExercisesAttempted: 0,
-				coverage: "0",
-			}));
+			return collections.map(
+				(
+					c
+				): T & {
+					attemptCount: number;
+					exerciseCount: number;
+					uniqueExercisesAttempted: number;
+					coverage: string;
+				} => ({
+					...c,
+					attemptCount: 0,
+					exerciseCount: c?._count?.exercises ?? 0,
+					uniqueExercisesAttempted: 0,
+					coverage: "0",
+				})
+			);
 		}
 
 		const exerciseIds = exercises.map(toIds);
@@ -68,19 +79,29 @@ export class CollectionAnalyticsService {
 		}
 
 		// Enrich collections with attempt counts and coverage
-		const collectionsWithAttempts = collections.map((c): T & { attemptCount: number; exerciseCount: number; uniqueExercisesAttempted: number; coverage: string } => {
-			const exerciseCount = c?._count?.exercises || collectionExerciseCountMap.get(c.id) || 0;
-			const uniqueExercisesAttempted = collectionUniqueExercisesMap.get(c.id)?.size || 0;
-			const coverage = exerciseCount > 0 ? ((uniqueExercisesAttempted / exerciseCount) * 100).toFixed(0) : "0";
+		const collectionsWithAttempts = collections.map(
+			(
+				c
+			): T & {
+				attemptCount: number;
+				exerciseCount: number;
+				uniqueExercisesAttempted: number;
+				coverage: string;
+			} => {
+				const exerciseCount = c?._count?.exercises || collectionExerciseCountMap.get(c.id) || 0;
+				const uniqueExercisesAttempted = collectionUniqueExercisesMap.get(c.id)?.size || 0;
+				const coverage =
+					exerciseCount > 0 ? ((uniqueExercisesAttempted / exerciseCount) * 100).toFixed(0) : "0";
 
-			return {
-				...c,
-				attemptCount: collectionAttemptMap.get(c.id) || 0,
-				exerciseCount,
-				uniqueExercisesAttempted,
-				coverage,
-			};
-		});
+				return {
+					...c,
+					attemptCount: collectionAttemptMap.get(c.id) || 0,
+					exerciseCount,
+					uniqueExercisesAttempted,
+					coverage,
+				};
+			}
+		);
 
 		return collectionsWithAttempts;
 	}

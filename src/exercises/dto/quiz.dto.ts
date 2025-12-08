@@ -42,10 +42,6 @@ export class UserAnswerDto {
 	@IsString()
 	@IsNotEmpty()
 	public userAnswer!: string;
-
-	// @IsOptional()
-	// @IsString()
-	// public sessionId?: string;
 }
 
 export class UserAnswerFeedbackDto {
@@ -61,14 +57,14 @@ export class UserAnswerFeedbackDto {
 	@Expose()
 	public additionalCorrectAnswers?: string[];
 
-	// @Expose()
-	// public streak?: number;
+	@Expose()
+	public streak?: number;
 
-	// @Expose()
-	// public sessionCorrect?: number;
+	@Expose()
+	public sessionCorrect?: number;
 
-	// @Expose()
-	// public sessionTotal?: number;
+	@Expose()
+	public sessionTotal?: number;
 
 	@Expose()
 	public nextExerciseId!: string;

@@ -22,7 +22,6 @@ import { FilterExerciseDto } from "./dto/filter-exercise.dto";
 import { PaginatedResponseDto } from "src/common/types";
 import { UpdateExerciseDto } from "./dto/update-exercise.dto";
 import { UserAnswerDto, QuizQuestionDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
-// import { FileInterceptor } from "@nestjs/platform-express";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { multerConfig, multerField as field } from "src/configs/multer.config";
 import { ExerciseFileType } from "../common/enums/exercise-file-type.enum";

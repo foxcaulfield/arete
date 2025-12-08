@@ -8,7 +8,7 @@ import { QuizService } from "./quiz.service";
 import { ExerciseQueryService } from "./exercise-query.service";
 import { ExerciseValidationService } from "./exercise-validation.service";
 import { EXERCISE_RULES_SYMBOL, ExerciseRulesConfig } from "src/exercises/exercise-rules.config";
-// import { QuizSessionStore } from "./quiz-session.store";
+import { QUIZ_SESSION_STORE, InMemoryQuizSessionStore } from "./quiz-session.store";
 
 export const exerciseRulesSettings: ExerciseRulesConfig = {
 	DISTRACTORS_PER_QUESTION: 3,
@@ -22,13 +22,13 @@ export const exerciseRulesSettings: ExerciseRulesConfig = {
 	controllers: [ExercisesController],
 	providers: [
 		{ provide: EXERCISE_RULES_SYMBOL, useValue: exerciseRulesSettings },
+		{ provide: QUIZ_SESSION_STORE, useClass: InMemoryQuizSessionStore },
 		ExercisesService,
 		PrismaService,
 		QuizService,
-		// QuizSessionStore,
 		ExerciseQueryService,
 		ExerciseValidationService,
 	],
-	exports: [ExercisesService, QuizService],
+	exports: [ExercisesService, QuizService, QUIZ_SESSION_STORE],
 })
 export class ExercisesModule {}

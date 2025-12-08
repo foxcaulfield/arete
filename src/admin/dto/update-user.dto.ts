@@ -2,19 +2,19 @@ import { IsEmail, IsOptional, IsEnum, IsBoolean, IsString } from "class-validato
 import { UserRole } from "@prisma/client";
 
 export class UpdateUserDto {
-    @IsOptional()
-    @IsString()
-    public name?: string;
+	@IsOptional()
+	@IsString()
+	public name?: string;
 
-    @IsOptional()
-    @IsEmail()
-    public email?: string;
+	@IsOptional()
+	@IsEmail()
+	public email?: string;
 
-    @IsOptional()
-    @IsEnum(UserRole)
-    public role?: UserRole;
+	@IsOptional()
+	@IsEnum(UserRole)
+	public role?: UserRole;
 
-    @IsOptional()
-    @IsBoolean()
-    public isActive?: boolean;
+	@IsOptional()
+	@IsBoolean()
+	public isActive?: boolean;
 }

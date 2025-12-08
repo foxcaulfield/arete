@@ -63,7 +63,13 @@ export class UiController {
 	public async dashboard(
 		@Session() session: UserSession,
 		@Query("view") view?: string
-	): Promise<{ title: string; stats: DashboardStats; randomCollectionId: string | null; isAdmin: boolean; viewMode: string }> {
+	): Promise<{
+		title: string;
+		stats: DashboardStats;
+		randomCollectionId: string | null;
+		isAdmin: boolean;
+		viewMode: string;
+	}> {
 		return this.uiService.getDashboard(session, view);
 	}
 
@@ -155,7 +161,7 @@ export class UiController {
 		quizQuestion: QuizQuestionDto;
 		collectionId: string;
 		collectionName: string;
-		sessionStats: { correct: number; total: number; streak: number; maxStreak: number }; /* mock */
+		sessionStats: { correct: number; total: number; streak: number; maxStreak: number };
 		distractorsHotKeyMapFunction: (index: number) => number;
 	}> {
 		const [quizQuestion, collection, sessionStats] = await Promise.all([
@@ -168,7 +174,7 @@ export class UiController {
 			collectionId,
 			collectionName: collection.name,
 			sessionStats,
-			distractorsHotKeyMapFunction: this.distractorsHotKeyMapFunction,
+			distractorsHotKeyMapFunction: this.distractorsHotKeyMapFunction.bind(this),
 		};
 	}
 
@@ -183,6 +189,4 @@ export class UiController {
 			return 3; // Key '3'
 		else return index + 100; // Disable hotkey for other buttons
 	}
-
-
 }

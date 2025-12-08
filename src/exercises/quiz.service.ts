@@ -8,8 +8,7 @@ import { UtilsService } from "src/common/utils.service";
 import { ExerciseQueryService } from "./exercise-query.service";
 import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/exercises/exercise-rules.config";
 import { CollectionAccessService } from "src/collections/collection-access.service";
-// import { QuizSessionStore } from "./quiz-session.store";
-
+import { QUIZ_SESSION_STORE, type IQuizSessionStore, type QuizSessionStats } from "./quiz-session.store";
 
 @Injectable()
 export class QuizService extends BaseService {
@@ -20,33 +19,25 @@ export class QuizService extends BaseService {
 		private readonly utilsService: UtilsService,
 		private readonly exerciseQueryService: ExerciseQueryService,
 		@Inject(EXERCISE_RULES_SYMBOL) private readonly exerciseConfig: ExerciseRulesConfig,
-		// private readonly sessionStore: QuizSessionStore,
+		@Inject(QUIZ_SESSION_STORE) private readonly sessionStore: IQuizSessionStore
 	) {
 		super();
 	}
-    
 
-	/**
-	 * Get or create a quiz session for user+collection
-	 */
-	// Session methods now delegated to `QuizSessionStore`
-	public resetSession(_userId: string, _collectionId: string): void {
-		// this.sessionStore.resetSession(userId, collectionId);
+	public resetSession(userId: string, collectionId: string): void {
+		this.sessionStore.resetSession(userId, collectionId);
 	}
 
-	public getSessionStats(_userId: string, _collectionId: string): { correct: number; total: number; streak: number; maxStreak: number } {
-		// return this.sessionStore.getSessionStats(userId, collectionId);
-		return { correct: 0, total: 0, streak: 0, maxStreak: 0 };
+	public getSessionStats(userId: string, collectionId: string): QuizSessionStats {
+		return this.sessionStore.getSessionStats(userId, collectionId);
 	}
 
-	/**
-	 * Records user attempt (currently commented out in original)
-	 */
-	private async recordAttempt(userId: string, exerciseId: string, isCorrect: boolean): Promise<void> {
+	private async recordAttempt(userId: string, exerciseId: string, answer: string, isCorrect: boolean): Promise<void> {
 		await this.prismaService.attempt.create({
 			data: {
 				exerciseId,
 				userId,
+				answer,
 				isCorrect,
 			},
 		});
@@ -134,22 +125,10 @@ export class QuizService extends BaseService {
 		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
 
 		// Update session stats
-		// const session = this.sessionStore.getOrCreateSession(currentUserId, collectionId);
-		// session.total++;
-		// session.answeredExerciseIds.add(exercise.id);
-		
-		// if (isCorrect) {
-		// 	session.correct++;
-		// 	session.streak++;
-		// 	if (session.streak > session.maxStreak) {
-		// 		session.maxStreak = session.streak;
-		// 	}
-		// } else {
-		// 	session.streak = 0;
-		// }
+		const sessionStats = this.sessionStore.recordAnswer(currentUserId, collectionId, exercise.id, isCorrect);
 
 		// Record attempt in database
-		await this.recordAttempt(currentUserId, exercise.id, isCorrect);
+		await this.recordAttempt(currentUserId, exercise.id, dto.userAnswer, isCorrect);
 
 		const nextExercise = await this.getDrillExercise(currentUserId, collectionId);
 
@@ -158,9 +137,9 @@ export class QuizService extends BaseService {
 			correctAnswer: exercise.correctAnswer,
 			explanation: exercise.explanation ?? undefined,
 			additionalCorrectAnswers: exercise.additionalCorrectAnswers ?? undefined,
-			// streak: session.streak,
-			// sessionCorrect: session.correct,
-			// sessionTotal: session.total,
+			streak: sessionStats.streak,
+			sessionCorrect: sessionStats.correct,
+			sessionTotal: sessionStats.total,
 			nextExerciseId: nextExercise.id,
 		};
 	}

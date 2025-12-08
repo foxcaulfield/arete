@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { Module, MiddlewareConsumer, NestModule } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -14,22 +13,37 @@ import { PermissionsGuard } from "./guards/permissions.guard";
 import { RolesGuard } from "./guards/roles.guard";
 import { SignUpHook } from "./hooks/auth.hook";
 import { ExercisesModule } from "./exercises/exercises.module";
-// import { betterAuth } from "better-auth";
-// import { prismaAdapter } from "better-auth/adapters/prisma";
-// import { PrismaClient, UserRole } from "@prisma/client";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 
-// import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
 import { envValidationSchema } from "./configs/joi-env.config";
 import { CommonModule } from "./common/common.module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { UiModule } from "./ui/ui.module";
 import { ViewContextMiddleware } from "./middlewares/view-context.middleware";
 import { betterAuthConfigFactory } from "./configs/better-auth.config";
+import { APP_LIMITS_SYMBOL, defaultAppLimits } from "./configs/app-limits.config";
 
 @Module({
 	imports: [
+		ThrottlerModule.forRoot([
+			{
+				name: "short",
+				ttl: 1000, // 1 second
+				limit: 3, // 3 requests per second
+			},
+			{
+				name: "medium",
+				ttl: 10000, // 10 seconds
+				limit: 20, // 20 requests per 10 seconds
+			},
+			{
+				name: "long",
+				ttl: 60000, // 1 minute
+				limit: 100, // 100 requests per minute
+			},
+		]),
 		AuthModule.forRootAsync({
 			inject: [ConfigService],
 			useFactory: betterAuthConfigFactory,
@@ -61,9 +75,10 @@ import { betterAuthConfigFactory } from "./configs/better-auth.config";
 	providers: [
 		AppService,
 		PrismaService,
+		{ provide: APP_LIMITS_SYMBOL, useValue: defaultAppLimits },
 		{
-			provide: APP_GUARD, // <-
-			useClass: AuthGuard, // <-
+			provide: APP_GUARD,
+			useClass: AuthGuard,
 		},
 		{
 			provide: APP_GUARD,
@@ -72,6 +87,10 @@ import { betterAuthConfigFactory } from "./configs/better-auth.config";
 		{
 			provide: APP_GUARD,
 			useClass: PermissionsGuard,
+		},
+		{
+			provide: APP_GUARD,
+			useClass: ThrottlerGuard,
 		},
 		SignUpHook,
 	],

@@ -37,13 +37,13 @@ async function bootstrap(): Promise<void> {
 			if (!dateValue) return "";
 			const date = new Date(dateValue);
 			if (isNaN(date.getTime())) return String(dateValue);
-			
+
 			// Simple date formatting
 			const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 			const day = date.getDate();
 			const month = months[date.getMonth()];
 			const year = date.getFullYear();
-			
+
 			if (format === "MMM D, YYYY") {
 				return `${month} ${day}, ${year}`;
 			}
@@ -120,7 +120,6 @@ async function bootstrap(): Promise<void> {
 			transform: true,
 			forbidNonWhitelisted: true,
 			forbidUnknownValues: true,
-			// disableErrorMessages: true,
 			exceptionFactory: (errors: ValidationError[]) => {
 				const formattedErrors = errors.reduce(
 					(acc, error) => {
