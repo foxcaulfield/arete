@@ -19,6 +19,8 @@
 !src
 !tsconfig.json
 !prisma
+!views
+!public
 
 !.dockerignore
 !eslint.config.mjs
