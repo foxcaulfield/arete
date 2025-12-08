@@ -1,336 +1,157 @@
 {% extends "layouts/base.njk" %}
+{% import "exercises/exercise-components.njk" as exerciseComponents %}
+
 {% block content %}
-<h1>Edit Exercise</h1>
-<form
-    id="exercise-edit-form"
-    enctype="multipart/form-data"
-    hx-patch="/exercises/update/{{ exercise.id }}"
-    hx-encoding="multipart/form-data"
-    hx-trigger="submit"
-    hx-swap="none"
-    hx-disabled-elt="this"
-    hx-on::after-request="
-    if (event.detail.xhr.status === 200) {
-      window.location = '/ui/exercises/{{ exercise.id }}';
-    } else {
-      try {
-        const err = JSON.parse(event.detail.xhr.responseText);
-        const fields = err.fields ? Object.values(err.fields).flat().join(', ') : '';
-        document.getElementById('exercise-edit-errors').textContent =
-          (err.message || 'Update failed') + (fields ? ' — ' + fields : '');
-      } catch(e) {
-        document.getElementById('exercise-edit-errors').textContent = 'Update failed';
-      }
-    }">
-    <div id="form-content">
-        {# GRID ITEM A #}
-        <div class="grid-item-a">
-            <div class="form-group">
-                <label for="collectionId">Collection ID</label>
-                <input
-                    id="collectionId"
-                    value="{{ collectionId or exercise.collectionId | default('') }}"
-                    type="text"
-                    name="collectionId" />
-            </div>
-        </div>
+	{# Page Header with Back Button #}
+	<div class="page-header page-header--simple">
+		<a href="/ui/exercises/{{ exercise.id }}" class="btn-back">← Back to Exercise</a>
+	</div>
 
-        {# GRID ITEM O #}
-        <div class="grid-item-o">
-            <div class="form-group">
-                <label for="exercise-type">Exercise Type</label>
-                <select name="type" id="exercise-type">
-                    <option value="FILL_IN_THE_BLANK" {% if exercise.type=="FILL_IN_THE_BLANK" %}selected{% endif %}>
-                        Fill in the blank
-                    </option>
-                    <option value="CHOICE_SINGLE" {% if exercise.type=="CHOICE_SINGLE" %}selected{% endif %}>Choice
-                    </option>
-                </select>
-            </div>
-        </div>
+	<div class="card form-card form-card--wide">
+		<div class="form-header">
+			<h1 class="form-header__title">Edit Exercise</h1>
+			<p class="form-header__subtitle">Update exercise details</p>
+		</div>
 
-        {# GRID ITEM B #}
-        <div class="grid-item-b flex-row">
-            <div class="form-group">
-                <label for="question-input">Question</label>
-                <input type="text" name="question" value="{{ exercise.question }}" />
-            </div>
-            <div class="form-group">
-                <label for="translation-input">Translation</label>
-                <input type="text" name="translation" id="translation-input" value="{{ exercise.translation }}" />
-            </div>
-        </div>
+		{# Progress bar for file uploads #}
+		<div class="upload-progress" id="upload-progress" style="display: none;">
+			<div class="upload-progress__bar">
+				<div class="upload-progress__fill" id="progress-fill"></div>
+			</div>
+			<span class="upload-progress__text" id="progress-text">Uploading...</span>
+		</div>
 
-        {# GRID ITEM C #}
-        <div class="grid-item-c">
-            <div class="form-group">
-                <label for="correct-answer-input">Correct Answer</label>
-                <input
-                    type="text"
-                    name="correctAnswer"
-                    id="correct-answer-input"
-                    value="{{ exercise.correctAnswer }}" />
-            </div>
-        </div>
+		<form
+			id="exercise-edit-form"
+			class="exercise-form"
+			enctype="multipart/form-data"
+			hx-patch="/exercises/update/{{ exercise.id }}"
+			hx-encoding="multipart/form-data"
+			hx-trigger="submit"
+			hx-swap="none"
+			hx-disabled-elt="button[type='submit']"
+			hx-on::before-request="
+				document.getElementById('upload-progress').style.display = 'flex';
+			"
+			hx-on::after-request="
+				document.getElementById('upload-progress').style.display = 'none';
+				if (event.detail.xhr.status === 200) {
+					toast.success('Exercise updated!');
+					setTimeout(function() { window.location = '/ui/exercises/{{ exercise.id }}'; }, 500);
+				} else {
+					try {
+						const err = JSON.parse(event.detail.xhr.responseText);
+						const fields = err.fields ? Object.values(err.fields).flat().join(', ') : '';
+						toast.error((err.message || 'Update failed') + (fields ? ': ' + fields : ''));
+					} catch(e) {
+						toast.error('Update failed');
+					}
+				}"
+			hx-on::xhr:progress="
+				const pct = Math.round((event.detail.loaded / event.detail.total) * 100);
+				document.getElementById('progress-fill').style.width = pct + '%';
+				document.getElementById('progress-text').textContent = pct + '% uploaded';
+			"
+		>
+			{# Hidden collection ID #}
+			<input type="hidden" name="collectionId" value="{{ exercise.collectionId }}" />
 
-        {# GRID ITEM D #}
-        <div class="grid-item-d">
-            {# additional correct answers #}
-            <div class="form-group">
-                <div id="additional-correct-answers-input">
-                    <div>
-                        <label>Additional Correct Answers</label>
-                        <button type="button"
-                            onclick="document.getElementById('additional-correct-answers-container').innerHTML=''">
-                            Clear
-                        </button>
-                    </div>
-                    <input type="text" placeholder="paris, PARIS, Île de France..."
-                        onkeydown="if(event.key=='Enter'||event.key==','){
-                        event.preventDefault();
-                        let v = this.value.trim().replace(/,$/,'');
-                        if(v){
-                            let t=document.getElementById('additional-correct-answers-container');
-                            t.insertAdjacentHTML('beforeend',
-                                `<div class='tag'>`+
-                                // `<span>${v}</span>`+
-                                `<input type='hidden' name='additionalCorrectAnswers' value='${v}' />`+
-                                `${v} `+
-                                `<button type='button' onclick='this.parentElement.remove()'>×</button>`+
-                                `</div>`
-                            );
-                            this.value='';
-                            }
-                        }" />
-                </div>
-                <div id="additional-correct-answers-container">
-                    {# intentionally left blank #}
+			{# Question & Answer Section #}
+			<div class="form-section">
+				<div class="form-section__header">
+					<h2 class="form-section__title">Question & Answer</h2>
+					{{ exerciseComponents.typeSelect(name="type", selected=exercise.type) }}
+				</div>
+				<div class="form-row">
+					{{ exerciseComponents.questionInput(name="question", value=exercise.question) }}
+					{{ exerciseComponents.translationInput(name="translation", value=exercise.translation) }}
+				</div>
+				<div class="form-row">
+					{{ exerciseComponents.correctAnswerInput(name="correctAnswer", value=exercise.correctAnswer) }}
+				</div>
+			</div>
 
-                    {% for answer in exercise.additionalCorrectAnswers %}
-                    <div class="tag">
-                        <input type="hidden" name="additionalCorrectAnswers" value="{{ answer }}" />
-                        {{ answer }}
-                        <button type="button" onclick="this.parentElement.remove()">×</button>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
+			{# Answer Variations #}
+			<div class="form-section">
+				<h2 class="form-section__title">Answer Variations</h2>
+				<div class="form-row form-row--half">
+					{{ exerciseComponents.tagsInput(
+						name='additionalCorrectAnswers',
+						label='Also Accept These Answers',
+						placeholder='Type and press Enter...',
+						value=exercise.additionalCorrectAnswers,
+						tagVariant='success'
+					) }}
+					{{ exerciseComponents.tagsInput(
+						name='distractors',
+						label='Wrong Choices (Distractors)',
+						placeholder='Type and press Enter...',
+						value=exercise.distractors,
+						tagVariant='danger'
+					) }}
+				</div>
+			</div>
 
-        {# GRID ITEM E #}
-        <div class="grid-item-e">
-            {# distractors #}
-            <div class="form-group">
-                <div id="distractors-input">
-                    <div>
-                        <label>Wrong Answers</label>
-                        <button type="button"
-                            onclick="document.getElementById('distractors-container').innerHTML=''">
-                            Clear
-                        </button>
-                    </div>
-                    <input type="text" placeholder="london, berlin, madrid..."
-                        onkeydown="if(event.key=='Enter'||event.key==','){
-                        event.preventDefault();
-                        let v = this.value.trim().replace(/,$/,'');
-                        if(v){
-                            let t=document.getElementById('distractors-container');
-                            t.insertAdjacentHTML('beforeend',
-                                `<div>`+
-                                // `<span>${v}</span>`+
-                                `<input type='hidden' name='distractors' value='${v}' />`+
-                                `${v} `+
-                                `<button type='button' onclick='this.parentElement.remove()'>×</button>`+
-                                `</div>`
-                            );
-                            this.value='';
-                            }
-                        }" />
-                </div>
-                <div id="distractors-container">
-                    {# intentionally left blank #}
-                    {% for distractor in exercise.distractors %}
-                    <div>
-                        <input type="hidden" name="distractors" value="{{ distractor }}" />
-                        {{ distractor }}
-                        <button type="button" onclick="this.parentElement.remove()">×</button>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
+			{# Media Attachments #}
+			<div class="form-section">
+				<h2 class="form-section__title">Media Attachments</h2>
+				<p class="form-section__hint">Optional image and audio to accompany the exercise</p>
+				<div class="form-row form-row--half">
+					{{ exerciseComponents.imageUpload(
+						name="image",
+						currentUrl=exercise.imageUrl,
+						showRemove=true
+					) }}
+					{{ exerciseComponents.audioUpload(
+						name="audio",
+						currentUrl=exercise.audioUrl,
+						showRemove=true
+					) }}
+				</div>
+			</div>
 
-        {# GRID ITEM F #}
-        <div class="grid-item-f flex-row">
-            <div class="form-group">
-                <label for="exercise-explanation">Explanation</label>
-                <textarea
-                    id="exercise-explanation"
-                    name="explanation"
-                    rows="4">{{ exercise.explanation }}</textarea>
-            </div>
-            <div class="form-group">
-                <label for="exercise-image-input">Image (optional)</label>
-                <input
-                    accept="image/*"
-                    type="file"
-                    name="image"
-                    id="exercise-image-input"
-                    onchange="let r=new FileReader(),p=document.getElementById('img-preview');r.onload=e=>p.src=e.target.result;if(this.files[0])r.readAsDataURL(this.files[0]);p.hidden=false" />
-                <div id="setNullImageLabel">
-                    <span> Set image to null </span>
-                    <input class="checkbox" style="display: inline; width: unset;" type="checkbox" name="setNullImage"
-                        id="setNullImage" />
-                </div>
-                <img id="img-preview" src="/exercises/files/image/{{ exercise.imageUrl }}" alt="Current image"
-                    style="max-width:200px;border-radius:4px" />
-                {# <img id="img-preview" hidden style="max-width:200px;margin-top:8px;border-radius:4px" /> #}
-            </div>
-            <div class="form-group">
-                <label for="audio-input">Audio (optional)</label>
-                <input
-                    type="file"
-                    name="audio"
-                    id="audio-input"
-                    accept="audio/*"
-                    hx-on:change="let a=document.getElementById('audio-player'); a.src=URL.createObjectURL(event.target.files[0]); a.style.display='block'" />
-                <div id="setNullAudioLabel">
-                    <span> Set audio to null </span>
-                    <input class="checkbox" style="display: inline; width: unset;" type="checkbox" name="setNullAudio"
-                        id="setNullAudio" />
-                </div>
-                <audio
-                    src="/exercises/files/audio/{{ exercise.audioUrl }}"
-                    id="audio-player"
-                    controls
-                    style="display: block; margin-top:8px;"></audio>
-            </div>
-        </div>
+			{# Explanation #}
+			<div class="form-section">
+				<h2 class="form-section__title">Explanation</h2>
+				{{ exerciseComponents.explanationInput(name="explanation", value=exercise.explanation) }}
+			</div>
 
-        {# GRID ITEM BUTTONS #}
-        <div class="grid-item-btn">
-            <div class="form-group">
-                <button type="submit">Save</button>
-                <button type="button"
-                    onclick="window.location.href='/ui/exercises/{{ exercise.id}}'">Cancel</button>
-            </div>
-        </div>
-    </div>
+			{# Form Actions #}
+			<div class="form-actions">
+				<a href="/ui/exercises/{{ exercise.id }}" class="btn-outline">Cancel</a>
+				<button type="submit" class="btn-primary">Save Changes</button>
+			</div>
+		</form>
+	</div>
 
-    <div id="exercise-edit-errors" class="error mt"></div>
-    {# <div class="mt">
-        <button type="submit">Save</button>
-        <button type="button" onclick="window.location.href='/ui/exercises/{{ exercise.id }}'">Cancel</button>
-    </div> #}
-</form>
-<style>
-    :root {
-        --success-bg: #ecfdf0;
-        --success-text: #14532d;
-        --danger-bg: #fff2f2;
-        --danger-text: #7f1d1d;
-    }
+	{# Image Preview Modal #}
+	<div id="image-modal" class="modal" onclick="closeImageModal(event)">
+		<div class="modal__content">
+			<button class="modal__close" onclick="closeImageModal(event)">&times;</button>
+			<img id="modal-image" src="" alt="Full size image" />
+		</div>
+	</div>
 
-    .tag,
-    #distractors-container div {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.25rem 0.6rem;
-        margin: 4px 6px;
-        border-radius: 9999px;
-        font-size: 0.95rem;
-        border: 1px solid;
-    }
-
-    #additional-correct-answers-container .tag {
-        background: var(--success-bg);
-        color: var(--success-text);
-        border-color: #86efac;
-    }
-
-    #distractors-container div {
-        background: var(--danger-bg);
-        color: var(--danger-text);
-        border-color: #fca5a5;
-    }
-
-    .tag button,
-    #distractors-container div button {
-        border: none;
-        background: transparent;
-        color: inherit;
-        cursor: pointer;
-        padding: 0 6px;
-        font-size: 1.05rem;
-    }
-
-    #additional-correct-answers-input>div,
-    #distractors-input>div {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    #additional-correct-answers-input>div button,
-    #distractors-input>div button {
-        padding: 0.25rem 0.5rem;
-        border: 1px solid #e5e7eb;
-        background: #fff;
-        color: #6b7280;
-        cursor: pointer;
-        border-radius: 4px;
-    }
-
-    #form-content {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        grid-template-areas:
-            'a a b b b b'
-            'o o c c c c'
-            'd d e e e e'
-            'f f f f f f'
-            'btn btn btn btn btn btn';
-        gap: 1rem 1.5rem;
-    }
-
-    .grid-item-a {
-        grid-area: a;
-    }
-
-    .grid-item-o {
-        grid-area: o;
-    }
-
-    .grid-item-b {
-        grid-area: b;
-    }
-
-    .grid-item-c {
-        grid-area: c;
-    }
-
-    .grid-item-d {
-        grid-area: d;
-    }
-
-    .grid-item-e {
-        grid-area: e;
-    }
-
-    .grid-item-f {
-        grid-area: f;
-    }
-
-    .grid-item-btn {
-        grid-area: btn;
-    }
-
-    .flex-row {
-        display: flex;
-        flex-direction: row;
-        gap: 1rem;
-    }
-</style>
+	<script>
+		function openImageModal(src) {
+			document.getElementById('modal-image').src = src;
+			document.getElementById('image-modal').classList.add('modal--open');
+			document.body.style.overflow = 'hidden';
+		}
+		function closeImageModal(event) {
+			if (event.target.id === 'image-modal' || event.target.classList.contains('modal__close')) {
+				document.getElementById('image-modal').classList.remove('modal--open');
+				document.body.style.overflow = '';
+			}
+		}
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape') {
+				const modal = document.getElementById('image-modal');
+				if (modal) {
+					modal.classList.remove('modal--open');
+					document.body.style.overflow = '';
+				}
+			}
+		});
+	</script>
 {% endblock %}

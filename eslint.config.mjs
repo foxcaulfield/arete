@@ -2,10 +2,11 @@
 import eslint from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import prettierPlugin from "eslint-plugin-prettier";
 
 export default tseslint.config(
 	{
-		ignores: ["eslint.config.mjs"],
+		ignores: ["eslint.config.mjs", "dist/**", "node_modules/**"],
 	},
 	eslint.configs.recommended,
 	...tseslint.configs.recommendedTypeChecked,
@@ -20,6 +21,9 @@ export default tseslint.config(
 				projectService: true,
 				tsconfigRootDir: import.meta.dirname,
 			},
+		},
+		plugins: {
+			prettier: prettierPlugin,
 		},
 	},
 	{
@@ -48,7 +52,6 @@ export default tseslint.config(
 					allowConciseArrowFunctionExpressionsStartingWithVoid: false,
 				},
 			],
-			"prettier-plugin-jinja-template": "error",
 		},
 	}
 );

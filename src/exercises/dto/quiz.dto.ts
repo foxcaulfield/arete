@@ -26,6 +26,12 @@ export class QuizQuestionDto {
 
 	@Expose()
 	public distractors?: string[] | null;
+
+	@Expose()
+	public totalExercises?: number;
+
+	@Expose()
+	public exercisesWithAttempts?: number;
 }
 
 export class UserAnswerDto {
@@ -47,6 +53,18 @@ export class UserAnswerFeedbackDto {
 
 	@Expose()
 	public explanation?: string;
+
+	@Expose()
+	public additionalCorrectAnswers?: string[];
+
+	@Expose()
+	public streak?: number;
+
+	@Expose()
+	public sessionCorrect?: number;
+
+	@Expose()
+	public sessionTotal?: number;
 
 	@Expose()
 	public nextExerciseId!: string;

@@ -85,29 +85,14 @@ export class ExerciseQueryService {
 	public async getLeastAttemptedExercise(collectionId: string, userId: string): Promise<Exercise> {
 		const baseWhere = { collectionId, isActive: true };
 
-		// // Global least-attempted (no user filter) — use relation count ordering
-		// if (!userId) {
-		// 	const exercise = await this.prismaService.exercise.findFirst({
-		// 		where: baseWhere,
-		// 		orderBy: { Attempt: { _count: "asc" } },
-		// 	});
-
-		// 	if (!exercise) throw new NotFoundException("Exercise not found");
-
-		// 	return exercise;
-		// }
-
-		// Per-user: prefer any exercise with ZERO attempts by this user
 		const zeroAttemptExercise = await this.prismaService.exercise.findFirst({
 			where: {
 				...baseWhere,
-				Attempt: { none: { userId } }, // exercises with no attempts by this user
+				Attempt: { none: { userId } },
 			},
 		});
 		if (zeroAttemptExercise) return zeroAttemptExercise;
 
-		// Otherwise group attempts by exercise (only attempts by this user and in the collection),
-		// pick exerciseId with minimal count and load that exercise.
 		const grouped = await this.prismaService.attempt.groupBy({
 			by: ["exerciseId"],
 			where: {
@@ -126,7 +111,6 @@ export class ExerciseQueryService {
 			if (g._count._all < min._count._all) min = g;
 		}
 
-		// return this.findExerciseOrFail(min.exerciseId);
 		const exercise = await this.prismaService.exercise.findUnique({
 			where: { id: min.exerciseId },
 		});

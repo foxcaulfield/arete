@@ -21,6 +21,10 @@ export function TransformToArray() {
 		if (value === undefined || value === null) {
 			return undefined;
 		}
+		// Empty string means "clear this array"
+		if (value === "" || (Array.isArray(value) && value.length === 1 && value[0] === "")) {
+			return [];
+		}
 		return Array.isArray(value) ? value : [value];
 	});
 }

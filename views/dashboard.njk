@@ -1,5 +1,78 @@
 {% extends "layouts/base.njk" %}
+
 {% block content %}
-    <h1>Dashboard</h1>
-    {# {% if user %} #}
+	<div class="page-header">
+		<div class="page-header__main">
+			<h1>Dashboard</h1>
+			{% if isAdmin %}
+				<div class="view-toggle">
+					<a href="/ui/dashboard?view=mine" class="view-toggle__btn {% if viewMode == 'mine' %}view-toggle__btn--active{% endif %}">
+						My Collections
+					</a>
+					<a href="/ui/dashboard?view=all" class="view-toggle__btn {% if viewMode == 'all' %}view-toggle__btn--active{% endif %}">
+						All Activity
+					</a>
+				</div>
+			{% endif %}
+		</div>
+		<div class="page-header__actions">
+			<button class="primary" onclick="window.location.href='/ui/collections'">View Collections</button>
+		</div>
+	</div>
+
+	{% if viewMode == 'all' %}
+		<div class="admin-notice">
+			<span class="admin-notice__icon">📊</span>
+			<span class="admin-notice__text">Showing your activity across all collections (including other users')</span>
+		</div>
+	{% endif %}
+
+	<div class="stats-grid">
+		<div class="stat-card stat-card--accent">
+			<span class="stat-card__label">{% if viewMode == 'all' %}Collections Practiced{% else %}Collections{% endif %}</span>
+			<span class="stat-card__value">{{ stats.collections }}</span>
+		</div>
+		<div class="stat-card">
+			<span class="stat-card__label">{% if viewMode == 'all' %}Accessible Exercises{% else %}Exercises{% endif %}</span>
+			<span class="stat-card__value">{{ stats.exercises }}</span>
+		</div>
+		<div class="stat-card">
+			<span class="stat-card__label">Total Attempts</span>
+			<span class="stat-card__value">{{ stats.attempts }}</span>
+		</div>
+		<div class="stat-card stat-card--success">
+			<span class="stat-card__label">Accuracy</span>
+			<span class="stat-card__value">{{ stats.accuracy }}%</span>
+			<span class="stat-card__detail">{{ stats.correctAttempts }} correct</span>
+		</div>
+		<div class="stat-card">
+			<span class="stat-card__label">Coverage</span>
+			<span class="stat-card__value">{{ stats.coverage }}%</span>
+			<span class="stat-card__detail">{{ stats.uniqueExercisesAttempted }} of {{ stats.exercises }} practiced</span>
+		</div>
+	</div>
+
+	<div class="dashboard-actions">
+		<h2>Quick Actions</h2>
+		<div class="action-grid">
+			<a href="/ui/collections/create" class="action-card">
+				<span class="action-card__icon">➕</span>
+				<span class="action-card__text">New Collection</span>
+			</a>
+			{% if randomCollectionId %}
+				<a href="/ui/quiz/{{ randomCollectionId }}" class="action-card action-card--primary">
+					<span class="action-card__icon">🎲</span>
+					<span class="action-card__text">Quick Quiz</span>
+				</a>
+			{% endif %}
+			<a href="/ui/collections" class="action-card">
+				<span class="action-card__icon">📚</span>
+				<span class="action-card__text">Browse Collections</span>
+			</a>
+			<a href="/ui/profile" class="action-card">
+				<span class="action-card__icon">⚙️</span>
+				<span class="action-card__text">Settings</span>
+			</a>
+		</div>
+	</div>
 {% endblock %}

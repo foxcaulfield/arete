@@ -168,7 +168,7 @@ model Attempt {
     exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
     userId     String
     user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    // userAnswer String
+    answer     String   @default("")
     isCorrect  Boolean
     createdAt  DateTime @default(now())
 

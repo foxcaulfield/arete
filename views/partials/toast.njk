@@ -1,0 +1,68 @@
+{# Toast Notification Container #}
+<div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+(function() {
+	window.toast = {
+		show: function(message, type) {
+			type = type || 'info';
+			var container = document.getElementById('toast-container');
+			if (!container) return;
+
+			var toast = document.createElement('div');
+			toast.className = 'toast toast--' + type;
+			toast.setAttribute('role', 'alert');
+
+			var icon = '';
+			if (type === 'success') icon = '✓';
+			else if (type === 'error') icon = '✕';
+			else if (type === 'warning') icon = '⚠';
+			else icon = 'ℹ';
+
+			toast.innerHTML =
+				'<span class="toast__icon">' + icon + '</span>' +
+				'<span class="toast__message">' + message + '</span>' +
+				'<button class="toast__close" aria-label="Close">&times;</button>';
+
+			container.appendChild(toast);
+
+			requestAnimationFrame(function() {
+				toast.classList.add('toast--visible');
+			});
+
+			toast.querySelector('.toast__close').addEventListener('click', function() {
+				dismissToast(toast);
+			});
+
+			setTimeout(function() {
+				dismissToast(toast);
+			}, 4000);
+
+			function dismissToast(t) {
+				t.classList.remove('toast--visible');
+				t.classList.add('toast--hiding');
+				setTimeout(function() {
+					if (t.parentNode) t.parentNode.removeChild(t);
+				}, 300);
+			}
+		},
+		success: function(msg) { this.show(msg, 'success'); },
+		error: function(msg) { this.show(msg, 'error'); },
+		warning: function(msg) { this.show(msg, 'warning'); },
+		info: function(msg) { this.show(msg, 'info'); }
+	};
+
+	document.addEventListener('htmx:responseError', function(event) {
+		var status = event.detail.xhr.status;
+		if (status === 429) {
+			toast.warning('Too many requests. Please slow down.');
+		} else if (status >= 500) {
+			toast.error('Server error. Please try again later.');
+		}
+	});
+
+	document.addEventListener('htmx:sendError', function() {
+		toast.error('Network error. Please check your connection.');
+	});
+})();
+</script>

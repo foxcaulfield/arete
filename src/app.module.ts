@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { Module, MiddlewareConsumer, NestModule } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -9,76 +8,45 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { AuthGuard, AuthModule } from "@thallesp/nestjs-better-auth";
 import { APP_GUARD } from "@nestjs/core";
 import { CollectionsModule } from "./collections/collections.module";
+import { AdminModule } from "./admin/admin.module";
 import { PermissionsGuard } from "./guards/permissions.guard";
 import { RolesGuard } from "./guards/roles.guard";
 import { SignUpHook } from "./hooks/auth.hook";
 import { ExercisesModule } from "./exercises/exercises.module";
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { PrismaClient, UserRole } from "@prisma/client";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 
-import { envValidationSchema, EnvConfig } from "./configs/joi-env.config";
+import { envValidationSchema } from "./configs/joi-env.config";
 import { CommonModule } from "./common/common.module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { UiModule } from "./ui/ui.module";
 import { ViewContextMiddleware } from "./middlewares/view-context.middleware";
+import { betterAuthConfigFactory } from "./configs/better-auth.config";
+import { APP_LIMITS_SYMBOL, defaultAppLimits } from "./configs/app-limits.config";
 
 @Module({
 	imports: [
+		ThrottlerModule.forRoot([
+			{
+				name: "short",
+				ttl: 1000, // 1 second
+				limit: 3, // 3 requests per second
+			},
+			{
+				name: "medium",
+				ttl: 10000, // 10 seconds
+				limit: 20, // 20 requests per 10 seconds
+			},
+			{
+				name: "long",
+				ttl: 60000, // 1 minute
+				limit: 100, // 100 requests per minute
+			},
+		]),
 		AuthModule.forRootAsync({
 			inject: [ConfigService],
-			useFactory: (configService: ConfigService<EnvConfig, true>) => {
-				const isProduction = configService.get("NODE_ENV", { infer: true }) === "production";
-
-				const prismaClient = new PrismaClient().$extends({
-					query: {
-						user: {
-							create({ args, query }) {
-								// Ensure role is always set to 'USER' on creation
-								args.data.role = UserRole.USER;
-								args.data.emailVerified = false;
-								return query(args);
-							},
-						},
-					},
-				});
-				const auth = betterAuth({
-					// baseURL: process.env.API_URL,
-					basePath: "/api/auth",
-					secret: process.env.BETTER_AUTH_SECRET,
-					database: prismaAdapter(prismaClient, {
-						provider: "postgresql",
-					}),
-					hooks: {},
-					emailAndPassword: {
-						enabled: true,
-					},
-					advanced: {
-						cookiePrefix: configService.get("COOKIE_PREFIX", { infer: true }),
-						crossSubDomainCookies: {
-							enabled: false,
-						},
-						useSecureCookies: isProduction,
-						defaultCookieAttributes: {
-							sameSite: isProduction ? "none" : "lax", // Use "none" only in production
-							partitioned: isProduction ? true : false, // Disable in dev
-						},
-					},
-					session: {
-						expiresIn: 60 * 60 * 24 * 7, // 7 days
-						updateAge: 60 * 60 * 24, // Update every day
-						cookieCache: {
-							enabled: true,
-							maxAge: 5 * 60, // 5 minutes
-						},
-					},
-					trustedOrigins: configService.get("TRUSTED_ORIGINS", { infer: true }).split(","),
-				});
-
-				return { auth };
-			},
+			useFactory: betterAuthConfigFactory,
 		}),
 		ConfigModule.forRoot({
 			isGlobal: true,
@@ -92,6 +60,8 @@ import { ViewContextMiddleware } from "./middlewares/view-context.middleware";
 		UsersModule,
 		PrismaModule,
 		CollectionsModule,
+		// Admin module contains admin-only endpoints (users management)
+		AdminModule,
 		ExercisesModule,
 		CommonModule,
 		ServeStaticModule.forRoot({
@@ -105,9 +75,10 @@ import { ViewContextMiddleware } from "./middlewares/view-context.middleware";
 	providers: [
 		AppService,
 		PrismaService,
+		{ provide: APP_LIMITS_SYMBOL, useValue: defaultAppLimits },
 		{
-			provide: APP_GUARD, // <-
-			useClass: AuthGuard, // <-
+			provide: APP_GUARD,
+			useClass: AuthGuard,
 		},
 		{
 			provide: APP_GUARD,
@@ -116,6 +87,10 @@ import { ViewContextMiddleware } from "./middlewares/view-context.middleware";
 		{
 			provide: APP_GUARD,
 			useClass: PermissionsGuard,
+		},
+		{
+			provide: APP_GUARD,
+			useClass: ThrottlerGuard,
 		},
 		SignUpHook,
 	],

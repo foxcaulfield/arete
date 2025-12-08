@@ -1,0 +1,187 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+{% if error %}
+	<div class="admin-error">
+		<span class="admin-error__icon">🚫</span>
+		<h1>Access Denied</h1>
+		<p>You don't have permission to access the admin panel.</p>
+		<a href="/ui/dashboard" class="btn btn--primary">Back to Dashboard</a>
+	</div>
+{% else %}
+<div class="admin-page">
+	<div class="admin-header">
+		<div class="admin-header__nav">
+			<a href="/ui/admin" class="admin-header__back">← Admin</a>
+		</div>
+		<h1 class="admin-header__title">
+			<span class="admin-header__icon">📝</span>
+			All Exercises
+		</h1>
+		<p class="admin-header__subtitle">{{ pagination.total }} exercises in database</p>
+	</div>
+
+	<div class="admin-stats admin-stats--mini">
+		<div class="admin-stat">
+			<span class="admin-stat__icon">📝</span>
+			<div class="admin-stat__content">
+				<span class="admin-stat__value">{{ stats.total }}</span>
+				<span class="admin-stat__label">Total</span>
+			</div>
+		</div>
+		{% if stats.orphans > 0 %}
+		<div class="admin-stat admin-stat--warning">
+			<span class="admin-stat__icon">👻</span>
+			<div class="admin-stat__content">
+				<span class="admin-stat__value">{{ stats.orphans }}</span>
+				<span class="admin-stat__label">Orphans</span>
+			</div>
+		</div>
+		{% endif %}
+	</div>
+
+	<div class="admin-toolbar">
+		<form class="admin-search admin-search--extended" action="/ui/admin/exercises" method="get">
+			<input 
+				type="search" 
+				name="search" 
+				class="admin-search__input" 
+				placeholder="Search by question, answer, collection, or owner..." 
+				value="{{ search }}"
+				{% if filter == 'orphans' %}disabled{% endif %}
+			/>
+			<select name="filter" class="admin-search__select">
+				<option value="">All Exercises</option>
+				<option value="orphans" {% if filter == 'orphans' %}selected{% endif %}>👻 Orphans Only</option>
+			</select>
+			<button type="submit" class="admin-search__btn">Filter</button>
+			{% if search or filter %}
+				<a href="/ui/admin/exercises" class="admin-search__clear">Clear</a>
+			{% endif %}
+		</form>
+	</div>
+
+	{% if filter == 'orphans' %}
+	<div class="admin-notice admin-notice--warning">
+		<span class="admin-notice__icon">👻</span>
+		<span class="admin-notice__text">Showing orphan exercises — these belong to collections that have been deleted</span>
+	</div>
+	{% endif %}
+
+	<div class="admin-table-wrap">
+		<table class="admin-table">
+			<thead>
+				<tr>
+					<th>Type</th>
+					<th>Question</th>
+					<th>Answer</th>
+					<th>Collection</th>
+					<th>Owner</th>
+					<th>Updated</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for exercise in exercises %}
+				<tr class="{% if not exercise.collection %}admin-table__row--orphan{% endif %}">
+					<td class="admin-table__center">
+						{% if exercise.type == 'FILL_IN_THE_BLANK' %}
+							<span class="exercise-type-badge exercise-type-badge--fill" title="Fill in the blank">✏️</span>
+						{% elif exercise.type == 'CHOICE_SINGLE' %}
+							<span class="exercise-type-badge exercise-type-badge--choice" title="Single choice">🔘</span>
+						{% else %}
+							<span class="exercise-type-badge" title="{{ exercise.type }}">❓</span>
+						{% endif %}
+					</td>
+					<td>
+						{% if exercise.collection %}
+							<a href="/ui/exercises/{{ exercise.id }}" class="admin-table__link" title="{{ exercise.question }}">
+								{{ exercise.question | truncate(45) }}
+							</a>
+						{% else %}
+							<span class="admin-table__deleted-text" title="{{ exercise.question }}">
+								{{ exercise.question | truncate(45) }}
+							</span>
+						{% endif %}
+					</td>
+					<td class="admin-table__answer">
+						<code>{{ exercise.correctAnswer | truncate(20) }}</code>
+					</td>
+					<td>
+						{% if exercise.collection %}
+							<a href="/ui/collections/{{ exercise.collection.id }}" class="admin-table__link">
+								{{ exercise.collection.name | truncate(20) }}
+							</a>
+						{% else %}
+							<span class="admin-table__deleted">
+								<span class="admin-table__deleted-icon">🗑️</span>
+								Deleted
+								<code class="admin-table__deleted-id">{{ exercise.orphanCollectionId | truncate(10) }}</code>
+							</span>
+						{% endif %}
+					</td>
+					<td>
+						{% if exercise.collection and exercise.collection.user %}
+							<span class="admin-table__muted">{{ exercise.collection.user.name | truncate(15) }}</span>
+						{% else %}
+							<span class="admin-table__muted">—</span>
+						{% endif %}
+					</td>
+					<td class="admin-table__muted">
+						{{ exercise.updatedAt | date('short') }}
+					</td>
+					<td>
+						<div class="admin-table__actions">
+							{% if exercise.collection %}
+								<a href="/ui/exercises/{{ exercise.id }}" class="admin-btn admin-btn--small" title="View">
+									👁️
+								</a>
+							{% else %}
+								<span class="admin-table__muted">—</span>
+							{% endif %}
+						</div>
+					</td>
+				</tr>
+				{% else %}
+				<tr>
+					<td colspan="7" class="admin-table__empty">
+						{% if filter == 'orphans' %}
+							No orphan exercises found — all exercises have valid collections
+						{% elif search %}
+							No exercises found matching "{{ search }}"
+						{% else %}
+							No exercises in the database
+						{% endif %}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+
+	{% if pagination.totalPages > 1 %}
+	<div class="admin-pagination">
+		{% if pagination.hasPrev %}
+			<a href="/ui/admin/exercises?page={{ pagination.page - 1 }}{% if search %}&search={{ search }}{% endif %}{% if filter %}&filter={{ filter }}{% endif %}" class="admin-pagination__btn">
+				← Previous
+			</a>
+		{% else %}
+			<span class="admin-pagination__btn admin-pagination__btn--disabled">← Previous</span>
+		{% endif %}
+		
+		<span class="admin-pagination__info">
+			Page {{ pagination.page }} of {{ pagination.totalPages }}
+		</span>
+		
+		{% if pagination.hasNext %}
+			<a href="/ui/admin/exercises?page={{ pagination.page + 1 }}{% if search %}&search={{ search }}{% endif %}{% if filter %}&filter={{ filter }}{% endif %}" class="admin-pagination__btn">
+				Next →
+			</a>
+		{% else %}
+			<span class="admin-pagination__btn admin-pagination__btn--disabled">Next →</span>
+		{% endif %}
+	</div>
+	{% endif %}
+</div>
+{% endif %}
+{% endblock %}

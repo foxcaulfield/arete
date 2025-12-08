@@ -3,6 +3,7 @@ import { CollectionsService } from "./collections.service";
 import { CreateCollectionDto } from "./dto/create-collection.dto";
 import { ResponseCollectionDto } from "./dto/response-collection.dto";
 import { UpdateCollectionDto } from "./dto/update-collection.dto";
+import { FilterCollectionDto } from "./dto/filter-collection.dto";
 import { Session, type UserSession } from "@thallesp/nestjs-better-auth";
 import { Roles } from "src/decorators/roles.decorator";
 import { UserRole } from "@prisma/client";
@@ -22,11 +23,10 @@ export class CollectionsController {
 
 	@Get("list")
 	public getAll(
-		@Query("page", AsInt) page: number = 5,
-		@Query("limit", AsInt) limit: number = 5,
+		@Query() filter: FilterCollectionDto,
 		@Session() session: UserSession
 	): Promise<Paginated<ResponseCollectionDto>> {
-		return this.service.getCollectionsByUserId(session.user.id, page, limit);
+		return this.service.getCollectionsByUserId(session.user.id, filter);
 	}
 
 	@Get("get_by_id/:id")

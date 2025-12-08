@@ -5,7 +5,6 @@ import { UserSession } from "@thallesp/nestjs-better-auth";
 import { UserRole } from "@prisma/client";
 import { IncomingMessage } from "node:http";
 import { UsersService } from "src/users/users.service";
-// import { Request } from "express";
 
 interface AuthenticatedRequest extends UserSession, IncomingMessage {
 	user: UserSession["user"] & {

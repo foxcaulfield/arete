@@ -36,4 +36,10 @@ export class ResponseCollectionDto {
 
 	@Expose()
 	public exerciseCount?: number;
+
+	@Expose()
+	public uniqueExercisesAttempted?: number;
+
+	@Expose()
+	public coverage?: string;
 }

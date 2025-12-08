@@ -24,6 +24,8 @@ COPY --from=dependencies /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /usr/src/app/prisma ./prisma
+COPY --from=builder /usr/src/app/views ./views
+COPY --from=builder /usr/src/app/public ./public
 COPY package*.json ./
 # Verify migrations are present
 RUN ls -la prisma/migrations/ || (echo "ERROR: Migrations not found in runtime image!" && exit 1)

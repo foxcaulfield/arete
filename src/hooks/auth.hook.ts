@@ -1,26 +1,34 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
+import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { BeforeHook, Hook, type AuthHookContext } from "@thallesp/nestjs-better-auth";
 import { APIError } from "better-auth";
-// import { SignUpService } from "./sign-up.service";
+import { PrismaService } from "src/prisma/prisma.service";
+import { APP_LIMITS_SYMBOL } from "src/configs/app-limits.config";
+import type { AppLimitsConfig } from "src/configs/app-limits.config";
 
 @Hook()
 @Injectable()
 export class SignUpHook {
-	// public constructor(private readonly signUpService: SignUpService) {}
+	public constructor(
+		private readonly prismaService: PrismaService,
+		@Inject(APP_LIMITS_SYMBOL) private readonly appLimits: AppLimitsConfig
+	) {}
 
 	@BeforeHook()
 	public async handle(ctx: AuthHookContext): Promise<void> {
 		const allowedPaths = ["/sign-in/email", "/sign-up/email", "/get-session", "/sign-out"];
 
-		if (allowedPaths.includes(ctx.path)) {
-			await Promise.resolve();
-			return;
+		if (!allowedPaths.includes(ctx.path)) {
+			throw new APIError(HttpStatus.BAD_REQUEST, { message: "Invalid path (forbidden action)" });
 		}
-		throw new APIError(HttpStatus.BAD_REQUEST, { message: "Invalid path (forbidden action)" });
 
-		// Custom logic like enforcing email domain registration
-		// Can throw APIError if validation fails
-		// await this.signUpService.execute(ctx);
-		// console.log("Sign-up hook executed", ctx);
+		// Check registration limit for sign-up
+		if (ctx.path === "/sign-up/email") {
+			const userCount = await this.prismaService.user.count();
+			if (userCount >= this.appLimits.MAX_REGISTERED_USERS) {
+				throw new APIError(HttpStatus.FORBIDDEN, {
+					message: "Registration is currently closed. Maximum user limit reached.",
+				});
+			}
+		}
 	}
 }

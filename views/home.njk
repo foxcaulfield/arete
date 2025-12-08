@@ -1,17 +1,58 @@
 {% extends "layouts/base.njk" %}
 
-{% block content %}
-  <section class="hero">
-    <h1>{{ title }}</h1>
-    {% if subtitle %}<p class="muted">{{ subtitle }}</p>{% endif %}
-  </section>
+{% block bodyClass %}body--home{% endblock %}
 
-  <section>
-    <h2>Minimal htmx demo</h2>
-    <p>
-      Click the button to fetch the current server time without a full page reload.
-    </p>
-    <button class="btn" hx-get="/ui/time" hx-target="#time" hx-swap="innerHTML">Show server time</button>
-    <div id="time" class="mt">{{now}}</div>
-  </section>
+{% block content %}
+	<section class="hero hero--home">
+		<span class="hero__badge">Learning Platform</span>
+		<h1 class="hero__title">{{ title }}</h1>
+		<p class="hero__subtitle">Master any subject with spaced repetition and active recall</p>
+	</section>
+
+	{% if isAuthenticated %}
+		<div class="home-cards">
+			<a href="/ui/collections" class="card home-card">
+				<div class="home-card__icon">📚</div>
+				<h3>Collections</h3>
+				<p class="text-muted">Browse and manage your exercise collections</p>
+				<span class="home-card__arrow">→</span>
+			</a>
+			<a href="/ui/dashboard" class="card home-card">
+				<div class="home-card__icon">📊</div>
+				<h3>Dashboard</h3>
+				<p class="text-muted">View your learning statistics and progress</p>
+				<span class="home-card__arrow">→</span>
+			</a>
+			<a href="/ui/profile" class="card home-card">
+				<div class="home-card__icon">👤</div>
+				<h3>Profile</h3>
+				<p class="text-muted">Manage your account settings</p>
+				<span class="home-card__arrow">→</span>
+			</a>
+		</div>
+	{% else %}
+		<div class="home-features">
+			<div class="feature">
+				<div class="feature__icon">🎯</div>
+				<h4>Active Recall</h4>
+				<p>Test yourself with quizzes tailored to your learning needs</p>
+			</div>
+			<div class="feature">
+				<div class="feature__icon">📈</div>
+				<h4>Track Progress</h4>
+				<p>Monitor your accuracy and improvement over time</p>
+			</div>
+			<div class="feature">
+				<div class="feature__icon">🎨</div>
+				<h4>Customizable</h4>
+				<p>Create your own exercises with images, audio, and more</p>
+			</div>
+		</div>
+		<div class="home-cta">
+			<div class="flex gap-sm justify-center">
+				<button class="primary" onclick="window.location.href='/ui/auth/signup'">Get Started Free</button>
+				<button class="secondary" onclick="window.location.href='/ui/auth/login'">Sign In</button>
+			</div>
+		</div>
+	{% endif %}
 {% endblock %}

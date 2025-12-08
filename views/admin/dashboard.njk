@@ -1,0 +1,132 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+{% if error %}
+	<div class="admin-error">
+		<span class="admin-error__icon">🚫</span>
+		<h1>Access Denied</h1>
+		<p>You don't have permission to access the admin panel.</p>
+		<a href="/ui/dashboard" class="btn btn--primary">Back to Dashboard</a>
+	</div>
+{% else %}
+<div class="admin-page">
+	<div class="admin-header">
+		<h1 class="admin-header__title">
+			<span class="admin-header__icon">⚙️</span>
+			Admin Dashboard
+		</h1>
+		<p class="admin-header__subtitle">System overview and management</p>
+	</div>
+
+	<div class="admin-stats">
+		<div class="admin-stat">
+			<span class="admin-stat__icon">👥</span>
+			<div class="admin-stat__content">
+				<span class="admin-stat__value">{{ stats.users }}</span>
+				<span class="admin-stat__label">Users</span>
+			</div>
+		</div>
+		<div class="admin-stat">
+			<span class="admin-stat__icon">📚</span>
+			<div class="admin-stat__content">
+				<span class="admin-stat__value">{{ stats.collections }}</span>
+				<span class="admin-stat__label">Collections</span>
+			</div>
+		</div>
+		<div class="admin-stat">
+			<span class="admin-stat__icon">📝</span>
+			<div class="admin-stat__content">
+				<span class="admin-stat__value">{{ stats.exercises }}</span>
+				<span class="admin-stat__label">Exercises</span>
+			</div>
+		</div>
+		<div class="admin-stat">
+			<span class="admin-stat__icon">🎯</span>
+			<div class="admin-stat__content">
+				<span class="admin-stat__value">{{ stats.attempts }}</span>
+				<span class="admin-stat__label">Attempts</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="admin-grid">
+		<section class="admin-section">
+			<div class="admin-section__header">
+				<h2 class="admin-section__title">Quick Actions</h2>
+			</div>
+			<div class="admin-actions">
+				<a href="/ui/admin/users" class="admin-action">
+					<span class="admin-action__icon">👥</span>
+					<div class="admin-action__content">
+						<span class="admin-action__title">Manage Users</span>
+						<span class="admin-action__desc">View and manage all users</span>
+					</div>
+					<span class="admin-action__arrow">→</span>
+				</a>
+				<a href="/ui/admin/collections" class="admin-action">
+					<span class="admin-action__icon">📚</span>
+					<div class="admin-action__content">
+						<span class="admin-action__title">All Collections</span>
+						<span class="admin-action__desc">Browse all user collections</span>
+					</div>
+					<span class="admin-action__arrow">→</span>
+				</a>
+				<a href="/ui/admin/exercises" class="admin-action">
+					<span class="admin-action__icon">📝</span>
+					<div class="admin-action__content">
+						<span class="admin-action__title">All Exercises</span>
+						<span class="admin-action__desc">Browse all exercises</span>
+					</div>
+					<span class="admin-action__arrow">→</span>
+				</a>
+				<a href="/ui/admin/attempts" class="admin-action">
+					<span class="admin-action__icon">🎯</span>
+					<div class="admin-action__content">
+						<span class="admin-action__title">All Attempts</span>
+						<span class="admin-action__desc">View quiz attempt history</span>
+					</div>
+					<span class="admin-action__arrow">→</span>
+				</a>
+			</div>
+		</section>
+
+		<section class="admin-section">
+			<div class="admin-section__header">
+				<h2 class="admin-section__title">Recent Users</h2>
+				<a href="/ui/admin/users" class="admin-section__link">View all →</a>
+			</div>
+			<div class="admin-table-wrap">
+				<table class="admin-table">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Email</th>
+							<th>Role</th>
+							<th>Joined</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for user in recentUsers %}
+						<tr>
+							<td>
+								<span class="admin-table__name">{{ user.name }}</span>
+							</td>
+							<td class="admin-table__muted">{{ user.email }}</td>
+							<td>
+								<span class="badge badge--{{ user.role | lower }}">{{ user.role }}</span>
+							</td>
+							<td class="admin-table__muted">{{ user.createdAt | date('short') }}</td>
+						</tr>
+						{% else %}
+						<tr>
+							<td colspan="4" class="admin-table__empty">No users yet</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</section>
+	</div>
+</div>
+{% endif %}
+{% endblock %}

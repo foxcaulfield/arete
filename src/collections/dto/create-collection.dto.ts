@@ -8,7 +8,6 @@ export class CreateCollectionDto {
 
 	@IsOptional()
 	@MaxLength(255)
-	@MinLength(5)
 	@IsString()
 	public description?: string;
 

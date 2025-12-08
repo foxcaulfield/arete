@@ -1,39 +1,71 @@
 {% extends "layouts/base.njk" %}
-{% import "partials/components.njk" as components %}
 
 {% block content %}
-    <h1>Edit Collection: {{ collection.name }}</h1>
-    <form 
-        id="edit-collection-form" 
-        hx-patch="/collections/update/{{ collection.id }}"
-        hx-encoding="json"
-        hx-trigger="submit"
-        hx-swap="none"
-        hx-on::after-request="
-        console.log(event.detail);
-            if(event.detail.successful){ 
-                window.location='/ui/collections/{{ collection.id }}'; 
-            } else {
-                try { 
-                    const err=JSON.parse(event.detail.xhr.responseText); 
-                    document.getElementById('edit-collection-form-errors').textContent = err.message + ' Fields: ' + (err.fields ? Object.values(err.fields).flat().join(', ') : 'N/A'); 
-                } catch(e){
-                    document.getElementById('edit-collection-form-errors').textContent='Update failed'; 
-                }
-            }"
-        class="card">
-        <div>
-            <label for="collection-name-input">Collection Name</label>
-            <input type="text" id="collection-name-input" name="name" value="{{ collection.name }}" required/>
-        </div>
-        <div>
-            <label for="collection-description-input">Description</label>
-            <textarea id="collection-description-input" name="description" rows="4">{{ collection.description }}</textarea>
-        </div>
-        <div>
-            <button type="submit">Save Changes</button>
-            <button type="button" onclick="window.location.href='/ui/collections/{{ collection.id }}'">Cancel</button>
-        </div>
-    </form>
-    <div id="edit-collection-form-errors" class="error mt"></div>
+	{# Page Header with Back Button #}
+	<div class="page-header page-header--simple">
+		<a href="/ui/collections/{{ collection.id }}" class="btn-back">← Back to Collection</a>
+	</div>
+
+	<div class="card form-card">
+		<div class="form-header">
+			<h1 class="form-header__title">Edit Collection</h1>
+			<p class="form-header__subtitle">Update collection details</p>
+		</div>
+
+		<form 
+			id="edit-collection-form" 
+			hx-patch="/collections/update/{{ collection.id }}"
+			hx-encoding="json"
+			hx-trigger="submit"
+			hx-swap="none"
+			hx-disabled-elt="button[type='submit']"
+			hx-on::after-request="
+				if(event.detail.successful){ 
+					toast.success('Collection updated!');
+					setTimeout(function(){ window.location='/ui/collections/{{ collection.id }}'; }, 500);
+				} else {
+					try { 
+						const err = JSON.parse(event.detail.xhr.responseText);
+						const fields = err.fields ? Object.values(err.fields).flat().join(', ') : '';
+						toast.error(err.message + (fields ? ': ' + fields : ''));
+					} catch(e){
+						toast.error('Failed to update collection');
+					}
+				}"
+			class="form-body"
+		>
+			<div class="form-group">
+				<label for="collection-name-input" class="form-label">Collection Name <span class="required">*</span></label>
+				<input 
+					type="text" 
+					id="collection-name-input" 
+					name="name" 
+					class="form-input"
+					value="{{ collection.name }}"
+					placeholder="e.g., Spanish Vocabulary, Math Formulas..."
+					required
+					minlength="3"
+					autocomplete="off"
+				/>
+				<span class="form-hint">Minimum 3 characters</span>
+			</div>
+
+			<div class="form-group">
+				<label for="collection-description-input" class="form-label">Description</label>
+				<textarea 
+					id="collection-description-input" 
+					name="description" 
+					class="form-input"
+					rows="3"
+					placeholder="What is this collection about?"
+				>{{ collection.description }}</textarea>
+				<span class="form-hint">Optional - helps you remember the purpose of this collection</span>
+			</div>
+
+			<div class="form-actions">
+				<a href="/ui/collections/{{ collection.id }}" class="btn-outline">Cancel</a>
+				<button type="submit" class="btn-primary">Save Changes</button>
+			</div>
+		</form>
+	</div>
 {% endblock %}

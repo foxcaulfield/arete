@@ -8,6 +8,7 @@ import { UtilsService } from "src/common/utils.service";
 import { ExerciseQueryService } from "./exercise-query.service";
 import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/exercises/exercise-rules.config";
 import { CollectionAccessService } from "src/collections/collection-access.service";
+import { QUIZ_SESSION_STORE, type IQuizSessionStore, type QuizSessionStats } from "./quiz-session.store";
 
 @Injectable()
 export class QuizService extends BaseService {
@@ -17,19 +18,26 @@ export class QuizService extends BaseService {
 		private readonly collectionAccessService: CollectionAccessService,
 		private readonly utilsService: UtilsService,
 		private readonly exerciseQueryService: ExerciseQueryService,
-		@Inject(EXERCISE_RULES_SYMBOL) private readonly exerciseConfig: ExerciseRulesConfig
+		@Inject(EXERCISE_RULES_SYMBOL) private readonly exerciseConfig: ExerciseRulesConfig,
+		@Inject(QUIZ_SESSION_STORE) private readonly sessionStore: IQuizSessionStore
 	) {
 		super();
 	}
 
-	/**
-	 * Records user attempt (currently commented out in original)
-	 */
-	private async recordAttempt(userId: string, exerciseId: string, isCorrect: boolean): Promise<void> {
+	public resetSession(userId: string, collectionId: string): void {
+		this.sessionStore.resetSession(userId, collectionId);
+	}
+
+	public getSessionStats(userId: string, collectionId: string): QuizSessionStats {
+		return this.sessionStore.getSessionStats(userId, collectionId);
+	}
+
+	private async recordAttempt(userId: string, exerciseId: string, answer: string, isCorrect: boolean): Promise<void> {
 		await this.prismaService.attempt.create({
 			data: {
 				exerciseId,
 				userId,
+				answer,
 				isCorrect,
 			},
 		});
@@ -74,6 +82,18 @@ export class QuizService extends BaseService {
 	): Promise<QuizQuestionDto> {
 		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
 
+		// Get collection stats
+		const [totalExercises, exercisesWithAttempts] = await Promise.all([
+			this.prismaService.exercise.count({ where: { collectionId, isActive: true } }),
+			this.prismaService.exercise.count({
+				where: {
+					collectionId,
+					isActive: true,
+					Attempt: { some: { userId: currentUserId } },
+				},
+			}),
+		]);
+
 		let exercise: Exercise;
 		if (exerciseSelectionMode === "least-attempted") {
 			exercise = await this.exerciseQueryService.getLeastAttemptedExercise(collectionId, currentUserId);
@@ -89,6 +109,8 @@ export class QuizService extends BaseService {
 		return this.toResponseDto(QuizQuestionDto, {
 			...exercise,
 			distractors: updatedDistractors,
+			totalExercises,
+			exercisesWithAttempts,
 		});
 	}
 
@@ -102,8 +124,11 @@ export class QuizService extends BaseService {
 		const exercise = await this.exercisesService.findExerciseOrFail(dto.exerciseId);
 		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
 
-		// TODO: Uncomment when ready to track attempts
-		await this.recordAttempt(currentUserId, exercise.id, isCorrect);
+		// Update session stats
+		const sessionStats = this.sessionStore.recordAnswer(currentUserId, collectionId, exercise.id, isCorrect);
+
+		// Record attempt in database
+		await this.recordAttempt(currentUserId, exercise.id, dto.userAnswer, isCorrect);
 
 		const nextExercise = await this.getDrillExercise(currentUserId, collectionId);
 
@@ -111,6 +136,10 @@ export class QuizService extends BaseService {
 			isCorrect,
 			correctAnswer: exercise.correctAnswer,
 			explanation: exercise.explanation ?? undefined,
+			additionalCorrectAnswers: exercise.additionalCorrectAnswers ?? undefined,
+			streak: sessionStats.streak,
+			sessionCorrect: sessionStats.correct,
+			sessionTotal: sessionStats.total,
 			nextExerciseId: nextExercise.id,
 		};
 	}

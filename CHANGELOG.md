@@ -1,3 +1,52 @@
+## 1.5.0-beta.5 (2025-12-08)
+
+* feat: add release helper script and update package.json for release management ([75237c4](https://github.com/foxcaulfield/arete/commit/75237c4))
+* feat: enhance home page styling and add GitHub icon to navbar ([b55269f](https://github.com/foxcaulfield/arete/commit/b55269f))
+
+## 1.5.0-beta.4 (2025-12-08)
+
+* feat: enhance Docker setup by adding views and public directories, and improve database service conf ([8d19650](https://github.com/foxcaulfield/arete/commit/8d19650))
+
+## 1.5.0-beta.3 (2025-12-08)
+
+* chore: add todo.txt to .gitignore ([77d91b7](https://github.com/foxcaulfield/arete/commit/77d91b7))
+* chore: update @nestjs/throttler to version 6.5.0 in package.json and package-lock.json ([8d274eb](https://github.com/foxcaulfield/arete/commit/8d274eb))
+* Add toast notification system and enhance profile and quiz pages ([2b56bc6](https://github.com/foxcaulfield/arete/commit/2b56bc6))
+* refactor: improve code formatting and type annotations in users.controller.ts and users.service.ts ([5447cc2](https://github.com/foxcaulfield/arete/commit/5447cc2))
+* refactor: update dashboard stats interface and improve UI service methods ([7cc6f27](https://github.com/foxcaulfield/arete/commit/7cc6f27))
+* style: format code in admin.module.ts for consistency ([cf07fa5](https://github.com/foxcaulfield/arete/commit/cf07fa5))
+* feat: add answer field to Attempt model and create migration for database update ([e06a070](https://github.com/foxcaulfield/arete/commit/e06a070))
+* feat: update ESLint configuration to include prettier plugin and ignore additional directories ([1dcbfe7](https://github.com/foxcaulfield/arete/commit/1dcbfe7))
+* styles: remove duplicate CSS rule blocks from public/css/styles.css ([35ccaf9](https://github.com/foxcaulfield/arete/commit/35ccaf9))
+
+## 1.5.0-beta.2 (2025-12-07)
+
+* feat: add lastAttemptAt field to ResponseExerciseDto for tracking user attempts ([a4e18a3](https://github.com/foxcaulfield/arete/commit/a4e18a3))
+* feat: enhance answer feedback with additional answers, add collection stats to drill exercise respon ([584428a](https://github.com/foxcaulfield/arete/commit/584428a))
+* feat: enhance collections filtering and analytics with pagination, sorting, and coverage metrics ([7e46132](https://github.com/foxcaulfield/arete/commit/7e46132))
+* feat: enhance exercise components with dynamic IDs and improve button styling ([15652eb](https://github.com/foxcaulfield/arete/commit/15652eb))
+* feat: enhance exercise forms with improved button actions and UI endpoints ([8e5ed13](https://github.com/foxcaulfield/arete/commit/8e5ed13))
+* feat: enhance getExercisesInCollection and getExerciseById methods with sorting, filtering, and atte ([1fe0452](https://github.com/foxcaulfield/arete/commit/1fe0452))
+* feat: enhance TransformToArray function to handle empty string as array clear ([3ce2fe8](https://github.com/foxcaulfield/arete/commit/3ce2fe8))
+* feat: expand FilterExerciseDto with additional filtering options and enums for sorting and media typ ([f7dd394](https://github.com/foxcaulfield/arete/commit/f7dd394))
+* feat: implement admin module with user management functionality including create, update, and delete ([dcbd5a9](https://github.com/foxcaulfield/arete/commit/dcbd5a9))
+* feat: implement betterAuth configuration factory and refactor app module imports ([c4a73b8](https://github.com/foxcaulfield/arete/commit/c4a73b8))
+* feat: refactor exercise components to use reusable tags input macro and add explanation field ([2b63dce](https://github.com/foxcaulfield/arete/commit/2b63dce))
+* feat: update FilterExerciseDto to set minimum page value to 1 and default page to 1 ([3000e73](https://github.com/foxcaulfield/arete/commit/3000e73))
+* feat: update form structure and styling for exercise creation and editing forms ([752cbcd](https://github.com/foxcaulfield/arete/commit/752cbcd))
+* fix: remove unused IsOptional import from class-validator in quiz.dto.ts ([72c15d4](https://github.com/foxcaulfield/arete/commit/72c15d4))
+
+## 1.5.0-beta.1 (2025-12-03)
+
+* feat: add exercise components including input fields and selection options ([31efc69](https://github.com/foxcaulfield/arete/commit/31efc69))
+* feat: enhance exercise components with dynamic tags for additional correct answers and distractors ([6294b59](https://github.com/foxcaulfield/arete/commit/6294b59))
+* feat: enhance exercise form components with UUID generation and dynamic input values ([cb9b405](https://github.com/foxcaulfield/arete/commit/cb9b405))
+* feat: move form styling to CSS for exercise creation form and enhance grid layout ([abcbb45](https://github.com/foxcaulfield/arete/commit/abcbb45))
+* feat: refactor exercise form and components for improved structure and dynamic behavior ([4972d15](https://github.com/foxcaulfield/arete/commit/4972d15))
+* feat: update exercise component macros to accept dynamic names for input fields ([9e83bfc](https://github.com/foxcaulfield/arete/commit/9e83bfc))
+* Merge branch 'develop' of github.com:foxcaulfield/arete into develop ([d36093f](https://github.com/foxcaulfield/arete/commit/d36093f))
+* chore(release): v1.4.0-beta.13 [skip ci] ([9cd99a1](https://github.com/foxcaulfield/arete/commit/9cd99a1))
+
 ## 1.4.0 (2025-12-01)
 
 * Merge pull request #48 from foxcaulfield/release/1.4.0 ([be8e22b](https://github.com/foxcaulfield/arete/commit/be8e22b)), closes [#48](https://github.com/foxcaulfield/arete/issues/48)
@@ -21,6 +70,10 @@
 * feat: add audio wave SVG icon ([567ca72](https://github.com/foxcaulfield/arete/commit/567ca72))
 * feat: add button styles and integrate button.css into the layout ([45e9b55](https://github.com/foxcaulfield/arete/commit/45e9b55))
 * feat: add CollectionAnalyticsService for enriching collections with user-specific attempt and exerci ([a90664c](https://github.com/foxcaulfield/arete/commit/a90664c))
+## 1.4.0-beta.13 (2025-12-01)
+
+* feat: add audio wave SVG icon ([567ca72](https://github.com/foxcaulfield/arete/commit/567ca72))
+* feat: add button styles and integrate button.css into the layout ([45e9b55](https://github.com/foxcaulfield/arete/commit/45e9b55))
 * feat: add collections page and components, enhance navbar for authenticated users ([66a3369](https://github.com/foxcaulfield/arete/commit/66a3369))
 * feat: add create exercise form and update UI components for collections ([e28672c](https://github.com/foxcaulfield/arete/commit/e28672c))
 * feat: add edit functionality for collections with form and controller updates ([b9adcf4](https://github.com/foxcaulfield/arete/commit/b9adcf4))
@@ -40,6 +93,8 @@
 * feat: create ExerciseRulesConfig for configurable exercise settings and update imports ([7516251](https://github.com/foxcaulfield/arete/commit/7516251))
 * feat: enhance collection and exercise tables with improved layout and question type block ([23a5c10](https://github.com/foxcaulfield/arete/commit/23a5c10))
 * feat: enhance file upload handling with MIME type validation and error handling ([a643c1a](https://github.com/foxcaulfield/arete/commit/a643c1a))
+* feat: add VSCode settings for nunjucks file associations and syntax highlighting ([3f41046](https://github.com/foxcaulfield/arete/commit/3f41046))
+* feat: enhance collection and exercise tables with improved layout and question type block ([23a5c10](https://github.com/foxcaulfield/arete/commit/23a5c10))
 * feat: enhance quiz page interactivity with improved feedback and event logging ([5976d08](https://github.com/foxcaulfield/arete/commit/5976d08))
 * feat: enhance quiz page layout with improved button styles and question type display ([1fed200](https://github.com/foxcaulfield/arete/commit/1fed200))
 * feat: enhance UI components and forms for collections, add exercise details and create functionality ([a0afce8](https://github.com/foxcaulfield/arete/commit/a0afce8))
@@ -102,6 +157,10 @@
 * feat: refactor component imports and add quiz page with functionality ([f3f78be](https://github.com/foxcaulfield/arete/commit/f3f78be))
 * feat: refactor file upload handling in ExercisesService ([ad099a6](https://github.com/foxcaulfield/arete/commit/ad099a6))
 * feat: refactor getTopMostAttemptedExercises method and move query logic to a dedicated function ([1f8db24](https://github.com/foxcaulfield/arete/commit/1f8db24))
+* feat: implement exercise detail view and enhance UI for exercise interactions ([e87bae9](https://github.com/foxcaulfield/arete/commit/e87bae9))
+* feat: improve quiz page functionality with enhanced event handling and state management ([9226d17](https://github.com/foxcaulfield/arete/commit/9226d17))
+* feat: move macros ([666a024](https://github.com/foxcaulfield/arete/commit/666a024))
+* feat: refactor component imports and add quiz page with functionality ([f3f78be](https://github.com/foxcaulfield/arete/commit/f3f78be))
 * feat: update allowed MIME types to include m4a for audio uploads ([ce896a0](https://github.com/foxcaulfield/arete/commit/ce896a0))
 * feat: update delete button to use hx-delete for collection removal ([b9ec7b1](https://github.com/foxcaulfield/arete/commit/b9ec7b1))
 * feat: update Prettier and ESLint configurations, add new dependencies for Jinja template support ([194f2b9](https://github.com/foxcaulfield/arete/commit/194f2b9))
