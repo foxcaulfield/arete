@@ -152,8 +152,8 @@ body.body--home::before {
 	transform: scale(1.1);
 }
 .navbar__github svg {
-	width: 56px;
-	height: 56px;
+	width: 24px;
+	height: 24px;
 }
 .navbar__links {
 	list-style: none;

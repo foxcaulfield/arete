@@ -91,10 +91,11 @@ echo -e "${BLUE}What would you like to do?${NC}"
 echo "1) Push to develop (creates beta release)"
 echo "2) Create release branch (for RC)"
 echo "3) Create PR to main (for stable release)"
-echo "4) Quick push current branch"
-echo "5) Exit"
+echo "4) Merge main → develop (after release)"
+echo "5) Quick push current branch"
+echo "6) Exit"
 echo ""
-read -p "Choose an option (1-5): " choice
+read -p "Choose an option (1-6): " choice
 
 case $choice in
     1)
@@ -132,11 +133,20 @@ case $choice in
         echo -e "${YELLOW}After merging, GitHub Actions will create: v$NEXT_STABLE${NC}"
         ;;
     4)
+        echo -e "\n${CYAN}Merging main into develop (back-merge after release)...${NC}"
+        git fetch origin main
+        git checkout develop
+        git pull origin develop
+        git merge origin/main -m "chore(merge): back-merge main into develop"
+        git push origin develop
+        echo -e "${GREEN}✅ Main merged into develop and pushed!${NC}"
+        ;;
+    5)
         echo -e "\n${GREEN}Pushing $CURRENT_BRANCH...${NC}"
         git push origin "$CURRENT_BRANCH"
         echo -e "${GREEN}✅ Pushed!${NC}"
         ;;
-    5)
+    6)
         echo -e "${BLUE}Bye! 👋${NC}"
         exit 0
         ;;
