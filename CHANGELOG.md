@@ -1,3 +1,7 @@
+## 1.5.0-beta.4 (2025-12-08)
+
+* feat: enhance Docker setup by adding views and public directories, and improve database service conf ([8d19650](https://github.com/foxcaulfield/arete/commit/8d19650))
+
 ## 1.5.0-beta.3 (2025-12-08)
 
 * chore: add todo.txt to .gitignore ([77d91b7](https://github.com/foxcaulfield/arete/commit/77d91b7))
