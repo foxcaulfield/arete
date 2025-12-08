@@ -71,4 +71,4 @@ npm run release
 
 ## License
 
-UNLICENSED - Private project
+**Proprietary** - Commercial use requires a paid license. See [LICENSE](LICENSE) for details.

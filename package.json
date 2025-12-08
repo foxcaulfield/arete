@@ -2,9 +2,9 @@
   "name": "arete",
   "version": "1.6.0-beta.1",
   "description": "",
-  "author": "",
+  "author": "foxcaulfield",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE FILE",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

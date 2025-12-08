@@ -2919,11 +2919,20 @@ a.filter-bar__action {
 .hero__title {
 	font-size: 3rem;
 	font-weight: 800;
-	margin: 0 0 0.75rem;
+	margin: 0 0 0.5rem;
 	background: linear-gradient(135deg, var(--pico-color) 0%, var(--accent) 100%);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
+}
+
+.hero__etymology {
+	font-size: 0.9rem;
+	font-style: italic;
+	color: var(--muted-color);
+	opacity: 0.8;
+	margin: 0 0 1rem;
+	letter-spacing: 0.02em;
 }
 
 .hero__subtitle {
