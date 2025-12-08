@@ -1,3 +1,11 @@
+## 1.6.0 (2025-12-08)
+
+* Merge pull request #50 from foxcaulfield/release/1.6.0 ([b1d0949](https://github.com/foxcaulfield/arete/commit/b1d0949)), closes [#50](https://github.com/foxcaulfield/arete/issues/50)
+* chore(release): v1.6.0-beta.1 [skip ci] ([1c6c8a3](https://github.com/foxcaulfield/arete/commit/1c6c8a3))
+* chore(release): v1.6.0-beta.2 [skip ci] ([aecf783](https://github.com/foxcaulfield/arete/commit/aecf783))
+* feat: add proprietary license and update README with licensing details ([d06e8da](https://github.com/foxcaulfield/arete/commit/d06e8da))
+* feat: update navbar GitHub icon size and enhance release script options ([66c6bca](https://github.com/foxcaulfield/arete/commit/66c6bca))
+
 ## 1.6.0-beta.2 (2025-12-08)
 
 * feat: add proprietary license and update README with licensing details ([d06e8da](https://github.com/foxcaulfield/arete/commit/d06e8da))
