@@ -1,3 +1,11 @@
+## 1.6.0-beta.2 (2025-12-08)
+
+* feat: add proprietary license and update README with licensing details ([d06e8da](https://github.com/foxcaulfield/arete/commit/d06e8da))
+
+## 1.6.0-beta.1 (2025-12-08)
+
+* feat: update navbar GitHub icon size and enhance release script options ([66c6bca](https://github.com/foxcaulfield/arete/commit/66c6bca))
+
 ## 1.5.0 (2025-12-08)
 
 * Add toast notification system and enhance profile and quiz pages ([2b56bc6](https://github.com/foxcaulfield/arete/commit/2b56bc6))
