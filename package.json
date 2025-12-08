@@ -19,6 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "start:migrate:prod": "prisma migrate deploy && npm run start:prod",
+    "release": "bash scripts/release.sh",
     "postinstall": "mkdir -p public/js && cp node_modules/htmx.org/dist/htmx.min.js public/js/htmx.org.min.js",
     "postinstall2": "mkdir -p public/js && cp node_modules/alpinejs/dist/cdn.min.js public/js/alpinejs.min.js"
   },
