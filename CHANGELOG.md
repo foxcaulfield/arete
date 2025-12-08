@@ -1,3 +1,8 @@
+## 1.5.0-beta.5 (2025-12-08)
+
+* feat: add release helper script and update package.json for release management ([75237c4](https://github.com/foxcaulfield/arete/commit/75237c4))
+* feat: enhance home page styling and add GitHub icon to navbar ([b55269f](https://github.com/foxcaulfield/arete/commit/b55269f))
+
 ## 1.5.0-beta.4 (2025-12-08)
 
 * feat: enhance Docker setup by adding views and public directories, and improve database service conf ([8d19650](https://github.com/foxcaulfield/arete/commit/8d19650))
