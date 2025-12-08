@@ -1,3 +1,15 @@
+## 1.5.0-beta.3 (2025-12-08)
+
+* chore: add todo.txt to .gitignore ([77d91b7](https://github.com/foxcaulfield/arete/commit/77d91b7))
+* chore: update @nestjs/throttler to version 6.5.0 in package.json and package-lock.json ([8d274eb](https://github.com/foxcaulfield/arete/commit/8d274eb))
+* Add toast notification system and enhance profile and quiz pages ([2b56bc6](https://github.com/foxcaulfield/arete/commit/2b56bc6))
+* refactor: improve code formatting and type annotations in users.controller.ts and users.service.ts ([5447cc2](https://github.com/foxcaulfield/arete/commit/5447cc2))
+* refactor: update dashboard stats interface and improve UI service methods ([7cc6f27](https://github.com/foxcaulfield/arete/commit/7cc6f27))
+* style: format code in admin.module.ts for consistency ([cf07fa5](https://github.com/foxcaulfield/arete/commit/cf07fa5))
+* feat: add answer field to Attempt model and create migration for database update ([e06a070](https://github.com/foxcaulfield/arete/commit/e06a070))
+* feat: update ESLint configuration to include prettier plugin and ignore additional directories ([1dcbfe7](https://github.com/foxcaulfield/arete/commit/1dcbfe7))
+* styles: remove duplicate CSS rule blocks from public/css/styles.css ([35ccaf9](https://github.com/foxcaulfield/arete/commit/35ccaf9))
+
 ## 1.5.0-beta.2 (2025-12-07)
 
 * feat: add lastAttemptAt field to ResponseExerciseDto for tracking user attempts ([a4e18a3](https://github.com/foxcaulfield/arete/commit/a4e18a3))
