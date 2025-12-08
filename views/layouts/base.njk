@@ -39,7 +39,7 @@
       }
     </script>
   </head>
-  <body>
+  <body class="{% block bodyClass %}{% endblock %}">
     {% include "partials/navbar.njk" %}
     <div class="htmx-progress" id="htmx-progress"></div>
     {% include "partials/toast.njk" %}

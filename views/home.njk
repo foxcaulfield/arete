@@ -1,7 +1,9 @@
 {% extends "layouts/base.njk" %}
 
+{% block bodyClass %}body--home{% endblock %}
+
 {% block content %}
-	<section class="hero">
+	<section class="hero hero--home">
 		<span class="hero__badge">Learning Platform</span>
 		<h1 class="hero__title">{{ title }}</h1>
 		<p class="hero__subtitle">Master any subject with spaced repetition and active recall</p>

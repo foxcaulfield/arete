@@ -1,6 +1,8 @@
 <nav class="navbar" x-data="{ open: false, colorOpen: false }">
   <div class="navbar__brand">
-    <a href="/ui">Arete</a>
+    <a href="https://github.com/foxcaulfield/arete" target="_blank" rel="noopener noreferrer" class="navbar__github" title="GitHub - foxcaulfield">
+      {% include "icons/github.njk" %}
+    </a>
   </div>
 
   <button class="navbar__toggle" aria-label="Toggle menu" @click="open = !open">
@@ -38,15 +40,15 @@
         </button>
         <div class="color-picker__dropdown" :class="{ 'color-picker__dropdown--open': colorOpen }">
           <button class="color-picker__option" data-color="pink" onclick="setAccentColor('pink')" title="Pink"></button>
-          <button class="color-picker__option" data-color="purple" onclick="setAccentColor('purple')" title="Purple"></button>
-          <button class="color-picker__option" data-color="violet" onclick="setAccentColor('violet')" title="Violet"></button>
+          {# <button class="color-picker__option" data-color="purple" onclick="setAccentColor('purple')" title="Purple"></button> #}
+          {# <button class="color-picker__option" data-color="violet" onclick="setAccentColor('violet')" title="Violet"></button> #}
           <button class="color-picker__option" data-color="indigo" onclick="setAccentColor('indigo')" title="Indigo"></button>
           <button class="color-picker__option" data-color="blue" onclick="setAccentColor('blue')" title="Blue"></button>
           <button class="color-picker__option" data-color="azure" onclick="setAccentColor('azure')" title="Azure"></button>
-          <button class="color-picker__option" data-color="cyan" onclick="setAccentColor('cyan')" title="Cyan"></button>
-          <button class="color-picker__option" data-color="jade" onclick="setAccentColor('jade')" title="Jade"></button>
-          <button class="color-picker__option" data-color="green" onclick="setAccentColor('green')" title="Green"></button>
-          <button class="color-picker__option" data-color="amber" onclick="setAccentColor('amber')" title="Amber"></button>
+          {# <button class="color-picker__option" data-color="cyan" onclick="setAccentColor('cyan')" title="Cyan"></button> #}
+          {# <button class="color-picker__option" data-color="jade" onclick="setAccentColor('jade')" title="Jade"></button> #}
+          {# <button class="color-picker__option" data-color="green" onclick="setAccentColor('green')" title="Green"></button> #}
+          {# <button class="color-picker__option" data-color="amber" onclick="setAccentColor('amber')" title="Amber"></button> #}
           <button class="color-picker__option" data-color="pumpkin" onclick="setAccentColor('pumpkin')" title="Pumpkin"></button>
           <button class="color-picker__option" data-color="orange" onclick="setAccentColor('orange')" title="Orange"></button>
           <button class="color-picker__option" data-color="red" onclick="setAccentColor('red')" title="Red"></button>

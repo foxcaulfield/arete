@@ -58,6 +58,28 @@ body {
 	min-height: 100vh;
 }
 
+/* Home page background */
+body.body--home {
+	background: url('/images/background.png') center center / cover no-repeat fixed;
+}
+
+body.body--home::before {
+	content: '';
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--pico-background-color) 60%, transparent) 0%,
+		color-mix(in srgb, var(--pico-background-color) 80%, transparent) 40%,
+		var(--pico-background-color) 100%
+	);
+	z-index: -1;
+	pointer-events: none;
+}
+
 .container {
 	max-width: 1120px;
 	margin: 2rem auto;
@@ -111,6 +133,27 @@ body {
 	font-weight: 700;
 	letter-spacing: 0.04em;
 	font-size: 1.1rem;
+}
+.navbar__brand {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0 1.5rem;
+}
+.navbar__github {
+	display: flex;
+	align-items: center;
+	opacity: 0.7;
+	transition: opacity 150ms ease, color 150ms ease, transform 150ms ease;
+}
+.navbar__github:hover {
+	opacity: 1;
+	color: var(--accent);
+	transform: scale(1.1);
+}
+.navbar__github svg {
+	width: 56px;
+	height: 56px;
 }
 .navbar__links {
 	list-style: none;
@@ -2849,6 +2892,16 @@ a.filter-bar__action {
 .hero {
 	text-align: center;
 	padding: 4rem 1rem 2.5rem;
+}
+
+.hero--home {
+	position: relative;
+	padding: 6rem 1rem 4rem;
+}
+
+.hero--home > * {
+	position: relative;
+	z-index: 1;
 }
 
 .hero__badge {
