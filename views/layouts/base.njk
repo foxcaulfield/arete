@@ -1,22 +1,62 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>{{ title or 'Arete' }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/pico.colors.css"/>
     <link rel="stylesheet" href="/static/css/pico.css"/>
-    <link rel="stylesheet" href="/static/css/pico.pink.css"/>
     <link rel="stylesheet" href="/static/css/button.css"/>
     <link rel="stylesheet" href="/static/css/styles.css"/>
     <script src="/static/js/htmx.org.min.js" defer></script>
     <script src="/static/js/alpinejs.min.js" defer></script>
+    <script>
+      // Theme management (dark/light + color accent)
+      (function() {
+        var savedTheme = localStorage.getItem('theme') || 'dark';
+        var savedColor = localStorage.getItem('accent-color') || 'pink';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.documentElement.setAttribute('data-accent', savedColor);
+      })();
+      
+      function toggleTheme() {
+        var html = document.documentElement;
+        var current = html.getAttribute('data-theme') || 'dark';
+        var next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+      }
+      
+      function setAccentColor(color) {
+        document.documentElement.setAttribute('data-accent', color);
+        localStorage.setItem('accent-color', color);
+        // Close dropdown if open
+        var dropdown = document.querySelector('.color-picker__dropdown');
+        if (dropdown) dropdown.classList.remove('color-picker__dropdown--open');
+      }
+    </script>
   </head>
   <body>
     {% include "partials/navbar.njk" %}
-    <div id="loading" class="htmx-indicator">Loading…</div>
-    <main class="container" hx-indicator="#loading">
+    <div class="htmx-progress" id="htmx-progress"></div>
+    {% include "partials/toast.njk" %}
+    <main class="container">
       {% block content %}{% endblock %}
     </main>
+    <script>
+      // HTMX Progress bar
+      document.addEventListener('htmx:beforeRequest', function() {
+        document.getElementById('htmx-progress').classList.add('htmx-progress--active');
+      });
+      document.addEventListener('htmx:afterRequest', function() {
+        document.getElementById('htmx-progress').classList.remove('htmx-progress--active');
+      });
+      document.addEventListener('htmx:responseError', function() {
+        document.getElementById('htmx-progress').classList.remove('htmx-progress--active');
+      });
+    </script>
   </body>
 </html>

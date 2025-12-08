@@ -1,0 +1,144 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+{% if error %}
+	<div class="admin-error">
+		<span class="admin-error__icon">🚫</span>
+		<h1>Access Denied</h1>
+		<p>You don't have permission to access the admin panel.</p>
+		<a href="/ui/dashboard" class="btn btn--primary">Back to Dashboard</a>
+	</div>
+{% else %}
+<div class="admin-page">
+	<div class="admin-header">
+		<div class="admin-header__nav">
+			<a href="/ui/admin" class="admin-header__back">← Admin</a>
+		</div>
+		<div class="admin-header__row">
+			<div>
+				<h1 class="admin-header__title">
+					<span class="admin-header__icon">👥</span>
+					All Users
+				</h1>
+				<p class="admin-header__subtitle">{{ pagination.total }} registered users</p>
+			</div>
+			<div class="admin-header__actions">
+				<a href="/ui/admin/users/create" class="btn btn--primary">
+					➕ Add User
+				</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="admin-toolbar">
+		<form class="admin-search" action="/ui/admin/users" method="get">
+			<input 
+				type="search" 
+				name="search" 
+				class="admin-search__input" 
+				placeholder="Search by name or email..." 
+				value="{{ search }}"
+			/>
+			<button type="submit" class="admin-search__btn">Search</button>
+			{% if search %}
+				<a href="/ui/admin/users" class="admin-search__clear">Clear</a>
+			{% endif %}
+		</form>
+	</div>
+
+	<div class="admin-table-wrap">
+		<table class="admin-table">
+			<thead>
+				<tr>
+					<th>User</th>
+					<th>Role</th>
+					<th>Collections</th>
+					<th>Attempts</th>
+					<th>Status</th>
+					<th>Joined</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for user in users %}
+				<tr>
+					<td>
+						<div class="admin-table__user">
+							<span class="admin-table__user-avatar">{{ user.name[0] | upper }}</span>
+							<div class="admin-table__user-info">
+								<a href="/ui/admin/users/{{ user.id }}" class="admin-table__user-name admin-table__link">{{ user.name }}</a>
+								<span class="admin-table__user-email">{{ user.email }}</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<span class="badge badge--{{ user.role | lower }}">{{ user.role }}</span>
+					</td>
+					<td class="admin-table__center">
+						<span class="admin-table__count">{{ user._count.collections }}</span>
+					</td>
+					<td class="admin-table__center">
+						<span class="admin-table__count">{{ user._count.Attempt }}</span>
+					</td>
+					<td>
+						{% if user.isActive %}
+							<span class="admin-status admin-status--active">Active</span>
+						{% else %}
+							<span class="admin-status admin-status--inactive">Inactive</span>
+						{% endif %}
+					</td>
+					<td class="admin-table__muted">
+						{{ user.createdAt | date('short') }}
+					</td>
+					<td>
+						<div class="admin-table__actions">
+							<a href="/ui/admin/users/{{ user.id }}" class="admin-btn admin-btn--small" title="View">
+								👁️
+							</a>
+							<a href="/ui/admin/users/{{ user.id }}/edit" class="admin-btn admin-btn--small" title="Edit">
+								✏️
+							</a>
+						</div>
+					</td>
+				</tr>
+				{% else %}
+				<tr>
+					<td colspan="7" class="admin-table__empty">
+						{% if search %}
+							No users found matching "{{ search }}"
+						{% else %}
+							No users yet
+						{% endif %}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+
+	{% if pagination.totalPages > 1 %}
+	<div class="admin-pagination">
+		{% if pagination.hasPrev %}
+			<a href="/ui/admin/users?page={{ pagination.page - 1 }}{% if search %}&search={{ search }}{% endif %}" class="admin-pagination__btn">
+				← Previous
+			</a>
+		{% else %}
+			<span class="admin-pagination__btn admin-pagination__btn--disabled">← Previous</span>
+		{% endif %}
+		
+		<span class="admin-pagination__info">
+			Page {{ pagination.page }} of {{ pagination.totalPages }}
+		</span>
+		
+		{% if pagination.hasNext %}
+			<a href="/ui/admin/users?page={{ pagination.page + 1 }}{% if search %}&search={{ search }}{% endif %}" class="admin-pagination__btn">
+				Next →
+			</a>
+		{% else %}
+			<span class="admin-pagination__btn admin-pagination__btn--disabled">Next →</span>
+		{% endif %}
+	</div>
+	{% endif %}
+</div>
+{% endif %}
+{% endblock %}

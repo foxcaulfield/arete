@@ -1,0 +1,139 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+{% if error %}
+	<div class="admin-error">
+		<span class="admin-error__icon">🚫</span>
+		<h1>{{ error }}</h1>
+		<p>{% if error == "Access denied" %}You don't have permission to access the admin panel.{% else %}The requested user could not be found.{% endif %}</p>
+		<a href="/ui/admin/users" class="btn btn--primary">Back to Users</a>
+	</div>
+{% else %}
+<div class="admin-page" x-data="userEditForm()">
+	<div class="admin-header">
+		<div class="admin-header__nav">
+			<a href="/ui/admin/users/{{ user.id }}" class="admin-header__back">← Back to User</a>
+		</div>
+		<h1 class="admin-header__title">
+			<span class="admin-header__icon">✏️</span>
+			Edit User
+		</h1>
+		<p class="admin-header__subtitle">{{ user.name }} ({{ user.email }})</p>
+	</div>
+
+	<div class="admin-section">
+		<form class="admin-form" @submit.prevent="saveUser">
+			<div class="form-grid">
+				<div class="form-group">
+					<label for="name" class="form-label">Name</label>
+					<input 
+						type="text" 
+						id="name" 
+						name="name" 
+						class="form-input"
+						x-model="formData.name"
+						required
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="email" class="form-label">Email</label>
+					<input 
+						type="email" 
+						id="email" 
+						name="email" 
+						class="form-input"
+						x-model="formData.email"
+						required
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="role" class="form-label">Role</label>
+					<select id="role" name="role" class="form-select" x-model="formData.role">
+						<option value="USER">User</option>
+						<option value="ADMIN">Admin</option>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="isActive" class="form-label">Status</label>
+					<select id="isActive" name="isActive" class="form-select" x-model="formData.isActive">
+						<option value="true">Active</option>
+						<option value="false">Inactive</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="form-info">
+				<div class="form-info__item">
+					<span class="form-info__label">User ID:</span>
+					<code class="form-info__value">{{ user.id }}</code>
+				</div>
+				<div class="form-info__item">
+					<span class="form-info__label">Created:</span>
+					<span class="form-info__value">{{ user.createdAt | date('long') }}</span>
+				</div>
+			</div>
+
+			<div class="form-actions">
+				<a href="/ui/admin/users/{{ user.id }}" class="btn btn--secondary">Cancel</a>
+				<button type="submit" class="btn btn--primary" :disabled="saving">
+					<span x-show="!saving">💾 Save Changes</span>
+					<span x-show="saving">Saving...</span>
+				</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script>
+function userEditForm() {
+	return {
+		saving: false,
+		formData: {
+			name: {{ user.name | dump | safe }},
+			email: {{ user.email | dump | safe }},
+			role: {{ user.role | dump | safe }},
+			isActive: {{ user.isActive | dump | safe }} ? 'true' : 'false'
+		},
+		async saveUser() {
+			this.saving = true;
+			try {
+				const payload = {
+					name: this.formData.name,
+					email: this.formData.email,
+					role: this.formData.role,
+					isActive: this.formData.isActive === 'true'
+				};
+				
+				const response = await fetch('/admin/users/{{ user.id }}', {
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(payload)
+				});
+				
+				const result = await response.json();
+				
+				if (response.ok && result.success) {
+					toast.success('User updated successfully');
+					setTimeout(() => {
+						window.location.href = '/ui/admin/users/{{ user.id }}';
+					}, 800);
+				} else {
+					toast.error(result.message || 'Failed to update user');
+				}
+			} catch (error) {
+				console.error('Error:', error);
+				toast.error('Failed to update user');
+			} finally {
+				this.saving = false;
+			}
+		}
+	};
+}
+</script>
+{% endif %}
+{% endblock %}

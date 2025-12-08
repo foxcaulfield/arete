@@ -1,7 +1,230 @@
 {% extends "layouts/base.njk" %}
 
 {% block content %}
-    <h1> Profile </h1>
-    <p>Username: {{ name }}</p>
-    <p>Email: {{ email }}</p>
+<div class="profile-page" x-data="profilePage()">
+	<div class="profile-header">
+		<div class="profile-header__avatar">
+			{% if image %}
+				<img src="{{ image }}" alt="{{ name }}" class="profile-header__avatar-img" />
+			{% else %}
+				<span class="profile-header__avatar-placeholder">{{ name[0] | upper }}</span>
+			{% endif %}
+		</div>
+		<div class="profile-header__info">
+			<h1 class="profile-header__name">{{ name }}</h1>
+			<p class="profile-header__email">{{ email }}</p>
+			<div class="profile-header__badges">
+				<span class="badge badge--{{ role | lower }}">{{ role }}</span>
+				{% if createdAt %}
+					<span class="badge badge--muted">Member since {{ createdAt | date('MMM D, YYYY') }}</span>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<div class="profile-stats">
+		<div class="profile-stat">
+			<span class="profile-stat__value">{{ stats.collections }}</span>
+			<span class="profile-stat__label">Collections</span>
+		</div>
+		<div class="profile-stat">
+			<span class="profile-stat__value">{{ stats.exercises }}</span>
+			<span class="profile-stat__label">Exercises</span>
+		</div>
+		<div class="profile-stat">
+			<span class="profile-stat__value">{{ stats.attempts }}</span>
+			<span class="profile-stat__label">Attempts</span>
+		</div>
+		<div class="profile-stat profile-stat--highlight">
+			<span class="profile-stat__value">{{ stats.coverage }}%</span>
+			<span class="profile-stat__label">Coverage</span>
+		</div>
+	</div>
+
+	<div class="profile-sections">
+		<section class="profile-section">
+			<h2 class="profile-section__title">
+				<span class="profile-section__icon">📊</span>
+				Learning Progress
+			</h2>
+			<div class="profile-progress">
+				<div class="profile-progress__item">
+					<div class="profile-progress__header">
+						<span>Coverage</span>
+						<span class="profile-progress__value">{{ stats.uniqueExercisesAttempted }} / {{ stats.exercises }} exercises practiced</span>
+					</div>
+					<div class="profile-progress__bar">
+						<div class="profile-progress__fill profile-progress__fill--primary" style="width: {{ stats.coverage }}%"></div>
+					</div>
+				</div>
+			</div>
+
+			{% if stats.exercises > 0 %}
+				<div class="profile-achievement">
+					{% if stats.coverage >= 90 %}
+						<span class="profile-achievement__icon">🏆</span>
+						<span class="profile-achievement__text">Outstanding! You've practiced almost everything!</span>
+					{% elif stats.coverage >= 70 %}
+						<span class="profile-achievement__icon">⭐</span>
+						<span class="profile-achievement__text">Great coverage! Keep up the excellent work!</span>
+					{% elif stats.coverage >= 50 %}
+						<span class="profile-achievement__icon">📈</span>
+						<span class="profile-achievement__text">Halfway there! Keep practicing more exercises.</span>
+					{% elif stats.coverage > 0 %}
+						<span class="profile-achievement__icon">💪</span>
+						<span class="profile-achievement__text">Good start! Try to practice more exercises.</span>
+					{% else %}
+						<span class="profile-achievement__icon">🎯</span>
+						<span class="profile-achievement__text">Start practicing to see your progress!</span>
+					{% endif %}
+				</div>
+			{% else %}
+				<div class="profile-empty">
+					<span class="profile-empty__icon">🎯</span>
+					<p class="profile-empty__text">Start practicing to see your progress!</p>
+					<a href="/ui/collections" class="btn btn--primary">Browse Collections</a>
+				</div>
+			{% endif %}
+		</section>
+
+		<section class="profile-section">
+			<h2 class="profile-section__title">
+				<span class="profile-section__icon">⚡</span>
+				Quick Actions
+			</h2>
+			<div class="profile-actions">
+				<a href="/ui/collections" class="profile-action">
+					<span class="profile-action__icon">📚</span>
+					<span class="profile-action__text">My Collections</span>
+					<span class="profile-action__arrow">→</span>
+				</a>
+				<a href="/ui/collections/create" class="profile-action">
+					<span class="profile-action__icon">➕</span>
+					<span class="profile-action__text">Create Collection</span>
+					<span class="profile-action__arrow">→</span>
+				</a>
+				<a href="/ui/dashboard" class="profile-action">
+					<span class="profile-action__icon">📊</span>
+					<span class="profile-action__text">Dashboard</span>
+					<span class="profile-action__arrow">→</span>
+				</a>
+			</div>
+		</section>
+
+		<section class="profile-section">
+			<h2 class="profile-section__title">
+				<span class="profile-section__icon">🔑</span>
+				Change Password
+			</h2>
+			<form class="profile-password-form" @submit.prevent="changePassword">
+				<div class="form-group">
+					<label for="currentPassword" class="form-label">Current Password</label>
+					<input 
+						type="password" 
+						id="currentPassword" 
+						class="form-input"
+						x-model="passwordForm.currentPassword"
+						placeholder="Enter current password"
+						required
+						minlength="8"
+					/>
+				</div>
+				<div class="form-group">
+					<label for="newPassword" class="form-label">New Password</label>
+					<input 
+						type="password" 
+						id="newPassword" 
+						class="form-input"
+						x-model="passwordForm.newPassword"
+						placeholder="Enter new password (min 8 characters)"
+						required
+						minlength="8"
+					/>
+				</div>
+				<div class="form-group">
+					<label for="confirmPassword" class="form-label">Confirm New Password</label>
+					<input 
+						type="password" 
+						id="confirmPassword" 
+						class="form-input"
+						x-model="passwordForm.confirmPassword"
+						placeholder="Confirm new password"
+						required
+						minlength="8"
+					/>
+				</div>
+				<div class="profile-password-form__actions">
+					<button type="submit" class="btn btn--primary" :disabled="changingPassword">
+						<span x-show="!changingPassword">Update Password</span>
+						<span x-show="changingPassword">Updating...</span>
+					</button>
+				</div>
+			</form>
+		</section>
+
+		<section class="profile-section profile-section--danger">
+			<h2 class="profile-section__title">
+				<span class="profile-section__icon">🔐</span>
+				Account
+			</h2>
+			<div class="profile-account">
+				<p class="profile-account__info">Signed in as <strong>{{ email }}</strong></p>
+				<button 
+					class="btn btn--outline-danger"
+					hx-post="/api/auth/sign-out" 
+					hx-swap="none"
+					hx-on::after-request="toast.info('Signed out'); setTimeout(function(){ window.location='/ui/auth/login'; }, 600);"
+				>
+					Sign Out
+				</button>
+			</div>
+		</section>
+	</div>
+</div>
+
+<script>
+function profilePage() {
+	return {
+		changingPassword: false,
+		passwordForm: {
+			currentPassword: '',
+			newPassword: '',
+			confirmPassword: ''
+		},
+		async changePassword() {
+			if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
+				toast.error('New passwords do not match');
+				return;
+			}
+			if (this.passwordForm.newPassword.length < 8) {
+				toast.error('Password must be at least 8 characters');
+				return;
+			}
+			this.changingPassword = true;
+			try {
+				const response = await fetch('/api/auth/change-password', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						newPassword: this.passwordForm.newPassword,
+						currentPassword: this.passwordForm.currentPassword,
+						revokeOtherSessions: true
+					})
+				});
+				const result = await response.json();
+				if (response.ok) {
+					toast.success('Password changed successfully');
+					this.passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+				} else {
+					toast.error(result.message || 'Failed to change password');
+				}
+			} catch (error) {
+				toast.error('Failed to change password');
+			} finally {
+				this.changingPassword = false;
+			}
+		}
+	};
+}
+</script>
 {% endblock %}

@@ -2,208 +2,211 @@
 {% import "partials/components.njk" as components %}
 
 {% block content %}
-    <h1 >Collection: {{ collection.name }}</h1>
-    <div  class="card">
-        <div>
-            <span>Description: </span>
-            <span>{{ collection.description }}</span>
-        </div>
-        <!-- Owner Block -->
-        <div>
-            {# <span>Owner</span> #}
-            <h3>
-                <span>Owner: </span>
-                <span>{{ collection.user.name }}</span>
-                {# <code>{{ collection.user.id }}</code> #}
-            </h3>
-        </div>
+	{# Page Header with Back Button #}
+	<div class="page-header page-header--simple">
+		<a href="/ui/collections" class="btn-back">← Collections</a>
+	</div>
 
-        <!-- Dates Block -->
-        <div>
-            {# <span>Timeline</span> #}
-            <div>
-                <div>
-                    <span>
-                        <strong>Created</strong>
-                    </span>
-                    <span>{{ collection.createdAt }}</span>
-                </div>
-                <div>
-                    <span>
-                        <strong>Updated</strong>
-                    </span>
-                    <span>{{ collection.updatedAt }}</span>
-                </div>
-            </div>
-        </div>
-        <br/>
-        <code>{{ collection.id }}</code>
+	{# Collection Info Card #}
+	<div class="card collection-card mb">
+		<div class="collection-header">
+			<div class="collection-header__main">
+				<h1 class="collection-header__name">{{ collection.name }}</h1>
+				{% if collection.description %}
+					<p class="collection-header__description">{{ collection.description }}</p>
+				{% endif %}
+			</div>
+			<div class="collection-header__stats">
+				<div class="mini-stat">
+					<span class="mini-stat__value">{{ collection.exerciseCount or exercises.pagination.totalItems or 0 }}</span>
+					<span class="mini-stat__label">Exercises</span>
+				</div>
+				<div class="mini-stat {% if (collection.coverage | int) >= 75 %}mini-stat--success{% elif (collection.coverage | int) >= 25 %}mini-stat--warning{% endif %}">
+					<span class="mini-stat__value">{{ collection.coverage or 0 }}%</span>
+					<span class="mini-stat__label">Coverage</span>
+				</div>
+				<div class="mini-stat">
+					<span class="mini-stat__value">{{ collection.attemptCount or 0 }}</span>
+					<span class="mini-stat__label">Attempts</span>
+				</div>
+			</div>
+		</div>
 
-        {# description Block #}
+		<div class="collection-meta">
+			<div class="collection-meta__item">
+				<span class="collection-meta__label">Owner</span>
+				<span class="collection-meta__value">{{ collection.user.name }}</span>
+			</div>
+			<div class="collection-meta__item">
+				<span class="collection-meta__label">Created</span>
+				<span class="collection-meta__value">{{ collection.createdAt | date('MMM D, YYYY') }}</span>
+			</div>
+			<div class="collection-meta__item">
+				<span class="collection-meta__label">Updated</span>
+				<span class="collection-meta__value">{{ collection.updatedAt | date('MMM D, YYYY') }}</span>
+			</div>
+		</div>
 
-    </div>
-    <div class="card actions">
-        <span>Actions</span>
+		{# Collection Actions - Single Row #}
+		<div class="collection-actions-bar">
+			<div class="collection-actions__secondary">
+				<a href="/ui/collections/{{ collection.id }}/edit" class="btn-outline">Edit</a>
+				<button
+					class="btn-outline btn-outline--danger"
+					type="button"
+					hx-delete="/collections/delete/{{ collection.id }}"
+					hx-disabled-elt="this"
+					hx-trigger="click"
+					hx-swap="none"
+					hx-confirm="Are you sure you want to delete this collection and all its exercises?"
+					hx-on::after-request="
+						if(event.detail.successful){
+							toast.success('Collection deleted');
+							setTimeout(function(){ window.location='/ui/collections'; }, 800);
+						} else {
+							try {
+								const err=JSON.parse(event.detail.xhr.responseText);
+								toast.error('Delete failed: ' + (err.message || 'Unknown error'));
+							} catch(e){
+								toast.error('Delete failed');
+							}
+						}"
+				>Delete</button>
+			</div>
+			<div class="collection-actions__primary">
+				<a href="/ui/exercises/create?collectionId={{ collection.id }}" class="btn-secondary">+ Add Exercise</a>
+				<a href="/ui/quiz/{{ collection.id }}" class="btn-primary">▶ Start Quiz</a>
+			</div>
+		</div>
+	</div>
 
-        <!-- <Button
-                        withAction={true}
-                        action="?/delete"
-                        onsubmit={confirmDelete}
-                        text="Delete Collection"
-                        color="error"
-                        fullWidth={true}
-                        size="sm"
-                    /> -->
-        <button type="button" onclick="window.location.href='/ui/collections/{{ collection.id }}/edit'">Edit</button>
-        <button
-            type="button"
-            hx-delete="/collections/delete/{{ collection.id }}"
-            hx-disabled-elt="this"
-            hx-trigger="click"
-            hx-swap="none"
-            hx-on::after-request="
-                if(event.detail.successful){ 
-                    window.location='/ui/collections'; 
-                } else {
-                    try { 
-                        const err=JSON.parse(event.detail.xhr.responseText); 
-                        alert('Delete failed: ' + (err.message || 'Unknown error'));
-                    } catch(e){
-                        alert('Delete failed'); 
-                    }
-                }"
-               hx-confirm="Are you sure you wish to delete your collection?"
-        >Delete</button>
-        <button type="button" onclick="window.location.href='/ui/collections'">Back</button>
-        <span id="separator"></span>
+	{# Exercises Section #}
+	<div id="exercises-wrapper">
+		<div class="section-header">
+			<h2>Exercises</h2>
+			<span class="section-header__count">{{ exercises.pagination.totalItems }} total</span>
+		</div>
 
-        <style>
-            /* Only apply to the "Actions" card to avoid affecting other .card elements */
-            .card.actions {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                flex-wrap: wrap;
-            }
+		{# Search & Filter Bar #}
+		<div class="filter-bar filter-bar--compact">
+			<form class="filter-bar__form" id="exercises-filter-form" hx-get="/ui/collections/{{ collection.id }}" hx-target="#exercises-wrapper" hx-select="#exercises-wrapper" hx-push-url="true" hx-trigger="submit">
+				<div class="filter-bar__search">
+					<input 
+						type="text" 
+						name="search" 
+						placeholder="Search by question or answer..." 
+						value="{{ filter.search or '' }}"
+						class="filter-bar__input"
+						autocomplete="off"
+					/>
+					<button type="submit" class="filter-bar__submit">Search</button>
+				</div>
+				<div class="filter-bar__options">
+					<select name="type" class="filter-bar__select">
+						<option value="">All Types</option>
+						<option value="CHOICE_SINGLE" {% if filter.type == 'CHOICE_SINGLE' %}selected{% endif %}>Single Choice</option>
+						<option value="FILL_IN_THE_BLANK" {% if filter.type == 'FILL_IN_THE_BLANK' %}selected{% endif %}>Fill in Blank</option>
+					</select>
+					<select name="sortBy" class="filter-bar__select" title="Sort by">
+						<option value="updatedAt" {% if filter.sortBy == 'updatedAt' %}selected{% endif %}>Sort: Updated</option>
+						<option value="createdAt" {% if filter.sortBy == 'createdAt' %}selected{% endif %}>Sort: Created</option>
+						<option value="question" {% if filter.sortBy == 'question' %}selected{% endif %}>Sort: Question</option>
+						<option value="totalAttempts" {% if filter.sortBy == 'totalAttempts' %}selected{% endif %}>Sort: Attempts</option>
+					</select>
+					<select name="sortOrder" class="filter-bar__select" title="Sort order">
+						<option value="desc" {% if filter.sortOrder == 'desc' %}selected{% endif %}>Descending</option>
+						<option value="asc" {% if filter.sortOrder == 'asc' %}selected{% endif %}>Ascending</option>
+					</select>
+					<select name="hasImage" class="filter-bar__select">
+						<option value="">📷 Any</option>
+						<option value="has" {% if filter.hasImage == 'has' %}selected{% endif %}>📷 With Image</option>
+						<option value="none" {% if filter.hasImage == 'none' %}selected{% endif %}>📷 No Image</option>
+					</select>
+					<select name="hasAudio" class="filter-bar__select">
+						<option value="">🎵 Any</option>
+						<option value="has" {% if filter.hasAudio == 'has' %}selected{% endif %}>🎵 With Audio</option>
+						<option value="none" {% if filter.hasAudio == 'none' %}selected{% endif %}>🎵 No Audio</option>
+					</select>
+					<select name="limit" class="filter-bar__select">
+						<option value="10" {% if exercises.pagination.limit == 10 %}selected{% endif %}>10 / page</option>
+						<option value="25" {% if exercises.pagination.limit == 25 %}selected{% endif %}>25 / page</option>
+						<option value="50" {% if exercises.pagination.limit == 50 %}selected{% endif %}>50 / page</option>
+					</select>
+					<button type="submit" class="filter-bar__submit">Apply</button>
+				</div>
+			</form>
+			<div class="filter-bar__hint">
+				Press Enter or click Apply to filter results.
+				{% if filter.search or filter.type or filter.hasImage or filter.hasAudio %}
+					— <a href="/ui/collections/{{ collection.id }}" class="filter-bar__clear">Clear filters</a>
+				{% endif %}
+			</div>
+		</div>
 
-            /* Make the separator a flexible spacer to push following controls to the right */
-            .card.actions > #separator {
-                display: block;
-                width: 0;
-                margin-left: auto;
-            }
+		{# Pagination Bar #}
+		{% if exercises.data.length %}
+			<div class="pagination">
+				<span class="pagination__info">{{ exercises.pagination.totalItems }} exercise{% if exercises.pagination.totalItems != 1 %}s{% endif %}</span>
 
-            /* Keep button spacing inside the actions card */
-            .card.actions > button {
-                margin: 0;
-            }
-        </style>
+				<div class="pagination__nav">
+					{% if exercises.pagination.hasPreviousPage %}
+						<button
+							type="button"
+							hx-get="/ui/collections/{{ collection.id }}?page={{ exercises.pagination.page - 1 }}&limit={{ exercises.pagination.limit }}{% if filter.search %}&search={{ filter.search }}{% endif %}{% if filter.type %}&type={{ filter.type }}{% endif %}{% if filter.hasImage %}&hasImage={{ filter.hasImage }}{% endif %}{% if filter.hasAudio %}&hasAudio={{ filter.hasAudio }}{% endif %}{% if filter.sortBy %}&sortBy={{ filter.sortBy }}{% endif %}{% if filter.sortOrder %}&sortOrder={{ filter.sortOrder }}{% endif %}"
+							hx-select="#exercises-wrapper"
+							hx-target="#exercises-wrapper"
+							hx-push-url="true"
+						>←</button>
+					{% else %}
+						<button type="button" disabled>←</button>
+					{% endif %}
 
-        <button
-            type="button"
-            onclick="window.location.href='/ui/exercises/create?collectionId={{ collection.id }}'"
-        >Add Exercise</button>
-        <button type="button" onclick="window.location.href='/ui/quiz/{{ collection.id }}'">Start Quiz</button>
-        <div>
-            {# <div id="dialog-trigger">Delete Collection</div> #}
-            {# <dialog id="delete-collection-dialog" aria-labelledby="delete-dialog-title"
-            aria-describedby="delete-dialog-desc">
-            <form id="delete-collection-form" action="?/delete" method="post" class="card"
-                onsubmit="return confirmDelete(event)">
-                <header id="delete-dialog-header">
-                    <h2 id="delete-dialog-title">Delete this Collection?</h2>
-                    <button type="button" id="delete-dialog-close" aria-label="Close">&times;</button>
-                </header>
+					<span class="pagination__page pagination__page--current">{{ exercises.pagination.page }}</span>
+					<span class="pagination__text">of {{ exercises.pagination.totalPages }}</span>
 
-                <p id="delete-dialog-desc">This action cannot be undone.</p>
+					{% if exercises.pagination.hasNextPage %}
+						<button
+							type="button"
+							hx-get="/ui/collections/{{ collection.id }}?page={{ exercises.pagination.page + 1 }}&limit={{ exercises.pagination.limit }}{% if filter.search %}&search={{ filter.search }}{% endif %}{% if filter.type %}&type={{ filter.type }}{% endif %}{% if filter.hasImage %}&hasImage={{ filter.hasImage }}{% endif %}{% if filter.hasAudio %}&hasAudio={{ filter.hasAudio }}{% endif %}{% if filter.sortBy %}&sortBy={{ filter.sortBy }}{% endif %}{% if filter.sortOrder %}&sortOrder={{ filter.sortOrder }}{% endif %}"
+							hx-select="#exercises-wrapper"
+							hx-target="#exercises-wrapper"
+							hx-push-url="true"
+						>→</button>
+					{% else %}
+						<button type="button" disabled>→</button>
+					{% endif %}
+				</div>
+			</div>
+		{% endif %}
 
-                <div id="delete-dialog-actions" class="dialog-actions">
-                    <button type="submit" id="delete-collection-btn" class="btn btn-error">Delete Collection</button>
-                    <button type="button" id="cancel-delete-btn" class="btn">Cancel</button>
-                </div>
-            </form>
-        </dialog> #}
-        </div>
-    </div>
-    <div 
-        id="exercises-wrapper"
-        hx-disabled-elt="#exercise-limit-select, #prev-exercises-button, #next-exercises-button">
-        <div>
-            <h2>Exercises</h2>
-            <span>{{ exercises.pagination.totalItems }} total</span>
-        </div>
-        <div>
-            <div>
-                <label for="exercise-limit-select">Show</label>
-                <select 
-                    id="exercise-limit-select" 
-                    name="limit"
-                    hx-get="/ui/collections/{{ collection.id }}"
-                    hx-trigger="change"
-                    hx-select="#exercises-wrapper"
-                    hx-target="#exercises-wrapper"
-                    hx-push-url="true"
-                    hx-disabled-elt="inherit">
-                    <option value="5" {% if exercises.pagination.limit==5 %}selected{% endif %}>5</option>
-                    <option value="10" {% if exercises.pagination.limit==10 %}selected{% endif %}>10</option>
-                    <option value="20" {% if exercises.pagination.limit==20 %}selected{% endif %}>20</option>
-                </select>
-                <span>per page</span>
-            </div>
-            <div>Total Exercises: {{ exercises.pagination.totalItems }}</div>
-            <div>Total Pages: {{ exercises.pagination.totalPages }}</div>
-            <div>
-                {% if exercises.pagination.hasPreviousPage %}
-                    <button 
-                        type="button"
-                        hx-get="/ui/collections/{{ collection.id }}?page={{ exercises.pagination.page - 1 }}&limit={{ exercises.pagination.limit }}"
-                        hx-select="#exercises-wrapper" 
-                        hx-target="#exercises-wrapper" 
-                        hx-push-url="true"
-                        hx-disabled-elt="inherit"
-                        >Previous</button>
-                {% else %}
-                    <button type="button" disabled>Previous</button>
-                {% endif %}
-
-                <span> Page: {{ exercises.pagination.page }} / {{ exercises.pagination.totalPages }}</span>
-
-                {% if exercises.pagination.hasNextPage %}
-                    <button 
-                    type="button"
-                    hx-get="/ui/collections/{{ collection.id }}?page={{ exercises.pagination.page + 1 }}&limit={{ exercises.pagination.limit }}"
-                    hx-select="#exercises-wrapper" 
-                    hx-target="#exercises-wrapper" 
-                    hx-push-url="true"
-                    hx-disabled-elt="inherit"
-                    >Next</button>
-                {% else %}
-                    <button type="button" disabled>Next</button>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Exercises Table or Empty State -->
-        {% if exercises.data.length %}
-            <div>
-                <table id="exercises-table" class="arete-table-fixed">
-                    <thead>
-                        {{ components.exerciseTableHeader() }}
-                    </thead>
-                    <tbody>
-                        {% for exercise in exercises.data %}
-                            {{ components.exerciseTableRow(exercise) }}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div>
-                <p>No exercises yet</p>
-                <p>Create one from the Actions panel to get started</p>
-            </div>
-        {% endif %}
-    </div>
-    {# {{ exercises.pagination | dump }}
-{{ exercises.data | dump }} #}
+		{# Exercises Table or Empty State #}
+		{% if exercises.data.length %}
+			<div class="table-wrapper">
+				<table id="exercises-table">
+					<thead>
+						{{ components.exerciseTableHeader() }}
+					</thead>
+					<tbody>
+						{% for exercise in exercises.data %}
+							{{ components.exerciseTableRow(exercise) }}
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		{% else %}
+			<div class="card">
+				<div class="empty-state">
+					{% if filter.search or filter.type %}
+						<div class="empty-state__icon">🔍</div>
+						<div class="empty-state__title">No exercises found</div>
+						<p class="empty-state__text">Try adjusting your search or <a href="/ui/collections/{{ collection.id }}">clear filters</a>.</p>
+					{% else %}
+						<div class="empty-state__icon">📝</div>
+						<div class="empty-state__title">No exercises yet</div>
+						<p class="empty-state__text">Click "+ Add Exercise" above to create your first one.</p>
+					{% endif %}
+				</div>
+			</div>
+		{% endif %}
+	</div>
 {% endblock %}

@@ -1,60 +1,103 @@
 {% macro collectionTableHeader() %}
 	<tr>
-		<th>Name</th>
-		<th>Description</th>
-		<th>Owner</th>
-		{# <th>ID</th> #}
-		{# <th>Created At</th>
-    <th>Updated At</th> #}
-		<th>Exercises</th>
-		<th>Attempts</th>
+		<th class="col-name">Name</th>
+		<th class="col-description hide-mobile">Description</th>
+		<th class="col-exercises">Exercises</th>
+		<th class="col-coverage">Coverage</th>
+		<th class="col-attempts hide-tablet">Attempts</th>
+		<th class="col-actions">Actions</th>
 	</tr>
 {% endmacro %}
 
 {% macro collectionTableRow(collectionUnit) %}
-	<tr
-		hx-get="/ui/collections/{{ collectionUnit.id }}"
-		hx-trigger="click"
-		hx-target="body"
-		hx-swap="innerHTML"
-		hx-push-url="true"
-	>
-		<td>{{ collectionUnit.name }}</td>
-		<td>{{ collectionUnit.description }}</td>
-		<td>{{ collectionUnit.user.name or "N/A" }}</td>
-		{# <td>{{ collectionUnit.id }}</td> #}
-		{# <td>{{ collectionUnit.createdAt }}</td>
-    <td>{{ collectionUnit.updatedAt }}</td> #}
-		<td>{{ collectionUnit.exerciseCount or 0 }}</td>
-		<td>{{ collectionUnit.attemptCount or 0 }}</td>
+	<tr>
+		<td class="col-name">
+			<a href="/ui/collections/{{ collectionUnit.id }}" class="cell-link">
+				<div class="cell-primary">{{ collectionUnit.name }}</div>
+				<div class="cell-secondary hide-desktop">{{ collectionUnit.user.name or "—" }}</div>
+			</a>
+		</td>
+		<td class="col-description hide-mobile">
+			<span class="text-truncate">{{ collectionUnit.description or "—" }}</span>
+		</td>
+		<td class="col-exercises text-center">{{ collectionUnit.exerciseCount or 0 }}</td>
+		<td class="col-coverage text-center">
+			<span class="coverage-badge {% if (collectionUnit.coverage | int) >= 75 %}coverage-badge--success{% elif (collectionUnit.coverage | int) >= 25 %}coverage-badge--warning{% endif %}">
+				{{ collectionUnit.coverage or 0 }}%
+			</span>
+		</td>
+		<td class="col-attempts text-center hide-tablet">{{ collectionUnit.attemptCount or 0 }}</td>
+		<td class="col-actions">
+			<a href="/ui/collections/{{ collectionUnit.id }}" class="table-action-btn" title="View">👁️</a>
+			<a href="/ui/quiz/{{ collectionUnit.id }}" class="table-action-btn table-action-btn--primary" title="Start Quiz">▶</a>
+		</td>
 	</tr>
 {% endmacro %}
 
 {% macro exerciseTableHeader() %}
 	<tr>
-		{# <th>ID</th> #}
-		<th>Question</th>
-		<th>Correct Answer</th>
-		<th>Type</th>
-		<th>Total Attempts</th>
-		<th>Correct Attempts</th>
+		<th class="col-question">Question</th>
+		<th class="col-answer hide-mobile">Answer</th>
+		<th class="col-type hide-tablet">Type</th>
+		<th class="col-media hide-tablet">Media</th>
+		<th class="col-accuracy">Accuracy</th>
+		<th class="col-actions">Actions</th>
 	</tr>
 {% endmacro %}
 
 {% macro exerciseTableRow(exerciseUnit) %}
-	<tr
-		hx-get="/ui/exercises/{{ exerciseUnit.id }}"
-		hx-trigger="click"
-		hx-target="body"
-		hx-swap="innerHTML"
-		hx-push-url="true"
-	>
-		{# <td>{{ exerciseUnit.id }}</td> #}
-		<td>{{ exerciseUnit.question }}</td>
-		<td>{{ exerciseUnit.correctAnswer }}</td>
-		<td>{{ exerciseUnit.type }}</td>
-		<td>{{ exerciseUnit.totalAttempts }}</td>
-		<td>{{ exerciseUnit.correctAttempts }}</td>
+	{% set total = exerciseUnit.totalAttempts or 0 %}
+	{% set correct = exerciseUnit.correctAttempts or 0 %}
+	{% set accuracy = (correct / total * 100) if total > 0 else 0 %}
+	<tr>
+		<td class="col-question">
+			<a href="/ui/exercises/{{ exerciseUnit.id }}" class="cell-link">
+				<div class="cell-primary text-truncate">{{ exerciseUnit.question | truncate(60) }}</div>
+			</a>
+			<div class="cell-secondary hide-desktop">
+			{% if exerciseUnit.type == 'CHOICE_SINGLE' %}Choice{% else %}Fill-in{% endif %}
+			{% if exerciseUnit.imageUrl or exerciseUnit.audioUrl %}
+					{% if exerciseUnit.imageUrl %}<span class="cell-secondary__media">📷</span>{% endif %}
+					{% if exerciseUnit.audioUrl %}<span class="cell-secondary__media">🎵</span>{% endif %}
+				{% endif %}
+				{% if total > 0 %}<span class="cell-secondary__stats">{{ correct }}/{{ total }}</span>{% endif %}
+			</div>
+		</td>
+		<td class="col-answer hide-mobile">
+			<span class="text-truncate">{{ exerciseUnit.correctAnswer | truncate(30) }}</span>
+		</td>
+		<td class="col-type hide-tablet">
+			<span class="badge badge--type">
+				{% if exerciseUnit.type == 'CHOICE_SINGLE' %}Choice{% else %}Fill-in{% endif %}
+			</span>
+		</td>
+		<td class="col-media hide-tablet">
+			<span class="media-indicators">
+				{% if exerciseUnit.imageUrl %}
+					<span class="media-indicator media-indicator--image" title="Has image">📷</span>
+				{% endif %}
+				{% if exerciseUnit.audioUrl %}
+					<span class="media-indicator media-indicator--audio" title="Has audio">🎵</span>
+				{% endif %}
+				{% if not exerciseUnit.imageUrl and not exerciseUnit.audioUrl %}
+					<span class="media-indicator media-indicator--none">—</span>
+				{% endif %}
+			</span>
+		</td>
+		<td class="col-accuracy text-center">
+			{% if total > 0 %}
+				<span class="accuracy-display {% if accuracy >= 75 %}accuracy--good{% elif accuracy >= 50 %}accuracy--medium{% else %}accuracy--poor{% endif %}">
+					{{ accuracy | round }}%
+				</span>
+				<span class="cell-secondary">{{ correct }}/{{ total }}</span>
+			{% else %}
+				<span class="text-muted">—</span>
+			{% endif %}
+		</td>
+		<td class="col-actions">
+			<a href="/ui/exercises/{{ exerciseUnit.id }}" class="table-action-btn" title="View">👁️</a>
+			<a href="/ui/exercises/{{ exerciseUnit.id }}/edit" class="table-action-btn" title="Edit">✏️</a>
+		</td>
 	</tr>
 {% endmacro %}
 

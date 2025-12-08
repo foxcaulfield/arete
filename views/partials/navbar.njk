@@ -1,33 +1,76 @@
-<nav class="navbar">
+<nav class="navbar" x-data="{ open: false, colorOpen: false }">
   <div class="navbar__brand">
     <a href="/ui">Arete</a>
   </div>
-  <ul class="navbar__links">
-    <li>
-      <a href="/ui">Home</a>
-    </li>
+
+  <button class="navbar__toggle" aria-label="Toggle menu" @click="open = !open">
+    <span class="navbar__toggle-bar"></span>
+    <span class="navbar__toggle-bar"></span>
+    <span class="navbar__toggle-bar"></span>
+  </button>
+
+  <ul class="navbar__links" :class="{ 'navbar__links--open': open }">
+    <li><a href="/ui" data-nav="home">Home</a></li>
     {% if not isAuthenticated %}
-      <li>
-        <a href="/ui/auth/login">Login</a>
-      </li>
-      <li>
-        <a href="/ui/auth/signup">Sign up</a>
-      </li>
+      <li><a href="/ui/auth/login" data-nav="login">Login</a></li>
+      <li><a href="/ui/auth/signup" data-nav="signup">Sign up</a></li>
     {% endif %}
     {% if isAuthenticated %}
+      <li><a href="/ui/dashboard" data-nav="dashboard">Dashboard</a></li>
+      <li><a href="/ui/collections" data-nav="collections">Collections</a></li>
+      <li><a href="/ui/profile" data-nav="profile">Profile</a></li>
+      {% if isAdmin %}
+        <li><a href="/ui/admin" data-nav="admin" class="navbar__link--admin">Admin</a></li>
+      {% endif %}
       <li>
-        <a href="/ui/collections">Collections</a>
-      </li>
-      <li>
-        <a href="/ui/profile">Profile</a>
-      </li>
-      <li>
-        <a 
-        hx-post="/api/auth/sign-out" 
-        hx-swap="none"
-        hx-on::after-request="window.location='/ui/auth/login'"
-      >Sign Out</a>
+        <a class="navbar__link--signout" hx-post="/api/auth/sign-out" hx-swap="none"
+          hx-on::after-request="toast.info('Signed out'); setTimeout(function(){ window.location='/ui/auth/login'; }, 600);">Sign Out</a>
       </li>
     {% endif %}
+    <li class="navbar__theme-controls">
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle dark/light">
+        <span class="theme-toggle__icon theme-toggle__icon--light">☀️</span>
+        <span class="theme-toggle__icon theme-toggle__icon--dark">🌙</span>
+      </button>
+      <div class="color-picker" @click.away="colorOpen = false">
+        <button class="color-picker__trigger" @click="colorOpen = !colorOpen" aria-label="Change accent color" title="Change color">
+          <span class="color-picker__swatch"></span>
+        </button>
+        <div class="color-picker__dropdown" :class="{ 'color-picker__dropdown--open': colorOpen }">
+          <button class="color-picker__option" data-color="pink" onclick="setAccentColor('pink')" title="Pink"></button>
+          <button class="color-picker__option" data-color="purple" onclick="setAccentColor('purple')" title="Purple"></button>
+          <button class="color-picker__option" data-color="violet" onclick="setAccentColor('violet')" title="Violet"></button>
+          <button class="color-picker__option" data-color="indigo" onclick="setAccentColor('indigo')" title="Indigo"></button>
+          <button class="color-picker__option" data-color="blue" onclick="setAccentColor('blue')" title="Blue"></button>
+          <button class="color-picker__option" data-color="azure" onclick="setAccentColor('azure')" title="Azure"></button>
+          <button class="color-picker__option" data-color="cyan" onclick="setAccentColor('cyan')" title="Cyan"></button>
+          <button class="color-picker__option" data-color="jade" onclick="setAccentColor('jade')" title="Jade"></button>
+          <button class="color-picker__option" data-color="green" onclick="setAccentColor('green')" title="Green"></button>
+          <button class="color-picker__option" data-color="amber" onclick="setAccentColor('amber')" title="Amber"></button>
+          <button class="color-picker__option" data-color="pumpkin" onclick="setAccentColor('pumpkin')" title="Pumpkin"></button>
+          <button class="color-picker__option" data-color="orange" onclick="setAccentColor('orange')" title="Orange"></button>
+          <button class="color-picker__option" data-color="red" onclick="setAccentColor('red')" title="Red"></button>
+        </div>
+      </div>
+    </li>
   </ul>
 </nav>
+
+<script>
+(function() {
+  var path = window.location.pathname;
+  var links = document.querySelectorAll('.navbar__links a[data-nav]');
+  links.forEach(function(link) {
+    var nav = link.getAttribute('data-nav');
+    var isActive = false;
+    if (nav === 'home' && (path === '/ui' || path === '/ui/')) isActive = true;
+    else if (nav === 'dashboard' && path.indexOf('/dashboard') !== -1 && path.indexOf('/admin') === -1) isActive = true;
+    else if (nav === 'collections' && (path.indexOf('/collections') !== -1 || path.indexOf('/exercises') !== -1 || path.indexOf('/quiz') !== -1) && path.indexOf('/admin') === -1) isActive = true;
+    else if (nav === 'profile' && path.indexOf('/profile') !== -1) isActive = true;
+    else if (nav === 'admin' && path.indexOf('/admin') !== -1) isActive = true;
+    else if (nav === 'login' && path.indexOf('/login') !== -1) isActive = true;
+    else if (nav === 'signup' && path.indexOf('/signup') !== -1) isActive = true;
+    if (isActive) link.classList.add('navbar__link--active');
+  });
+})();
+</script>

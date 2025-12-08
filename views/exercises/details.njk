@@ -1,48 +1,201 @@
 {% extends "layouts/base.njk" %}
+
 {% block content %}
-  <h1>Exercise</h1>
-  <div class="card">
-    <div><strong>Type:</strong> {{ exercise.type }}</div>
-    <div><strong>Question:</strong> {{ exercise.question }}</div>
-    <div><strong>Correct Answer:</strong> {{ exercise.correctAnswer }}</div>
-    {% if exercise.additionalCorrectAnswers and exercise.additionalCorrectAnswers.length %}
-      <div><strong>Also correct:</strong> {{ exercise.additionalCorrectAnswers | join(', ') }}</div>
-    {% endif %}
-    {% if exercise.distractors and exercise.distractors.length %}
-      <div><strong>Distractors:</strong> {{ exercise.distractors | join(', ') }}</div>
-    {% endif %}
-    {% if exercise.translation %}<div><strong>Translation:</strong> {{ exercise.translation }}</div>{% endif %}
-    {% if exercise.explanation %}<div><strong>Explanation:</strong> {{ exercise.explanation }}</div>{% endif %}
-    {% if exercise.imageUrl %}
-    	{# const safeType = encodeURIComponent(fileType);
-				const safeName = encodeURIComponent(filename);
-				const response = await this.request("GET", `/exercises/files/${safeType}/${safeName}`);
-				return response; #}
-      <div class="mt"><img 
-        style="max-width: 200px;"
-        src="/exercises/files/image/{{ exercise.imageUrl }}" alt="exercise image" style="max-width:100%"/></div>
-    {% endif %}
-    {% if exercise.audioUrl %}
-      <div class="mt"><audio controls src="/exercises/files/audio/{{ exercise.audioUrl }}"></audio></div>
-    {% endif %}
-    <div class="mt">
-      <a href="/ui/exercises/{{ exercise.id }}/edit">Edit</a>
-      <button
-        type="button"
-        hx-delete="/exercises/delete/{{ exercise.id }}"
-        hx-swap="none"
-        hx-disabled-elt="this"
-        hx-confirm="Delete this exercise?"
-        hx-on::after-request="
-          if (event.detail.xhr.status===200 || event.detail.xhr.status===204) {
-            window.location='/ui/collections/' + '{{ exercise.collectionId }}';
-          } else {
-            try { const err=JSON.parse(event.detail.xhr.responseText); alert(err.message||'Delete failed'); }
-            catch(e){ alert('Delete failed'); }
-          }">
-        Delete
-      </button>
-      <button type="button" onclick="window.location.href='/ui/collections/{{ exercise.collectionId }}'">Back to collection</button>
-    </div>
-  </div>
+	{# Page Header with Back Button #}
+	<div class="page-header page-header--simple">
+		<a href="/ui/collections/{{ exercise.collectionId }}" class="btn-back">← Back to Collection</a>
+	</div>
+
+	<div class="card exercise-details">
+		{# Header with title and stats #}
+		<div class="exercise-details__header">
+			<div class="exercise-details__header-main">
+				<div class="exercise-details__badges">
+					<span class="badge badge--type">
+						{% if exercise.type == 'CHOICE_SINGLE' %}Single Choice{% else %}Fill in Blank{% endif %}
+					</span>
+					{% if exercise.isActive %}
+						<span class="badge badge--success">Active</span>
+					{% else %}
+						<span class="badge badge--muted">Inactive</span>
+					{% endif %}
+				</div>
+				<h1 class="exercise-details__title">{{ exercise.question | truncate(80) }}</h1>
+			</div>
+			<div class="exercise-details__header-stats">
+				<div class="mini-stat">
+					<span class="mini-stat__value">{{ exercise.totalAttempts or 0 }}</span>
+					<span class="mini-stat__label">Attempts</span>
+				</div>
+				<div class="mini-stat {% if exercise.totalAttempts > 0 %}{% if ((exercise.correctAttempts / exercise.totalAttempts) * 100) >= 75 %}mini-stat--success{% elif ((exercise.correctAttempts / exercise.totalAttempts) * 100) >= 50 %}mini-stat--warning{% endif %}{% endif %}">
+					<span class="mini-stat__value">
+						{% if exercise.totalAttempts > 0 %}
+							{{ ((exercise.correctAttempts / exercise.totalAttempts) * 100) | round }}%
+						{% else %}
+							—
+						{% endif %}
+					</span>
+					<span class="mini-stat__label">Accuracy</span>
+				</div>
+			</div>
+		</div>
+
+		{# Main content #}
+		<div class="exercise-details__body">
+			{# Question & Answer Section - Side by side on desktop #}
+			<div class="detail-grid">
+				<div class="detail-section">
+					<h2 class="detail-section__label">Question</h2>
+					<p class="detail-section__content detail-section__content--large">{{ exercise.question }}</p>
+					{% if exercise.translation %}
+						<p class="detail-section__translation">{{ exercise.translation }}</p>
+					{% endif %}
+				</div>
+				<div class="detail-section">
+					<h2 class="detail-section__label">Correct Answer</h2>
+					<p class="detail-section__content detail-section__content--highlight">{{ exercise.correctAnswer }}</p>
+					{% if exercise.additionalCorrectAnswers and exercise.additionalCorrectAnswers.length %}
+						<div class="detail-section__also">
+							<span class="detail-section__also-label">Also accepted:</span>
+							{% for answer in exercise.additionalCorrectAnswers %}
+								<span class="tag tag--success tag--sm">{{ answer }}</span>
+							{% endfor %}
+						</div>
+					{% endif %}
+				</div>
+			</div>
+
+			{# Distractors #}
+			{% if exercise.distractors and exercise.distractors.length %}
+				<div class="detail-section">
+					<h2 class="detail-section__label">Distractors (Wrong Choices)</h2>
+					<div class="detail-section__tags">
+						{% for distractor in exercise.distractors %}
+							<span class="tag tag--danger">{{ distractor }}</span>
+						{% endfor %}
+					</div>
+				</div>
+			{% endif %}
+
+			{# Explanation #}
+			{% if exercise.explanation %}
+				<div class="detail-section">
+					<h2 class="detail-section__label">Explanation</h2>
+					<div class="callout callout--info">
+						<p>{{ exercise.explanation }}</p>
+					</div>
+				</div>
+			{% endif %}
+
+			{# Media - Redesigned to match form style #}
+			{% if exercise.imageUrl or exercise.audioUrl %}
+				<div class="detail-section">
+					<h2 class="detail-section__label">Media Attachments</h2>
+					<div class="media-cards">
+						{% if exercise.imageUrl %}
+							<div class="media-card" onclick="openImageModal('/exercises/files/image/{{ exercise.imageUrl }}')">
+								<div class="media-card__header">
+									<span class="media-card__icon">📷</span>
+									<span class="media-card__title">Image</span>
+								</div>
+								<div class="media-card__preview">
+									<img src="/exercises/files/image/{{ exercise.imageUrl }}" alt="Exercise image" />
+									<div class="media-card__overlay">
+										<span>🔍 Click to preview</span>
+									</div>
+								</div>
+							</div>
+						{% endif %}
+						{% if exercise.audioUrl %}
+							<div class="media-card">
+								<div class="media-card__header">
+									<span class="media-card__icon">🎵</span>
+									<span class="media-card__title">Audio</span>
+								</div>
+								<div class="media-card__player">
+									<audio controls src="/exercises/files/audio/{{ exercise.audioUrl }}"></audio>
+								</div>
+							</div>
+						{% endif %}
+					</div>
+				</div>
+			{% endif %}
+
+			{# Meta info #}
+			<div class="detail-section detail-section--meta">
+				<div class="detail-meta">
+					<span class="detail-meta__label">Created</span>
+					<span class="detail-meta__value">{{ exercise.createdAt | date('MMM D, YYYY') }}</span>
+				</div>
+				<div class="detail-meta">
+					<span class="detail-meta__label">Updated</span>
+					<span class="detail-meta__value">{{ exercise.updatedAt | date('MMM D, YYYY') }}</span>
+				</div>
+				{% if exercise.totalAttempts > 0 %}
+					<div class="detail-meta">
+						<span class="detail-meta__label">Last Practiced</span>
+						<span class="detail-meta__value">{{ exercise.lastAttemptAt | date('MMM D, YYYY') if exercise.lastAttemptAt else 'Recently' }}</span>
+					</div>
+				{% endif %}
+				<div class="detail-meta">
+					<span class="detail-meta__label">Success Rate</span>
+					<span class="detail-meta__value">{{ exercise.correctAttempts or 0 }} / {{ exercise.totalAttempts or 0 }} correct</span>
+				</div>
+			</div>
+		</div>
+
+		{# Actions footer #}
+		<div class="exercise-details__footer">
+			<div class="exercise-details__footer-secondary">
+				<a href="/ui/exercises/{{ exercise.id }}/edit" class="btn-outline">Edit</a>
+				<button
+					class="btn-outline btn-outline--danger"
+					type="button"
+					hx-delete="/exercises/delete/{{ exercise.id }}"
+					hx-swap="none"
+					hx-disabled-elt="this"
+					hx-confirm="Delete this exercise? This cannot be undone."
+					hx-on::after-request="
+						if (event.detail.xhr.status===200 || event.detail.xhr.status===204) {
+							toast.success('Exercise deleted');
+							setTimeout(function(){ window.location='/ui/collections/{{ exercise.collectionId }}'; }, 800);
+						} else {
+							try { const err=JSON.parse(event.detail.xhr.responseText); toast.error(err.message||'Delete failed'); }
+							catch(e){ toast.error('Delete failed'); }
+						}"
+				>Delete</button>
+			</div>
+			<div class="exercise-details__footer-primary">
+				<a href="/ui/quiz/{{ exercise.collectionId }}" class="btn-primary">▶ Practice Collection</a>
+			</div>
+		</div>
+	</div>
+
+	{# Image Modal #}
+	<div id="image-modal" class="modal" onclick="closeImageModal(event)">
+		<div class="modal__content">
+			<button class="modal__close" onclick="closeImageModal(event)">&times;</button>
+			<img id="modal-image" src="" alt="Full size image" />
+		</div>
+	</div>
+
+	<script>
+		function openImageModal(src) {
+			document.getElementById('modal-image').src = src;
+			document.getElementById('image-modal').classList.add('modal--open');
+			document.body.style.overflow = 'hidden';
+		}
+		function closeImageModal(event) {
+			if (event.target.id === 'image-modal' || event.target.classList.contains('modal__close')) {
+				document.getElementById('image-modal').classList.remove('modal--open');
+				document.body.style.overflow = '';
+			}
+		}
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape') {
+				document.getElementById('image-modal').classList.remove('modal--open');
+				document.body.style.overflow = '';
+			}
+		});
+	</script>
 {% endblock %}

@@ -1,0 +1,122 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+{% if error %}
+	<div class="admin-error">
+		<span class="admin-error__icon">🚫</span>
+		<h1>Access Denied</h1>
+		<p>You don't have permission to access the admin panel.</p>
+		<a href="/ui/dashboard" class="btn btn--primary">Back to Dashboard</a>
+	</div>
+{% else %}
+<div class="admin-page">
+	<div class="admin-header">
+		<div class="admin-header__nav">
+			<a href="/ui/admin" class="admin-header__back">← Admin</a>
+		</div>
+		<h1 class="admin-header__title">
+			<span class="admin-header__icon">📚</span>
+			All Collections
+		</h1>
+		<p class="admin-header__subtitle">{{ pagination.total }} collections across all users</p>
+	</div>
+
+	<div class="admin-toolbar">
+		<form class="admin-search" action="/ui/admin/collections" method="get">
+			<input 
+				type="search" 
+				name="search" 
+				class="admin-search__input" 
+				placeholder="Search by name, description, or owner..." 
+				value="{{ search }}"
+			/>
+			<button type="submit" class="admin-search__btn">Search</button>
+			{% if search %}
+				<a href="/ui/admin/collections" class="admin-search__clear">Clear</a>
+			{% endif %}
+		</form>
+	</div>
+
+	<div class="admin-table-wrap">
+		<table class="admin-table">
+			<thead>
+				<tr>
+					<th>Collection</th>
+					<th>Owner</th>
+					<th>Exercises</th>
+					<th>Updated</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for collection in collections %}
+				<tr>
+					<td>
+						<div class="admin-table__collection">
+							<span class="admin-table__name">{{ collection.name }}</span>
+							{% if collection.description %}
+								<span class="admin-table__desc">{{ collection.description | truncate(50) }}</span>
+							{% endif %}
+						</div>
+					</td>
+					<td>
+						<div class="admin-table__user">
+							<span class="admin-table__user-name">{{ collection.user.name }}</span>
+							<span class="admin-table__user-email">{{ collection.user.email }}</span>
+						</div>
+					</td>
+					<td class="admin-table__center">
+						<span class="admin-table__count">{{ collection._count.exercises }}</span>
+					</td>
+					<td class="admin-table__muted">
+						{{ collection.updatedAt | date('short') }}
+					</td>
+					<td>
+						<div class="admin-table__actions">
+							<a href="/ui/collections/{{ collection.id }}" class="admin-btn admin-btn--small" title="View">
+								👁️
+							</a>
+						</div>
+					</td>
+				</tr>
+				{% else %}
+				<tr>
+					<td colspan="5" class="admin-table__empty">
+						{% if search %}
+							No collections found matching "{{ search }}"
+						{% else %}
+							No collections yet
+						{% endif %}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+
+	{% if pagination.totalPages > 1 %}
+	<div class="admin-pagination">
+		{% if pagination.hasPrev %}
+			<a href="/ui/admin/collections?page={{ pagination.page - 1 }}{% if search %}&search={{ search }}{% endif %}" class="admin-pagination__btn">
+				← Previous
+			</a>
+		{% else %}
+			<span class="admin-pagination__btn admin-pagination__btn--disabled">← Previous</span>
+		{% endif %}
+		
+		<span class="admin-pagination__info">
+			Page {{ pagination.page }} of {{ pagination.totalPages }}
+		</span>
+		
+		{% if pagination.hasNext %}
+			<a href="/ui/admin/collections?page={{ pagination.page + 1 }}{% if search %}&search={{ search }}{% endif %}" class="admin-pagination__btn">
+				Next →
+			</a>
+		{% else %}
+			<span class="admin-pagination__btn admin-pagination__btn--disabled">Next →</span>
+		{% endif %}
+	</div>
+	{% endif %}
+</div>
+{% endif %}
+{% endblock %}

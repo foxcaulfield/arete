@@ -2,128 +2,156 @@
 {% import "exercises/exercise-components.njk" as exerciseComponents %}
 
 {% block content %}
-	<div class="container card">
-		<h1>Edit Exercise</h1>
-		<progress id="progress" value="0" max="100"></progress>
+	{# Page Header with Back Button #}
+	<div class="page-header page-header--simple">
+		<a href="/ui/exercises/{{ exercise.id }}" class="btn-back">← Back to Exercise</a>
+	</div>
+
+	<div class="card form-card form-card--wide">
+		<div class="form-header">
+			<h1 class="form-header__title">Edit Exercise</h1>
+			<p class="form-header__subtitle">Update exercise details</p>
+		</div>
+
+		{# Progress bar for file uploads #}
+		<div class="upload-progress" id="upload-progress" style="display: none;">
+			<div class="upload-progress__bar">
+				<div class="upload-progress__fill" id="progress-fill"></div>
+			</div>
+			<span class="upload-progress__text" id="progress-text">Uploading...</span>
+		</div>
 
 		<form
 			id="exercise-edit-form"
+			class="exercise-form"
 			enctype="multipart/form-data"
 			hx-patch="/exercises/update/{{ exercise.id }}"
 			hx-encoding="multipart/form-data"
 			hx-trigger="submit"
 			hx-swap="none"
-			hx-disabled-elt="this"
+			hx-disabled-elt="button[type='submit']"
+			hx-on::before-request="
+				document.getElementById('upload-progress').style.display = 'flex';
+			"
 			hx-on::after-request="
-    if (event.detail.xhr.status === 200) {
-      window.location = '/ui/exercises/{{ exercise.id }}';
-    } else {
-      try {
-        const err = JSON.parse(event.detail.xhr.responseText);
-        const fields = err.fields ? Object.values(err.fields).flat().join(', ') : '';
-        document.getElementById('exercise-edit-errors').textContent =
-          (err.message || 'Update failed') + (fields ? ' — ' + fields : '');
-      } catch(e) {
-        document.getElementById('exercise-edit-errors').textContent = 'Update failed';
-      }
-    }"
+				document.getElementById('upload-progress').style.display = 'none';
+				if (event.detail.xhr.status === 200) {
+					toast.success('Exercise updated!');
+					setTimeout(function() { window.location = '/ui/exercises/{{ exercise.id }}'; }, 500);
+				} else {
+					try {
+						const err = JSON.parse(event.detail.xhr.responseText);
+						const fields = err.fields ? Object.values(err.fields).flat().join(', ') : '';
+						toast.error((err.message || 'Update failed') + (fields ? ': ' + fields : ''));
+					} catch(e) {
+						toast.error('Update failed');
+					}
+				}"
 			hx-on::xhr:progress="
-                    const progress = document.getElementById('progress');
-                    progress.value = (event.detail.loaded / event.detail.total) * 100;
-                "
+				const pct = Math.round((event.detail.loaded / event.detail.total) * 100);
+				document.getElementById('progress-fill').style.width = pct + '%';
+				document.getElementById('progress-text').textContent = pct + '% uploaded';
+			"
 		>
-			<div class="form-content">
-				{# GRID ITEM A #}
-				<div class="grid-item" style="--area: a;">
-					{{
-						exerciseComponents.collectionIdInput(
-						    id=collectionId or exercise.collectionId,
-						    name="collectionId"
-						)
-					}}
-				</div>
+			{# Hidden collection ID #}
+			<input type="hidden" name="collectionId" value="{{ exercise.collectionId }}" />
 
-				{# GRID ITEM O #}
-				<div class="grid-item" style="--area: o;">
-					{{
-						exerciseComponents.typeSelect(
-						    name="type",
-						    selected=exercise.type
-						)
-					}}
+			{# Question & Answer Section #}
+			<div class="form-section">
+				<div class="form-section__header">
+					<h2 class="form-section__title">Question & Answer</h2>
+					{{ exerciseComponents.typeSelect(name="type", selected=exercise.type) }}
 				</div>
-
-				{# GRID ITEM B #}
-				<div class="grid-item flex-row" style="--area: b;">
-					{{ exerciseComponents.questionText(name="question", value=exercise.question) }}
-					{{ exerciseComponents.translationText(name="translation", value=exercise.translation) }}
+				<div class="form-row">
+					{{ exerciseComponents.questionInput(name="question", value=exercise.question) }}
+					{{ exerciseComponents.translationInput(name="translation", value=exercise.translation) }}
 				</div>
-
-				{# GRID ITEM C #}
-				<div class="grid-item" style="--area: c;">
+				<div class="form-row">
 					{{ exerciseComponents.correctAnswerInput(name="correctAnswer", value=exercise.correctAnswer) }}
-				</div>
-
-				{# GRID ITEM D #}
-				<div class="grid-item" style="--area: d;">
-					{# additional correct answers #}
-					{{
-						exerciseComponents.additionalCorrectAnswersInput(
-						    name='additionalCorrectAnswers',
-						    label='Additional Correct Answers',
-						    placeholder='paris, PARIS, Île de France...',
-						    value=exercise.additionalCorrectAnswers
-						)
-					}}
-				</div>
-
-				{# GRID ITEM E #}
-				<div class="grid-item" style="--area: e;">
-					{# distractors #}
-					{{
-						exerciseComponents.distractionAnswersInput(
-						    name='distractors',
-						    label='Wrong Answers',
-						    placeholder='london, berlin, madrid...',
-						    value=exercise.distractors
-						)
-					}}
-				</div>
-
-				{# GRID ITEM F #}
-				<div class="grid-item flex-row" style="--area: f;">
-					{{ exerciseComponents.explanationText(name="explanation", value=exercise.explanation) }}
-					{{
-						exerciseComponents.imageInput(
-						    name="image",
-						    label="Image (optional)",
-						    withClearButton=false,
-						    withSetNullButton=true,
-						    currentImageUrl=exercise.imageUrl
-						)
-					}}
-					{{
-						exerciseComponents.audioInput(
-						    name="audio",
-						    label="Audio (optional)",
-						    withClearButton=false,
-						    withSetNullButton=true,
-						    currentAudioUrl=exercise.audioUrl
-						)
-					}}
-				</div>
-
-				{# GRID ITEM BUTTONS #}
-				<div class="grid-item" style="--area: btn;">
-					{{ exerciseComponents.actionButtons(
-						collectionId or exercise.collectionId, 
-						submitLabel="Save Changes", 
-						cancelLabel="Cancel", 
-						cancelUrl=EXERCISES_UI_ENDPOINT ~ "/" ~ exercise.id) }}
 				</div>
 			</div>
 
-			<div id="exercise-edit-errors" class="error mt"></div>
+			{# Answer Variations #}
+			<div class="form-section">
+				<h2 class="form-section__title">Answer Variations</h2>
+				<div class="form-row form-row--half">
+					{{ exerciseComponents.tagsInput(
+						name='additionalCorrectAnswers',
+						label='Also Accept These Answers',
+						placeholder='Type and press Enter...',
+						value=exercise.additionalCorrectAnswers,
+						tagVariant='success'
+					) }}
+					{{ exerciseComponents.tagsInput(
+						name='distractors',
+						label='Wrong Choices (Distractors)',
+						placeholder='Type and press Enter...',
+						value=exercise.distractors,
+						tagVariant='danger'
+					) }}
+				</div>
+			</div>
+
+			{# Media Attachments #}
+			<div class="form-section">
+				<h2 class="form-section__title">Media Attachments</h2>
+				<p class="form-section__hint">Optional image and audio to accompany the exercise</p>
+				<div class="form-row form-row--half">
+					{{ exerciseComponents.imageUpload(
+						name="image",
+						currentUrl=exercise.imageUrl,
+						showRemove=true
+					) }}
+					{{ exerciseComponents.audioUpload(
+						name="audio",
+						currentUrl=exercise.audioUrl,
+						showRemove=true
+					) }}
+				</div>
+			</div>
+
+			{# Explanation #}
+			<div class="form-section">
+				<h2 class="form-section__title">Explanation</h2>
+				{{ exerciseComponents.explanationInput(name="explanation", value=exercise.explanation) }}
+			</div>
+
+			{# Form Actions #}
+			<div class="form-actions">
+				<a href="/ui/exercises/{{ exercise.id }}" class="btn-outline">Cancel</a>
+				<button type="submit" class="btn-primary">Save Changes</button>
+			</div>
 		</form>
 	</div>
+
+	{# Image Preview Modal #}
+	<div id="image-modal" class="modal" onclick="closeImageModal(event)">
+		<div class="modal__content">
+			<button class="modal__close" onclick="closeImageModal(event)">&times;</button>
+			<img id="modal-image" src="" alt="Full size image" />
+		</div>
+	</div>
+
+	<script>
+		function openImageModal(src) {
+			document.getElementById('modal-image').src = src;
+			document.getElementById('image-modal').classList.add('modal--open');
+			document.body.style.overflow = 'hidden';
+		}
+		function closeImageModal(event) {
+			if (event.target.id === 'image-modal' || event.target.classList.contains('modal__close')) {
+				document.getElementById('image-modal').classList.remove('modal--open');
+				document.body.style.overflow = '';
+			}
+		}
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape') {
+				const modal = document.getElementById('image-modal');
+				if (modal) {
+					modal.classList.remove('modal--open');
+					document.body.style.overflow = '';
+				}
+			}
+		});
+	</script>
 {% endblock %}

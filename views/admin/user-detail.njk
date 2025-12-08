@@ -1,0 +1,262 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+{% if error %}
+	<div class="admin-error">
+		<span class="admin-error__icon">🚫</span>
+		<h1>{{ error }}</h1>
+		<p>{% if error == "Access denied" %}You don't have permission to access the admin panel.{% else %}The requested user could not be found.{% endif %}</p>
+		<a href="/ui/admin/users" class="btn btn--primary">Back to Users</a>
+	</div>
+{% else %}
+<div class="admin-page" x-data="{ showDeleteModal: false }">
+	<div class="admin-header">
+		<div class="admin-header__nav">
+			<a href="/ui/admin/users" class="admin-header__back">← All Users</a>
+		</div>
+		<div class="admin-header__row">
+			<div class="admin-header__left">
+				<div class="user-detail-avatar">{{ user.name[0] | upper }}</div>
+				<div>
+					<h1 class="admin-header__title">{{ user.name }}</h1>
+					<p class="admin-header__subtitle">{{ user.email }}</p>
+				</div>
+			</div>
+			<div class="admin-header__actions">
+				<a href="/ui/admin/users/{{ user.id }}/edit" class="btn btn--secondary">
+					✏️ Edit
+				</a>
+				<button class="btn btn--danger" type="button" onclick="document.getElementById('delete-modal-overlay').style.display = 'flex'">
+					🗑️ Delete
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="admin-stats">
+		<div class="admin-stat">
+			<span class="admin-stat__icon">📚</span>
+			<div class="admin-stat__content">
+				<span class="admin-stat__value">{{ stats.collections }}</span>
+				<span class="admin-stat__label">Collections</span>
+			</div>
+		</div>
+		<div class="admin-stat">
+			<span class="admin-stat__icon">🎯</span>
+			<div class="admin-stat__content">
+				<span class="admin-stat__value">{{ stats.attempts }}</span>
+				<span class="admin-stat__label">Attempts</span>
+			</div>
+		</div>
+		<div class="admin-stat">
+			<span class="admin-stat__icon">✅</span>
+			<div class="admin-stat__content">
+				<span class="admin-stat__value">{{ stats.correctAttempts }}</span>
+				<span class="admin-stat__label">Correct</span>
+			</div>
+		</div>
+		<div class="admin-stat">
+			<span class="admin-stat__icon">📈</span>
+			<div class="admin-stat__content">
+				<span class="admin-stat__value">{{ stats.accuracy }}%</span>
+				<span class="admin-stat__label">Accuracy</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="admin-grid">
+		<section class="admin-section">
+			<div class="admin-section__header">
+				<h2 class="admin-section__title">User Info</h2>
+			</div>
+			<div class="user-info-list">
+				<div class="user-info-item">
+					<span class="user-info-item__label">User ID</span>
+					<code class="user-info-item__value">{{ user.id }}</code>
+				</div>
+				<div class="user-info-item">
+					<span class="user-info-item__label">Role</span>
+					<span class="user-info-item__value">
+						<span class="badge badge--{{ user.role | lower }}">{{ user.role }}</span>
+					</span>
+				</div>
+				<div class="user-info-item">
+					<span class="user-info-item__label">Status</span>
+					<span class="user-info-item__value">
+						{% if user.isActive %}
+							<span class="admin-status admin-status--active">Active</span>
+						{% else %}
+							<span class="admin-status admin-status--inactive">Inactive</span>
+						{% endif %}
+					</span>
+				</div>
+				<div class="user-info-item">
+					<span class="user-info-item__label">Joined</span>
+					<span class="user-info-item__value">{{ user.createdAt | date('long') }}</span>
+				</div>
+				{% if user.updatedAt %}
+				<div class="user-info-item">
+					<span class="user-info-item__label">Last Updated</span>
+					<span class="user-info-item__value">{{ user.updatedAt | date('long') }}</span>
+				</div>
+				{% endif %}
+			</div>
+		</section>
+
+		<section class="admin-section">
+			<div class="admin-section__header">
+				<h2 class="admin-section__title">Recent Collections</h2>
+				{% if collections.length > 0 %}
+					<a href="/ui/admin/collections?search={{ user.email }}" class="admin-section__link">View all →</a>
+				{% endif %}
+			</div>
+			{% if collections.length > 0 %}
+				<div class="user-collections-list">
+					{% for collection in collections %}
+						<a href="/ui/collections/{{ collection.id }}" class="user-collection-item">
+							<span class="user-collection-item__name">{{ collection.name }}</span>
+							<span class="user-collection-item__count">{{ collection._count.exercises }} exercises</span>
+						</a>
+					{% endfor %}
+				</div>
+			{% else %}
+				<p class="admin-section__empty">No collections yet</p>
+			{% endif %}
+		</section>
+	</div>
+
+	<section class="admin-section admin-section--full">
+		<div class="admin-section__header">
+			<h2 class="admin-section__title">Recent Attempts</h2>
+			{% if recentAttempts.length > 0 %}
+				<a href="/ui/admin/attempts?search={{ user.email }}" class="admin-section__link">View all →</a>
+			{% endif %}
+		</div>
+		{% if recentAttempts.length > 0 %}
+			<div class="admin-table-wrap">
+				<table class="admin-table">
+					<thead>
+						<tr>
+							<th>Result</th>
+							<th>Question</th>
+							<th>Collection</th>
+							<th>Answer</th>
+							<th>Date</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for attempt in recentAttempts %}
+						<tr class="{% if attempt.isCorrect %}admin-table__row--success{% else %}admin-table__row--error{% endif %}">
+							<td class="admin-table__center">
+								{% if attempt.isCorrect %}
+									<span title="Correct">✅</span>
+								{% else %}
+									<span title="Incorrect">❌</span>
+								{% endif %}
+							</td>
+							<td>
+								{% if attempt.exercise %}
+									{{ attempt.exercise.question | truncate(40) }}
+								{% else %}
+									<span class="admin-table__muted">Deleted exercise</span>
+								{% endif %}
+							</td>
+							<td class="admin-table__muted">
+								{% if attempt.exercise and attempt.exercise.collection %}
+									{{ attempt.exercise.collection.name | truncate(20) }}
+								{% else %}
+									—
+								{% endif %}
+							</td>
+							<td class="admin-table__answer">
+								<code>{{ attempt.answer | truncate(25) }}</code>
+							</td>
+							<td class="admin-table__muted">{{ attempt.createdAt | date('short') }}</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		{% else %}
+			<p class="admin-section__empty">No attempts yet</p>
+		{% endif %}
+	</section>
+
+	<!-- Delete Modal (Pico compatible using <dialog>) -->
+	<dialog id="delete-modal" aria-hidden="true">
+		<article>
+			<header>
+				<h3 class="modal__title">🗑️ Delete User</h3>
+				<button class="close" aria-label="Close" type="button" onclick="closeDeleteModal()"></button>
+			</header>
+			<div class="modal__body">
+				<p>Are you sure you want to delete <strong>{{ user.name }}</strong>?</p>
+				<p class="modal__warning">This will permanently delete:</p>
+				<ul class="modal__list">
+					<li>{{ stats.collections }} collection(s)</li>
+					<li>All exercises in those collections</li>
+					<li>{{ stats.attempts }} attempt(s)</li>
+				</ul>
+				<p class="modal__danger">This action cannot be undone!</p>
+			</div>
+			<footer>
+				<button class="btn btn--secondary" type="button" onclick="closeDeleteModal()">Cancel</button>
+				<button 
+					class="btn btn--danger"
+					id="delete-confirm-btn"
+					type="button"
+					hx-delete="/admin/users/{{ user.id }}"
+					hx-swap="none"
+					hx-disabled-elt="this"
+					hx-headers='{"Content-Type": "application/json"}'
+					hx-on::after-request="if (event.detail.xhr && (event.detail.xhr.status === 200 || event.detail.xhr.status === 204)) { toast.success('User deleted'); setTimeout(function(){ window.location='/ui/admin/users'; }, 800); } else { try { const err = JSON.parse(event.detail.xhr && event.detail.xhr.responseText || '{}'); toast.error(err.message || 'Failed to delete user'); } catch (e) { toast.error('Failed to delete user'); } }"
+				>
+					Delete User
+				</button>
+			</footer>
+		</article>
+	</dialog>
+
+	<script>
+	(function(){
+		const dialog = document.getElementById('delete-modal');
+
+		window.openDeleteModal = function(){
+			if (!dialog) return;
+			if (typeof dialog.showModal === 'function') {
+				dialog.showModal();
+			} else {
+				dialog.setAttribute('open','');
+			}
+			document.body.classList.add('modal-is-open');
+			dialog.setAttribute('aria-hidden','false');
+		}
+
+		window.closeDeleteModal = function(){
+			if (!dialog) return;
+			try { if (typeof dialog.close === 'function') dialog.close(); else dialog.removeAttribute('open'); } catch(e) {}
+			document.body.classList.remove('modal-is-open');
+			dialog.setAttribute('aria-hidden','true');
+		}
+
+		// Close when clicking backdrop (outside the article)
+		dialog.addEventListener('click', function(event){
+			const article = dialog.querySelector('article');
+			if (!article) return;
+			const rect = article.getBoundingClientRect();
+			const x = event.clientX, y = event.clientY;
+			if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+				closeDeleteModal();
+			}
+		});
+
+		// Ensure header delete button opens modal (in case Alpine not loaded)
+		const headerDelete = document.querySelector('.admin-header__actions > button.btn--danger');
+		if (headerDelete) {
+			headerDelete.addEventListener('click', function(){ openDeleteModal(); });
+		}
+	})();
+	</script>
+</div>
+{% endif %}
+{% endblock %}

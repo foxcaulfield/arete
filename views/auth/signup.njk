@@ -1,46 +1,42 @@
 {% extends "layouts/base.njk" %}
 
 {% block content %}
-    <form 
-    hx-post="/api/auth/sign-up/email"
-    hx-trigger="submit"
-    hx-swap="none"
-    hx-on::after-request="
-        if(event.detail.xhr.status===200){ 
-            window.location='/ui/profile'; 
-        } else {
-            try { 
-                const err=JSON.parse(event.detail.xhr.responseText); 
-                document.getElementById('form-errors').textContent = err.message || 'Sign up failed'; 
-            } catch(e){
-                document.getElementById('form-errors').textContent='Sign up failed'; 
-            }
-        }"
-    hx-on::response-error="
-        try { 
-            const err = JSON.parse(event.detail.xhr.responseText);
-            document.getElementById('form-errors').textContent = err.message || 'Sign up failed';
-        } catch(e){
-            document.getElementById('form-errors').textContent='Sign up failed';
-        }"
-    >
-        <h1>Sign Up</h1>
-        {% if error %}
-            <div class="error-message">{{ error }}</div>
-        {% endif %}
-        <div class="form-group">
-            <label for="name">Username</label>
-            <input type="text" id="name" name="name" required/>
-        </div>
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input type="text" id="email" name="email" required/>
-        </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required/>
-        </div>
-        <div id="form-errors" class="error"></div>
-        <button type="submit" class="btn">Sign Up</button>
-    </form>
+	<div class="card auth-card">
+		<h1>Sign Up</h1>
+		<form
+			hx-post="/api/auth/sign-up/email"
+			hx-trigger="submit"
+			hx-swap="none"
+			hx-on::after-request="
+				if(event.detail.xhr.status===200){
+					toast.success('Account created!');
+					setTimeout(function(){ window.location='/ui/profile'; }, 600);
+				} else {
+					try {
+						const err=JSON.parse(event.detail.xhr.responseText);
+						toast.error(err.message || 'Sign up failed');
+					} catch(e){
+						toast.error('Sign up failed');
+					}
+				}"
+		>
+			{% if error %}
+				<div class="text-danger mb">{{ error }}</div>
+			{% endif %}
+			<div class="form-group">
+				<label for="name">Username</label>
+				<input type="text" id="name" name="name" placeholder="johndoe" required/>
+			</div>
+			<div class="form-group">
+				<label for="email">Email</label>
+				<input type="email" id="email" name="email" placeholder="you@example.com" required/>
+			</div>
+			<div class="form-group">
+				<label for="password">Password</label>
+				<input type="password" id="password" name="password" placeholder="••••••••" required/>
+			</div>
+			<button type="submit" class="primary">Create Account</button>
+		</form>
+		<p class="auth-footer">Already have an account? <a href="/ui/auth/login">Login</a></p>
+	</div>
 {% endblock %}

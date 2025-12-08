@@ -2,99 +2,150 @@
 {% import "exercises/exercise-components.njk" as exerciseComponents %}
 
 {% block content %}
-	<div class="container card">
-		<h1>Create New Exercise</h1>
-		<progress id="progress" value="0" max="100"></progress>
+	{# Page Header with Back Button #}
+	<div class="page-header page-header--simple">
+		<a href="/ui/collections/{{ collectionId }}" class="btn-back">← Back to Collection</a>
+	</div>
+
+	<div class="card form-card form-card--wide">
+		<div class="form-header">
+			<h1 class="form-header__title">Create New Exercise</h1>
+			<p class="form-header__subtitle">Add a new exercise to your collection</p>
+		</div>
+
+		{# Progress bar for file uploads #}
+		<div class="upload-progress" id="upload-progress" style="display: none;">
+			<div class="upload-progress__bar">
+				<div class="upload-progress__fill" id="progress-fill"></div>
+			</div>
+			<span class="upload-progress__text" id="progress-text">Uploading...</span>
+		</div>
 
 		<form
 			id="exercise-create-form"
+			class="exercise-form"
 			hx-post="/exercises/create"
 			hx-encoding="multipart/form-data"
 			hx-trigger="submit"
 			hx-swap="none"
+			hx-disabled-elt="button[type='submit']"
+			hx-on::before-request="
+				document.getElementById('upload-progress').style.display = 'flex';
+			"
 			hx-on::after-request="
-                    if (event.detail.successful) {
-                        try {
-                            const ex = JSON.parse(event.detail.xhr.responseText);
-                            // Prefer redirect to its collection detail
-                            window.location = '/ui/collections/' + ex.collectionId;
-                        } catch(e) {
-                            // Fallback to collections page if parsing fails
-                            window.location = '/ui/collections';
-                        }
-                    } else {
-                        try {
-                            const err = JSON.parse(event.detail.xhr.responseText);
-                            const fields = err.fields ? Object.values(err.fields).flat().join(', ') : '';
-                            document.getElementById('exercise-form-errors').textContent =
-                            (err.message || 'Create failed') + (fields ? ' — ' + fields : '');
-                        } catch(e) {
-                            document.getElementById('exercise-form-errors').textContent = 'Create failed';
-                        }
-                    }"
+				document.getElementById('upload-progress').style.display = 'none';
+				if (event.detail.successful) {
+					try {
+						const ex = JSON.parse(event.detail.xhr.responseText);
+						toast.success('Exercise created!');
+						setTimeout(function() { window.location = '/ui/collections/' + ex.collectionId; }, 500);
+					} catch(e) {
+						window.location = '/ui/collections';
+					}
+				} else {
+					try {
+						const err = JSON.parse(event.detail.xhr.responseText);
+						const fields = err.fields ? Object.values(err.fields).flat().join(', ') : '';
+						toast.error((err.message || 'Create failed') + (fields ? ': ' + fields : ''));
+					} catch(e) {
+						toast.error('Create failed');
+					}
+				}"
 			hx-on::xhr:progress="
-                    const progress = document.getElementById('progress');
-                    progress.value = (event.detail.loaded / event.detail.total) * 100;
-                "
+				const pct = Math.round((event.detail.loaded / event.detail.total) * 100);
+				document.getElementById('progress-fill').style.width = pct + '%';
+				document.getElementById('progress-text').textContent = pct + '% uploaded';
+			"
 		>
-			<div class="form-content">
-				{# GRID ITEM A #}
-				<div class="grid-item" style="--area: a;">
-					{{ exerciseComponents.collectionIdInput(id=collectionId, name="collectionId") }}
+			{# Hidden collection ID #}
+			<input type="hidden" name="collectionId" value="{{ collectionId }}" />
+
+			{# Question & Answer Section #}
+			<div class="form-section">
+				<div class="form-section__header">
+					<h2 class="form-section__title">Question & Answer</h2>
+					{{ exerciseComponents.typeSelect(name="type") }}
 				</div>
-
-				{# GRID ITEM O #}
-				<div class="grid-item" style="--area: o;">{{ exerciseComponents.typeSelect(name="type") }}</div>
-
-				{# GRID ITEM B #}
-				<div class="grid-item flex-row" style="--area: b;">
-					{{ exerciseComponents.questionText(name="question") }}
-					{{ exerciseComponents.translationText(name="translation") }}
+				<div class="form-row">
+					{{ exerciseComponents.questionInput(name="question") }}
+					{{ exerciseComponents.translationInput(name="translation") }}
 				</div>
-
-				{# GRID ITEM C #}
-				<div class="grid-item" style="--area: c;">
+				<div class="form-row">
 					{{ exerciseComponents.correctAnswerInput(name="correctAnswer") }}
 				</div>
-
-				{# GRID ITEM D #}
-				<div class="grid-item" style="--area: d;">
-					{# additional correct answers #}
-					{{
-						exerciseComponents.additionalCorrectAnswersInput(
-                            name='additionalCorrectAnswers',
-                            label='Additional Correct Answers'
-						)
-					}}
-				</div>
-
-				{# GRID ITEM E #}
-				<div class="grid-item" style="--area: e;">
-					{# distractors #}
-					{{
-						exerciseComponents.distractionAnswersInput(
-						    name='distractors',
-						    label='Wrong Answers'
-						)
-					}}
-				</div>
-
-				{# GRID ITEM F #}
-				<div class="grid-item flex-row" style="--area: f;">
-					{{ exerciseComponents.explanationText(name="explanation") }}
-					{{ exerciseComponents.imageInput(name="image", label="Image (optional)", withClearButton=true) }}
-					{{ exerciseComponents.audioInput(name="audio", label="Audio (optional)", withClearButton=true) }}
-				</div>
-
-				{# GRID ITEM BUTTONS #}
-				<div class="grid-item" style="--area: btn;">{{ 
-					exerciseComponents.actionButtons(
-						collectionId, 
-						submitLabel="Submit", 
-						cancelLabel="Cancel", 
-						cancelUrl=COLLECTIONS_UI_ENDPOINT ~ "/" ~ collectionId) }}</div>
 			</div>
-			<div id="exercise-form-errors"></div>
+
+			{# Answer Variations #}
+			<div class="form-section">
+				<h2 class="form-section__title">Answer Variations</h2>
+				<div class="form-row form-row--half">
+					{{ exerciseComponents.tagsInput(
+						name='additionalCorrectAnswers',
+						label='Also Accept These Answers',
+						placeholder='Type and press Enter...',
+						tagVariant='success'
+					) }}
+					{{ exerciseComponents.tagsInput(
+						name='distractors',
+						label='Wrong Choices (Distractors)',
+						placeholder='Type and press Enter...',
+						tagVariant='danger'
+					) }}
+				</div>
+			</div>
+
+			{# Media Attachments #}
+			<div class="form-section">
+				<h2 class="form-section__title">Media Attachments</h2>
+				<p class="form-section__hint">Optional image and audio to accompany the exercise</p>
+				<div class="form-row form-row--half">
+					{{ exerciseComponents.imageUpload(name="image") }}
+					{{ exerciseComponents.audioUpload(name="audio") }}
+				</div>
+			</div>
+
+			{# Explanation #}
+			<div class="form-section">
+				<h2 class="form-section__title">Explanation</h2>
+				{{ exerciseComponents.explanationInput(name="explanation") }}
+			</div>
+
+			{# Form Actions #}
+			<div class="form-actions">
+				<a href="/ui/collections/{{ collectionId }}" class="btn-outline">Cancel</a>
+				<button type="submit" class="btn-primary">Create Exercise</button>
+			</div>
 		</form>
 	</div>
+
+	{# Image Preview Modal #}
+	<div id="image-modal" class="modal" onclick="closeImageModal(event)">
+		<div class="modal__content">
+			<button class="modal__close" onclick="closeImageModal(event)">&times;</button>
+			<img id="modal-image" src="" alt="Full size image" />
+		</div>
+	</div>
+
+	<script>
+		function openImageModal(src) {
+			document.getElementById('modal-image').src = src;
+			document.getElementById('image-modal').classList.add('modal--open');
+			document.body.style.overflow = 'hidden';
+		}
+		function closeImageModal(event) {
+			if (event.target.id === 'image-modal' || event.target.classList.contains('modal__close')) {
+				document.getElementById('image-modal').classList.remove('modal--open');
+				document.body.style.overflow = '';
+			}
+		}
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape') {
+				const modal = document.getElementById('image-modal');
+				if (modal) {
+					modal.classList.remove('modal--open');
+					document.body.style.overflow = '';
+				}
+			}
+		});
+	</script>
 {% endblock %}
