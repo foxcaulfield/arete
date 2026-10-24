@@ -1,3 +1,10 @@
+## [2.0.2-rc.1](https://github.com/foxcaulfield/arete/compare/v2.0.1...v2.0.2-rc.1) (2026-10-24)
+
+
+### Bug Fixes
+
+* validate force_docker_for_version input format ([#60](https://github.com/foxcaulfield/arete/issues/60)) ([ec2917c](https://github.com/foxcaulfield/arete/commit/ec2917c16888205b22ca8908172f957de5a281d4))
+
 ## [2.0.1](https://github.com/foxcaulfield/arete/compare/v2.0.0...v2.0.1) (2026-10-24)
 
 
