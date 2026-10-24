@@ -6,7 +6,20 @@ import prettierPlugin from "eslint-plugin-prettier";
 
 export default tseslint.config(
 	{
-		ignores: ["eslint.config.mjs", "dist/**", "node_modules/**"],
+		// ignores: ["eslint.config.mjs", "dist/**", "node_modules/**"],
+		// ignores: ["eslint.config.mjs", "dist/**", "node_modules/**", "front-end/**"],
+
+		ignores: [
+			"eslint.config.mjs",
+			"dist/**",
+			"node_modules/**",
+			"front-end/**",
+			// "generated/**",
+			"public/**",
+			"src/generated/**",
+			"prisma.config.ts",
+			"scripts/**",
+		],
 	},
 	eslint.configs.recommended,
 	...tseslint.configs.recommendedTypeChecked,
@@ -52,6 +65,22 @@ export default tseslint.config(
 					allowConciseArrowFunctionExpressionsStartingWithVoid: false,
 				},
 			],
+		},
+	},
+	{
+		files: ["front-end/**/*.ts"],
+		languageOptions: {
+			sourceType: "module",
+			globals: { ...globals.browser },
+			parserOptions: {
+				projectService: true,
+				tsconfigRootDir: import.meta.dirname,
+			},
+		},
+		rules: {
+			"@typescript-eslint/explicit-function-return-type": "off",
+			"@typescript-eslint/explicit-member-accessibility": "off",
+			"@typescript-eslint/no-floating-promises": "off",
 		},
 	}
 );

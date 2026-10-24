@@ -9,6 +9,7 @@ import { ExerciseQueryService } from "./exercise-query.service";
 import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/exercises/exercise-rules.config";
 import { CollectionAccessService } from "src/collections/collection-access.service";
 import { QUIZ_SESSION_STORE, type IQuizSessionStore, type QuizSessionStats } from "./quiz-session.store";
+import { parseJsonArray } from "src/common/json-array";
 
 @Injectable()
 export class QuizService extends BaseService {
@@ -54,8 +55,9 @@ export class QuizService extends BaseService {
 			return true;
 		}
 
-		if (exercise.additionalCorrectAnswers?.length) {
-			return exercise.additionalCorrectAnswers.some(
+		const additionalAnswers = parseJsonArray(exercise.additionalCorrectAnswers);
+		if (additionalAnswers.length > 0) {
+			return additionalAnswers.some(
 				(alt): boolean => normalizedUserAnswer === this.utilsService.trimAndLowercase(alt)
 			);
 		}
@@ -103,7 +105,8 @@ export class QuizService extends BaseService {
 
 		const updatedDistractors =
 			exercise.type === ExerciseType.CHOICE_SINGLE
-				? this.getRandomDistractors(exercise.correctAnswer, exercise.distractors ?? [])
+				? // ? this.getRandomDistractors(exercise.correctAnswer, exercise.distractors ?? [])
+					this.getRandomDistractors(exercise.correctAnswer, parseJsonArray(exercise.distractors))
 				: [];
 
 		return this.toResponseDto(QuizQuestionDto, {
@@ -136,7 +139,8 @@ export class QuizService extends BaseService {
 			isCorrect,
 			correctAnswer: exercise.correctAnswer,
 			explanation: exercise.explanation ?? undefined,
-			additionalCorrectAnswers: exercise.additionalCorrectAnswers ?? undefined,
+			// additionalCorrectAnswers: exercise.additionalCorrectAnswers ?? undefined,
+			additionalCorrectAnswers: parseJsonArray(exercise.additionalCorrectAnswers),
 			streak: sessionStats.streak,
 			sessionCorrect: sessionStats.correct,
 			sessionTotal: sessionStats.total,
