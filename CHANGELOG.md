@@ -1,3 +1,10 @@
+## [2.0.3](https://github.com/foxcaulfield/arete/compare/v2.0.2...v2.0.3) (2026-10-24)
+
+
+### Bug Fixes
+
+* update cheatsheet.md ([#62](https://github.com/foxcaulfield/arete/issues/62)) ([04f1d2e](https://github.com/foxcaulfield/arete/commit/04f1d2ed5315fa1f0f8d5aede91ecae124b03507))
+
 ## [2.0.3-rc.1](https://github.com/foxcaulfield/arete/compare/v2.0.2...v2.0.3-rc.1) (2026-10-24)
 
 
