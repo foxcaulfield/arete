@@ -1,3 +1,10 @@
+## [2.0.1-rc.1](https://github.com/foxcaulfield/arete/compare/v2.0.0...v2.0.1-rc.1) (2026-10-24)
+
+
+### Bug Fixes
+
+* document back-merge step in release flow ([#58](https://github.com/foxcaulfield/arete/issues/58)) ([0bf2093](https://github.com/foxcaulfield/arete/commit/0bf20939f16867e0a143d99da0b6e6e06efb0b53))
+
 # [2.0.0](https://github.com/foxcaulfield/arete/compare/v1.6.0...v2.0.0) (2026-10-24)
 
 
