@@ -19,6 +19,7 @@ import { CollectionAnalyticsService } from "./collection-analytics.service";
 import { CollectionSortBy, FilterCollectionDto, SortOrder } from "./dto/filter-collection.dto";
 import { APP_LIMITS_SYMBOL } from "src/configs/app-limits.config";
 import type { AppLimitsConfig } from "src/configs/app-limits.config";
+import { caseInsensitiveEquals, caseInsensitiveContains } from "src/common/prisma-filters";
 
 type CollectionWithUser = Collection & { user?: Pick<User, "id" | "name"> };
 
@@ -74,7 +75,8 @@ export class CollectionsService extends BaseService {
 		const duplicate = await this.prismaService.collection.findFirst({
 			where: {
 				userId: userId,
-				name: { equals: dto.name.trim(), mode: "insensitive" },
+				// name: { equals: dto.name.trim(), mode: "insensitive" },
+				name: caseInsensitiveEquals(dto.name.trim()),
 			},
 			select: { id: true },
 		});
@@ -183,7 +185,8 @@ export class CollectionsService extends BaseService {
 				where: {
 					userId: fetchedCollection.userId,
 					id: { not: collectionId },
-					name: { equals: dto.name.trim(), mode: "insensitive" },
+					// name: { equals: dto.name.trim(), mode: "insensitive" },
+					name: caseInsensitiveEquals(dto.name.trim()),
 				},
 				select: { id: true },
 			});
@@ -227,8 +230,10 @@ export class CollectionsService extends BaseService {
 			userId: targetUserId,
 			...(search && {
 				OR: [
-					{ name: { contains: search, mode: "insensitive" } },
-					{ description: { contains: search, mode: "insensitive" } },
+					// { name: { contains: search, mode: "insensitive" } },
+					// { description: { contains: search, mode: "insensitive" } },
+					{ name: caseInsensitiveContains(search) },
+					{ description: caseInsensitiveContains(search) },
 				],
 			}),
 		};

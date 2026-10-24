@@ -1,4 +1,8 @@
 {
+    "[env]": {
+        "editor.defaultFormatter": "IronGeek.vscode-env",
+        "editor.formatOnSave": true
+    },
     // "files.associations": {
     //     "*.njk": "html"
     // },
@@ -13,7 +17,14 @@
     //     "html.njk": "html"
     // },
     "files.associations": {
-        "*.njk": "html"
+        "*.njk": "html",
+        "*.css": "tailwindcss",
+        ".env": "env",
+        ".env.*": "env",
+        "*.env": "env",
+        ".env.local": "env",
+        ".env.development": "env",
+        ".env.production": "env"
     },
     "emmet.includeLanguages": {
         "njk": "html"
@@ -36,7 +47,22 @@
         "editorGroup.border": "#FF0000", // Red border between editor panels
         "contrastBorder": "#888888", // Light gray for general contrast borders
         // "tab.border": "#0000FF" // Blue border for tabs
-        "panel.border": "#FF0000" // Red border for bottom panel
+        "panel.border": "#FF0000", // Red border for bottom panel
+        // 1. ВАШЕ АКТИВНОЕ ВЫДЕЛЕНИЕ (Делаем максимально ярким и непрозрачным)
+        "editor.selectionBackground": "#ff00808e",
+        "editor.selectionForeground": "#FFFFFF",
+        // 2. ПОДСВЕТКА ОДИНАКОВЫХ СЛОВ (Когда просто поставили курсор на слово)
+        // Делаем цвет блеклым/прозрачным, чтобы при выделении мышью оно перекрывалось основным цветом
+        "editor.wordHighlightBackground": "#3399FF33",
+        "editor.wordHighlightBorder": "#3399FF88",
+        "editor.wordHighlightStrongBackground": "#00FF6633", // Для переменных на запись
+        "editor.wordHighlightStrongBorder": "#00FF6688",
+        // 3. РЕЗУЛЬТАТЫ ПОИСКА ЧЕРЕЗ CTRL+F (Тоже могут перекрывать выделение)
+        // Текущее найденное слово, на котором стоит фокус поиска:
+        "editor.findMatchBackground": "#FFCC00AA",
+        // Все остальные найденные совпадения на странице (делаем прозрачнее):
+        "editor.findMatchHighlightBackground": "#FFCC0033",
+        "editor.findMatchHighlightBorder": "#FFCC0066",
     },
     "editor.tokenColorCustomizations": {
         "textMateRules": [
@@ -88,5 +114,22 @@
                 }
             }
         ]
-    }
+    },
+    "files.exclude": {
+        "public/app/**": true,
+        "dist/**": true,
+        "node_modules/**": true,
+        "src/generated/**": true
+    },
+    "search.exclude": {
+        "public/app/**": true,
+        "dist/**": true,
+        "src/generated/**": true
+    },
+    "files.watcherExclude": {
+        "**/public/app/**": true,
+        "**/dist/**": true,
+        "**/src/generated/**": true
+    },
+    "prisma.pinToPrisma6": true
 }

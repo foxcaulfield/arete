@@ -1,23 +1,17 @@
 {
 	"compilerOptions": {
-		"module": "nodenext",
-		"moduleResolution": "nodenext",
 		"resolvePackageJsonExports": true,
-		"esModuleInterop": true,
 		"isolatedModules": true,
 		"declaration": true,
 		"removeComments": true,
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"allowSyntheticDefaultImports": true,
-		"target": "ES2023",
 		"sourceMap": true,
 		"outDir": "./dist",
-		"baseUrl": "./",
 		"incremental": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
-
 		// Strict Checks
 		"alwaysStrict": true,
 		"noImplicitAny": true,
@@ -28,7 +22,6 @@
 		"strictBindCallApply": true,
 		// "noPropertyAccessFromIndexSignature": true,
 		"noUncheckedIndexedAccess": true,
-
 		// Linter Checks
 		"noImplicitReturns": true, // https://eslint.org/docs/rules/consistent-return ?
 		"noFallthroughCasesInSwitch": true, // https://eslint.org/docs/rules/no-fallthrough
@@ -36,23 +29,40 @@
 		"noUnusedParameters": true, // https://eslint.org/docs/rules/no-unused-vars#args
 		"allowUnreachableCode": false, // https://eslint.org/docs/rules/no-unreachable ?
 		"allowUnusedLabels": false, // https://eslint.org/docs/rules/no-unused-labels
-
 		// Base Strict Checks
 		"noImplicitUseStrict": false,
 		"suppressExcessPropertyErrors": false,
 		"suppressImplicitAnyIndexErrors": false,
 		"noStrictGenericChecks": false,
-
-		"allowJs": true
+		"allowJs": true,
+		"paths": {
+			// This catch-all replaces the old baseUrl behavior for "src/..." imports
+			"src/*": [
+				"./src/*"
+			],
+			"@shared/*": [
+				"./shared/*"
+			]
+		},
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"target": "ES2023",
+		"esModuleInterop": true
 	},
 	"include": [
 		"src",
 		"test",
 		"commitlint.config.cjs",
-		"vite.config.ts",
+		// "vite.config.ts",
 		"src/**/*.spec.ts",
 		"src/**/*.test.ts",
 		"src/**/__tests__/*",
 		"src/**/?(*.)+(spec|test).[jt]s?(x)"
-	]
+	],
+	"exclude": [
+		"node_modules",
+		"dist",
+		"front-end",
+		"public"
+	],
 }

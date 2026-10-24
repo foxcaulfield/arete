@@ -1,36 +1,30 @@
-# This file specifies files and directories to ignore when building the Docker image.
-# node_modules
-# dist
-# *.log
-# *.env
-# *.md
-# .git
-# .gitignore
-# npm-debug.log
-# yarn-debug.log
-# yarn-error.log
-# coverage
-# prisma/dev.db
-# prisma/seed.ts
-
 # Deny everything
 *
 
+# Backend source
 !src
-!tsconfig.json
 !prisma
-!views
-!public
-
-!.dockerignore
-!eslint.config.mjs
-
-!docker-compose.yaml
-!Dockerfile
-!eslint.config.mjs
-!nest-cli.json
-!package-lock.json
-!package.json
-
 !tsconfig.json
 !tsconfig.build.json
+!nest-cli.json
+
+# Frontend source — REQUIRED for `npm run build:front`
+!front-end
+
+# Shared types (alias in vite.config.mts points here)
+!shared
+
+# Package config
+!package.json
+!package-lock.json
+!eslint.config.mjs
+!commitlint.config.cjs
+
+# Static assets — empty at copy time, populated by `vite build`
+!public
+
+# Docker meta
+!Dockerfile
+!.dockerignore
+!docker-compose.yaml
+!docker-compose.yml

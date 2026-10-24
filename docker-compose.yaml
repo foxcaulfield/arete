@@ -15,10 +15,16 @@ services:
             interval: 5s
             timeout: 5s
             retries: 5
-    
+
     backend:
         build: .
         env_file: .env
+        environment:
+            # Override: inside the compose network the DB hostname is "db", not "localhost".
+            # .env keeps localhost for local `npm run start:dev` — untouched
+            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+            # Force production mode in the container regardless of .env's NODE_ENV
+            - NODE_ENV=production
         ports:
             - "${APPLICATION_PORT}:3000"
         depends_on:

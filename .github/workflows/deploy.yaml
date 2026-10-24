@@ -1,0 +1,43 @@
+name: Deploy Production
+
+# DISABLED until VPS secrets are configured.
+# To enable:
+#   1. Uncomment the `release:` trigger below
+#   2. Remove the `if: false` on the `deploy:` job
+#   3. Set secrets: VPS_HOST, VPS_USER, VPS_SSH_KEY, GHCR_PAT
+on:
+    # release:
+    #     types: [published]
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: "Image tag to deploy (e.g. 1.7.0)"
+                required: true
+
+permissions:
+    contents: read
+    packages: read
+
+jobs:
+    deploy:
+        # DISABLED — flip to `true` (or delete this line) when VPS is ready
+        if: false
+        runs-on: ubuntu-latest
+        environment: production
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: SSH deploy
+              uses: appleboy/ssh-action@v1
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  script: |
+                      set -euo pipefail
+                      cd /opt/arete
+                      echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+                      export IMAGE_TAG=${{ github.event.release.tag_name || inputs.tag }}
+                      docker compose -f docker-compose.prod.yaml pull
+                      docker compose -f docker-compose.prod.yaml up -d
+                      docker compose -f docker-compose.prod.yaml ps
