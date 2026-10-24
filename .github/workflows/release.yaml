@@ -3,30 +3,35 @@ name: Release
 on:
     push:
         branches: [main, develop]
+    workflow_dispatch:
+        inputs:
+            force_docker_for_version:
+                description: "Force Docker build for an existing version (e.g. 2.0.0). Leave empty for normal release."
+                required: false
+                default: ""
 
 permissions:
-    contents: write # create tags + releases + commit changelog
-    packages: write # push to ghcr.io
+    contents: write
+    packages: write
     issues: write
     pull-requests: write
 
 concurrency:
     group: release-${{ github.ref }}
-    cancel-in-progress: false # never cancel a release mid-flight
+    cancel-in-progress: false
 
 jobs:
     release:
         runs-on: ubuntu-latest
         outputs:
-            published: ${{ steps.semantic.outputs.new_release_published }}
-            version: ${{ steps.semantic.outputs.new_release_version }}
-            channel: ${{ steps.semantic.outputs.new_release_channel }}
+            published: ${{ steps.check_tag.outputs.published }}
+            version: ${{ steps.check_tag.outputs.version }}
         steps:
             - uses: actions/checkout@v4
               with:
                   fetch-depth: 0
                   persist-credentials: false
-                  token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }} 
+                  token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
 
             - uses: actions/setup-node@v4
               with:
@@ -37,9 +42,26 @@ jobs:
 
             - name: Semantic Release
               id: semantic
+              if: github.event_name == 'push'
               env:
                   GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
               run: npx semantic-release
+
+            - name: Determine version (tag-based, no reliance on semrel outputs)
+              id: check_tag
+              run: |
+                  if [ -n "${{ inputs.force_docker_for_version }}" ]; then
+                      echo "published=true" >> $GITHUB_OUTPUT
+                      echo "version=${{ inputs.force_docker_for_version }}" >> $GITHUB_OUTPUT
+                      echo "✓ Forced build for version ${{ inputs.force_docker_for_version }}"
+                  elif TAG=$(git describe --tags --exact-match HEAD 2>/dev/null); then
+                      echo "published=true" >> $GITHUB_OUTPUT
+                      echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+                      echo "✓ New release detected: $TAG"
+                  else
+                      echo "published=false" >> $GITHUB_OUTPUT
+                      echo "ℹ No tag on HEAD — no release cut, skipping Docker"
+                  fi
 
     docker:
         needs: release
