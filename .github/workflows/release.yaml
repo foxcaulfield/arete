@@ -26,7 +26,7 @@ jobs:
               with:
                   fetch-depth: 0
                   persist-credentials: false
-                  token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }} 
+                  token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
 
             - uses: actions/setup-node@v4
               with:
@@ -42,41 +42,55 @@ jobs:
               run: npx semantic-release
 
     docker:
-        needs: release
-        if: needs.release.outputs.published == 'true'
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                  ref: ${{ github.ref }}
-                  fetch-depth: 0
+    needs: release
+    if: always() # Always run to avoid transitive skip propagation[reference:2]
+    runs-on: ubuntu-latest
+    steps:
+        - name: Check if release was published
+          id: check
+          run: |
+              if [[ "${{ needs.release.outputs.published }}" == "true" ]]; then
+                  echo "published=true" >> $GITHUB_OUTPUT
+              else
+                  echo "published=false" >> $GITHUB_OUTPUT
+              fi
 
-            - uses: docker/setup-buildx-action@v3
+        - uses: actions/checkout@v4
+          if: steps.check.outputs.published == 'true'
+          with:
+              ref: ${{ github.ref }}
+              fetch-depth: 0
 
-            - name: Log in to GHCR
-              uses: docker/login-action@v3
-              with:
-                  registry: ghcr.io
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
+        - uses: docker/setup-buildx-action@v3
+          if: steps.check.outputs.published == 'true'
 
-            - name: Extract metadata
-              id: meta
-              uses: docker/metadata-action@v5
-              with:
-                  images: ghcr.io/${{ github.repository }}
-                  tags: |
-                      type=raw,value=${{ needs.release.outputs.version }}
-                      type=raw,value=${{ github.sha }}
-                      type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-                      type=raw,value=rc-latest,enable=${{ github.ref == 'refs/heads/develop' }}
+        - name: Log in to GHCR
+          if: steps.check.outputs.published == 'true'
+          uses: docker/login-action@v3
+          with:
+              registry: ghcr.io
+              username: ${{ github.actor }}
+              password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Build and push
-              uses: docker/build-push-action@v5
-              with:
-                  context: .
-                  push: true
-                  tags: ${{ steps.meta.outputs.tags }}
-                  labels: ${{ steps.meta.outputs.labels }}
-                  cache-from: type=gha
-                  cache-to: type=gha,mode=max
+        - name: Extract metadata
+          if: steps.check.outputs.published == 'true'
+          id: meta
+          uses: docker/metadata-action@v5
+          with:
+              images: ghcr.io/${{ github.repository }}
+              tags: |
+                  type=raw,value=${{ needs.release.outputs.version }}
+                  type=raw,value=${{ github.sha }}
+                  type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+                  type=raw,value=rc-latest,enable=${{ github.ref == 'refs/heads/develop' }}
+
+        - name: Build and push
+          if: steps.check.outputs.published == 'true'
+          uses: docker/build-push-action@v5
+          with:
+              context: .
+              push: true
+              tags: ${{ steps.meta.outputs.tags }}
+              labels: ${{ steps.meta.outputs.labels }}
+              cache-from: type=gha
+              cache-to: type=gha,mode=max
