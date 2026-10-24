@@ -1,3 +1,5 @@
+/// <reference types="multer" />
+import { parseJsonArray, serializeJsonArray } from "src/common/json-array";
 import {
 	ForbiddenException,
 	Inject,
@@ -24,6 +26,7 @@ import { PaginationService } from "src/common/pagination.service";
 import { CollectionAccessService } from "src/collections/collection-access.service";
 import { APP_LIMITS_SYMBOL } from "src/configs/app-limits.config";
 import type { AppLimitsConfig } from "src/configs/app-limits.config";
+import { caseInsensitiveContains } from "src/common/prisma-filters";
 
 type MulterFile = Express.Multer.File;
 
@@ -96,8 +99,8 @@ export class ExercisesService extends BaseService {
 					...rest,
 					audioUrl: audioFilename,
 					imageUrl: imageFilename,
-					additionalCorrectAnswers: rest.additionalCorrectAnswers ?? [],
-					distractors: rest.distractors ?? [],
+					additionalCorrectAnswers: serializeJsonArray(rest.additionalCorrectAnswers),
+					distractors: serializeJsonArray(rest.distractors),
 					collection: {
 						connect: { id: collectionId },
 					},
@@ -105,7 +108,12 @@ export class ExercisesService extends BaseService {
 			});
 
 			this.logger.log(`Exercise created: ${exercise.id} by user ${currentUserId}`);
-			return this.toResponseDto(ResponseExerciseDto, exercise);
+			// return this.toResponseDto(ResponseExerciseDto, exercise);
+			return this.toResponseDto(ResponseExerciseDto, {
+				...exercise,
+				distractors: parseJsonArray(exercise.distractors),
+				additionalCorrectAnswers: parseJsonArray(exercise.additionalCorrectAnswers),
+			});
 		} catch (error) {
 			this.logger.error("Failed to create exercise", error);
 			if (audioFilename) {
@@ -144,9 +152,12 @@ export class ExercisesService extends BaseService {
 			collectionId,
 			...(searchTerm && {
 				OR: [
-					{ question: { contains: searchTerm, mode: "insensitive" } },
-					{ correctAnswer: { contains: searchTerm, mode: "insensitive" } },
-					{ translation: { contains: searchTerm, mode: "insensitive" } },
+					// { question: { contains: searchTerm, mode: "insensitive" } },
+					// { correctAnswer: { contains: searchTerm, mode: "insensitive" } },
+					// { translation: { contains: searchTerm, mode: "insensitive" } },
+					{ question: caseInsensitiveContains(searchTerm) },
+					{ correctAnswer: caseInsensitiveContains(searchTerm) },
+					{ translation: caseInsensitiveContains(searchTerm) },
 				],
 			}),
 			...(type && { type }),
@@ -193,7 +204,14 @@ export class ExercisesService extends BaseService {
 				const attempts = attemptCounts.filter((a): boolean => a.exerciseId === e.id);
 				const totalAttempts = attempts.reduce((sum, a): number => sum + a._count.id, 0);
 				const correctAttempts = attempts.find((a): boolean => a.isCorrect)?._count.id || 0;
-				return { ...e, totalAttempts, correctAttempts };
+				// return { ...e, totalAttempts, correctAttempts };
+				return {
+					...e,
+					distractors: parseJsonArray(e.distractors),
+					additionalCorrectAnswers: parseJsonArray(e.additionalCorrectAnswers),
+					totalAttempts,
+					correctAttempts,
+				};
 			});
 
 			return this.paginationService.buildPaginatedResponse(
@@ -212,9 +230,13 @@ export class ExercisesService extends BaseService {
 					correctAttempts: number;
 				}
 			> = await this.exerciseQueryService.getTopMostAttemptedExercises(collectionId, currentUserId, limit, skip);
-
+			const parsedRows = rows.map((r): ResponseExerciseDto => ({
+				...r,
+				distractors: parseJsonArray(r.distractors),
+				additionalCorrectAnswers: parseJsonArray(r.additionalCorrectAnswers),
+			}));
 			return this.paginationService.buildPaginatedResponse(
-				this.toResponseDto(ResponseExerciseDto, rows),
+				this.toResponseDto(ResponseExerciseDto, parsedRows),
 				total,
 				page,
 				limit
@@ -241,7 +263,14 @@ export class ExercisesService extends BaseService {
 			const attempts = attemptCounts.filter((a): boolean => a.exerciseId === e.id);
 			const totalAttempts = attempts.reduce((sum, a): number => sum + a._count.id, 0);
 			const correctAttempts = attempts.find((a): boolean => a.isCorrect)?._count.id || 0;
-			return { ...e, totalAttempts, correctAttempts };
+			// return { ...e, totalAttempts, correctAttempts };
+			return {
+				...e,
+				distractors: parseJsonArray(e.distractors),
+				additionalCorrectAnswers: parseJsonArray(e.additionalCorrectAnswers),
+				totalAttempts,
+				correctAttempts,
+			};
 		});
 
 		return this.paginationService.buildPaginatedResponse(
@@ -275,6 +304,8 @@ export class ExercisesService extends BaseService {
 
 		return this.toResponseDto(ResponseExerciseDto, {
 			...exercise,
+			distractors: parseJsonArray(exercise.distractors),
+			additionalCorrectAnswers: parseJsonArray(exercise.additionalCorrectAnswers),
 			totalAttempts,
 			correctAttempts,
 			lastAttemptAt: lastAttempt?.createdAt || null,
@@ -292,8 +323,10 @@ export class ExercisesService extends BaseService {
 
 		this.exerciseValidationService.validateAnswersAndDistractors(
 			dto.correctAnswer ?? exercise.correctAnswer,
-			dto.additionalCorrectAnswers ?? exercise.additionalCorrectAnswers,
-			dto.distractors ?? exercise.distractors,
+			// dto.additionalCorrectAnswers ?? exercise.additionalCorrectAnswers,
+			// dto.distractors ?? exercise.distractors,
+			dto.additionalCorrectAnswers ?? parseJsonArray(exercise.additionalCorrectAnswers),
+			dto.distractors ?? parseJsonArray(exercise.distractors),
 			dto.type ?? exercise.type
 		);
 
@@ -318,15 +351,25 @@ export class ExercisesService extends BaseService {
 				where: { id: exerciseId },
 				data: {
 					...dto,
-					additionalCorrectAnswers: dto.additionalCorrectAnswers === null ? [] : dto.additionalCorrectAnswers,
-					distractors: dto.distractors === null ? [] : dto.distractors,
+					// additionalCorrectAnswers: dto.additionalCorrectAnswers === null ? [] : dto.additionalCorrectAnswers,
+					// distractors: dto.distractors === null ? [] : dto.distractors,
+					additionalCorrectAnswers:
+						dto.additionalCorrectAnswers === undefined
+							? undefined
+							: serializeJsonArray(dto.additionalCorrectAnswers),
+					distractors: dto.distractors === undefined ? undefined : serializeJsonArray(dto.distractors),
 					audioUrl: audioFilename,
 					imageUrl: imageFilename,
 				},
 			});
 
 			this.logger.log(`Exercise updated: ${exerciseId} by user ${currentUserId}`);
-			return this.toResponseDto(ResponseExerciseDto, updated);
+			// return this.toResponseDto(ResponseExerciseDto, updated);
+			return this.toResponseDto(ResponseExerciseDto, {
+				...updated,
+				distractors: parseJsonArray(updated.distractors),
+				additionalCorrectAnswers: parseJsonArray(updated.additionalCorrectAnswers),
+			});
 		} catch (error) {
 			this.logger.error("Failed to update exercise", error);
 			if (audioFilename) {
@@ -351,7 +394,12 @@ export class ExercisesService extends BaseService {
 		});
 
 		this.logger.log(`Exercise deleted: ${exerciseId} by user ${currentUserId}`);
-		return this.toResponseDto(ResponseExerciseDto, deleted);
+		// return this.toResponseDto(ResponseExerciseDto, deleted);
+		return this.toResponseDto(ResponseExerciseDto, {
+			...deleted,
+			distractors: parseJsonArray(deleted.distractors),
+			additionalCorrectAnswers: parseJsonArray(deleted.additionalCorrectAnswers),
+		});
 	}
 
 	/* ===== FILE HANDLING ===== */

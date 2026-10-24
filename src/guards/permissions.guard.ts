@@ -38,7 +38,8 @@ export class PermissionsGuard implements CanActivate {
 		if (!userId) return false;
 
 		const user = await this.users.findUser(userId);
-		const userPermissions = user?.permissions?.map((p): UserPermission => p.name) || [];
+		// const userPermissions = user?.permissions?.map((p): UserPermission => p.name) || [];
+		const userPermissions = user?.permissions?.map((p: { name: UserPermission }): UserPermission => p.name) || [];
 		const hasPermission = required.every((p): boolean => userPermissions.includes(p));
 
 		if (!hasPermission) {

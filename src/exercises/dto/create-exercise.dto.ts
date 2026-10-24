@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { Exercise, ExerciseType } from "@prisma/client";
+import { ExerciseType } from "@prisma/client";
 import { IsArray, IsEnum, IsOptional, IsString, Length } from "class-validator";
 import { Transform } from "class-transformer";
 
@@ -29,7 +29,9 @@ export function TransformToArray() {
 	});
 }
 
-export class CreateExerciseDto implements Partial<Exercise> {
+// export class CreateExerciseDto implements Partial<Exercise> {
+
+export class CreateExerciseDto {
 	@IsString()
 	public collectionId!: string;
 

@@ -1,13 +1,11 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// ─────────────────────────────────────────────────────────────────────────────
+// PostgreSQL schema (production default)
+// Prisma 7 — url moved to prisma.config.ts, client generated via `prisma-client`
+// ─────────────────────────────────────────────────────────────────────────────
 
 generator client {
     provider        = "prisma-client-js"
     previewFeatures = ["postgresqlExtensions"]
-    //   output   = "../generated/prisma"
 }
 
 datasource db {
@@ -29,7 +27,6 @@ enum UserPermission {
     read_own_collections
     update_own_collections
     delete_own_collections
-
     read_all_collections
 }
 
@@ -133,29 +130,20 @@ model Exercise {
     id                       String       @id @default(cuid())
     collectionId             String
     collection               Collection   @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-    // Exercise content
     type                     ExerciseType @default(FILL_IN_THE_BLANK)
     question                 String       @db.Text
     placeholderSequence      String?      @default("***") @map("placeholder_sequence")
     correctAnswer            String       @map("correct_answer")
-    additionalCorrectAnswers String[]     @default([]) @map("additional_correct_answers")
-    distractors              String[]     @default([]) @map("distractors")
+    // Option A — JSON-encoded arrays, provider-agnostic
+    additionalCorrectAnswers String       @default("[]") @map("additional_correct_answers")
+    distractors              String       @default("[]")
     translation              String?      @db.Text
-    // Optional single audio and image stored on disk (filenames or relative paths)
     audioUrl                 String?
     imageUrl                 String?
-    // Metadata
-    // tags                     String[]   @default([])
-    // Rich content
-    // audioUrl           String?
-    // imageUrl           String?
     explanation              String?      @db.Text
-    // State
     isActive                 Boolean      @default(true)
     createdAt                DateTime     @default(now())
     updatedAt                DateTime     @updatedAt
-    // Relations
-    // attempts           Attempt[]
     Attempt                  Attempt[]
 
     @@index([collectionId])
