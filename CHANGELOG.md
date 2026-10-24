@@ -1,3 +1,65 @@
+# [2.0.0](https://github.com/foxcaulfield/arete/compare/v1.6.0...v2.0.0) (2026-10-24)
+
+
+* feat!: migrate to Svelte 5 SPA + Prisma 6 + release pipeline ([#51](https://github.com/foxcaulfield/arete/issues/51)) ([dde1c64](https://github.com/foxcaulfield/arete/commit/dde1c642299af9a1820bc06a80a8e0ad9a28c85f))
+
+
+### Continuous Integration
+
+* **release:** use PAT for semantic-release push ([#52](https://github.com/foxcaulfield/arete/issues/52)) ([14e4416](https://github.com/foxcaulfield/arete/commit/14e44161df5ab11387c069da63a882fb0723a13c))
+
+
+### BREAKING CHANGES
+
+* **release:** removed Nunjucks UI, HTMX, Alpine.js, and PicoCSS.
+The application is now a Svelte 5 SPA served at /app by NestJS.
+
+Highlights:
+- Frontend: Svelte 5 + Tailwind v4 + Skeleton v3 with custom router,
+  session store, and client-side API layer. No SvelteKit.
+- Backend: NestJS 11 + Prisma 6 with provider-agnostic JSON arrays
+  for distractors/additional answers (works on Postgres and SQLite).
+- Auth: better-auth 1.7 with @thallesp/nestjs-better-auth 2.8.
+  Global AuthGuard; @AllowAnonymous() for public routes.
+- Static: ServeStaticModule serves the built SPA at /app.
+  Nunjucks views, HTMX, Alpine, and src/ui module removed.
+- Tooling: dual-database switching (db:use:postgres / db:use:sqlite),
+  export/import/combine/clone scripts, idempotent parseJsonArray.
+- CI/CD: semantic-release + GitHub Actions + GHCR.
+  Workflows: ci, commitlint, release, deploy (gated).
+  Tag scheme: vX.Y.Z on main, vX.Y.Z-rc.N on develop.
+- Security: shell is public (676B, no data); API guarded;
+  security audit passes; deepmerge-ts accepted risk documented.
+
+Public API unchanged for existing endpoints.
+
+* chore: update release.yaml
+
+* ci(release): use PAT for semantic-release push to bypass branch protection
+
+* ci(release): use PAT for semantic-release push to bypass branch protection
+* removed Nunjucks UI, HTMX, Alpine.js, and PicoCSS.
+The application is now a Svelte 5 SPA served at /app by NestJS.
+
+Highlights:
+- Frontend: Svelte 5 + Tailwind v4 + Skeleton v3 with custom router,
+  session store, and client-side API layer. No SvelteKit.
+- Backend: NestJS 11 + Prisma 6 with provider-agnostic JSON arrays
+  for distractors/additional answers (works on Postgres and SQLite).
+- Auth: better-auth 1.7 with @thallesp/nestjs-better-auth 2.8.
+  Global AuthGuard; @AllowAnonymous() for public routes.
+- Static: ServeStaticModule serves the built SPA at /app.
+  Nunjucks views, HTMX, Alpine, and src/ui module removed.
+- Tooling: dual-database switching (db:use:postgres / db:use:sqlite),
+  export/import/combine/clone scripts, idempotent parseJsonArray.
+- CI/CD: semantic-release + GitHub Actions + GHCR.
+  Workflows: ci, commitlint, release, deploy (gated).
+  Tag scheme: vX.Y.Z on main, vX.Y.Z-rc.N on develop.
+- Security: shell is public (676B, no data); API guarded;
+  security audit passes; deepmerge-ts accepted risk documented.
+
+Public API unchanged for existing endpoints.
+
 # [2.0.0-rc.1](https://github.com/foxcaulfield/arete/compare/v1.6.0...v2.0.0-rc.1) (2026-10-24)
 
 
