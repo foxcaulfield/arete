@@ -47,13 +47,19 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
               run: npx semantic-release
 
-            - name: Determine version (tag-based, no reliance on semrel outputs)
+            - name: Determine version (tag-based)
               id: check_tag
               run: |
-                  if [ -n "${{ inputs.force_docker_for_version }}" ]; then
+                  FORCED="${{ inputs.force_docker_for_version }}"
+                  if [ -n "$FORCED" ]; then
+                      # Reject prefix, only accept bare semver
+                      if ! echo "$FORCED" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+                          echo "::error::Invalid force_docker_for_version='$FORCED'. Use bare semver (e.g. '2.0.0'), no prefix."
+                          exit 1
+                      fi
                       echo "published=true" >> $GITHUB_OUTPUT
-                      echo "version=${{ inputs.force_docker_for_version }}" >> $GITHUB_OUTPUT
-                      echo "✓ Forced build for version ${{ inputs.force_docker_for_version }}"
+                      echo "version=$FORCED" >> $GITHUB_OUTPUT
+                      echo "✓ Forced build for version $FORCED"
                   elif TAG=$(git describe --tags --exact-match HEAD 2>/dev/null); then
                       echo "published=true" >> $GITHUB_OUTPUT
                       echo "version=${TAG#v}" >> $GITHUB_OUTPUT
