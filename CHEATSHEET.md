@@ -38,3 +38,8 @@ If the Docker job failed but the tag/release already exist:
 `Actions → Release → Run workflow` → branch `main` → `force_docker_for_version`: `2.0.1` (just the version — **no prefix**)
 
 The `check_tag` step validates the format and fails fast if it's wrong.
+
+
+```
+branch ──PR──► develop (auto: X.Y.Z-rc.N) ──PR──► main (auto: X.Y.Z) ──back-merge──► develop
+```
