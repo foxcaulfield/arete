@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/foxcaulfield/arete/compare/v2.0.3...v2.0.4) (2026-10-24)
+
+
+### Bug Fixes
+
+* remove skip ci from release commit so PR checks can run ([#64](https://github.com/foxcaulfield/arete/issues/64)) ([0784b76](https://github.com/foxcaulfield/arete/commit/0784b76062a3e3b52b4d05ca962dbb6c432c6198))
+
 ## [2.0.4-rc.1](https://github.com/foxcaulfield/arete/compare/v2.0.3...v2.0.4-rc.1) (2026-10-24)
 
 
