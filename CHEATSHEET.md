@@ -143,3 +143,9 @@ If padding still looks wrong (logical-property conflict in some Tailwind v4 buil
 ```
 
 ---
+
+## Known debt — shadow DB broken
+
+Migration `20251022130000_arrays_to_json_strings` fails shadow replay (`column "additional_correct_answers" does not exist`) because its assumptions came from `db push` drift, not prior migrations. **Use `prisma migrate diff` + `prisma migrate deploy`** (no shadow check) until the migration history is squashed/baselined. `migrate dev` will fail with P3006. Not urgent — prod uses `migrate deploy` via `start:migrate:prod`.
+
+---
