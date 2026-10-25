@@ -1,3 +1,10 @@
+## [2.0.5-rc.1](https://github.com/foxcaulfield/arete/compare/v2.0.4...v2.0.5-rc.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* migrate all preset buttons to Button component; document UI conventions ([#66](https://github.com/foxcaulfield/arete/issues/66)) ([8b5d232](https://github.com/foxcaulfield/arete/commit/8b5d232f796ca2c7f88a275ed315dbfb706fe0c8))
+
 ## [2.0.4](https://github.com/foxcaulfield/arete/compare/v2.0.3...v2.0.4) (2026-10-24)
 
 
