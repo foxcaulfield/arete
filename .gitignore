@@ -77,3 +77,6 @@ dump*
 /public/app/
 
 prisma/templates/schema.sqlite.prisma.tpl
+
+
+*.dump
