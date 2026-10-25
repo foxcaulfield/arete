@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Button from "$lib/components/common/Button.svelte";
 	import { backend } from "$lib/api/client";
 	import { interpretActionError } from "$lib/api/forms";
 	import { session } from "$lib/auth/session.svelte";
@@ -6,7 +7,7 @@
 	import Unauthorized from "./Unauthorized.svelte";
 	import CollectionsTable from "$lib/components/collections/CollectionsTable.svelte";
 	import { toastSuccess } from "$lib/toast";
-    
+
 	let collections = $state<Collection.ResponseDto[]>([]);
 	let pagination = $state<PaginatedResponse<unknown>["pagination"] | null>(null);
 	let loading = $state(true);
@@ -19,17 +20,15 @@
 	const hasNext = $derived(Boolean(pagination?.hasNextPage));
 	const hasPrev = $derived(Boolean(pagination?.hasPreviousPage));
 
-// Toast on ?deleted=1, then strip the param
-$effect(() => {
-    const params = new URLSearchParams(router.page.url.search);
-    if (params.get("deleted") === "1") {
-        toastSuccess("Collection deleted.");
-        params.delete("deleted");
-        const qs = params.toString();
-        // router.navigate(`/collections${qs ? `?${qs}` : ""}`);
-		router.replace(`/collections${qs ? `?${qs}` : ""}`);
-    }
-});
+	$effect(() => {
+		const params = new URLSearchParams(router.page.url.search);
+		if (params.get("deleted") === "1") {
+			toastSuccess("Collection deleted.");
+			params.delete("deleted");
+			const qs = params.toString();
+			router.replace(`/collections${qs ? `?${qs}` : ""}`);
+		}
+	});
 
 	$effect(() => {
 		if (session.loading) return;
@@ -85,16 +84,22 @@ $effect(() => {
 				<p class="text-xs opacity-60">{totalItems} collection{totalItems !== 1 ? "s" : ""} total</p>
 			</div>
 			<div class="flex gap-2">
-				<button
+				<Button
+					text="All Collections"
 					type="button"
-					class="btn preset-outlined-primary-500 btn-sm"
-					onclick={() => router.navigate("/collections/all")}>All Collections</button
-				>
-				<button
+					preset="outlined"
+					color="primary"
+					size="sm"
+					onclick={() => router.navigate("/collections/all")}
+				/>
+				<Button
+					text="Create New"
 					type="button"
-					class="btn preset-filled-primary-500 btn-sm"
-					onclick={() => router.navigate("/collections/create")}>Create New</button
-				>
+					preset="filled"
+					color="primary"
+					size="sm"
+					onclick={() => router.navigate("/collections/create")}
+				/>
 			</div>
 		</div>
 
@@ -120,12 +125,15 @@ $effect(() => {
 						<span class="text-xs opacity-60">per page</span>
 					</div>
 					<div class="flex items-center gap-2">
-						<button
+						<Button
+							text="Previous"
 							type="button"
-							class="btn preset-tonal-surface-500 btn-sm"
+							preset="outlined"
+							color="surface"
+							size="sm"
+							disabled={!hasPrev}
 							onclick={() => goToPage(currentPage - 1)}
-							disabled={!hasPrev}>Previous</button
-						>
+						/>
 						<span class="text-xs opacity-60">
 							{#if totalItems > 0}
 								{(currentPage - 1) * limit + 1}–{Math.min(currentPage * limit, totalItems)} of {totalItems}
@@ -133,12 +141,15 @@ $effect(() => {
 								No items
 							{/if}
 						</span>
-						<button
+						<Button
+							text="Next"
 							type="button"
-							class="btn preset-tonal-surface-500 btn-sm"
+							preset="outlined"
+							color="surface"
+							size="sm"
+							disabled={!hasNext}
 							onclick={() => goToPage(currentPage + 1)}
-							disabled={!hasNext}>Next</button
-						>
+						/>
 						<span class="ml-2 text-xs opacity-60">Page {currentPage} of {totalPages || 1}</span>
 					</div>
 				</div>

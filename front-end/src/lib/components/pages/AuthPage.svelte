@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Button from "$lib/components/common/Button.svelte";
 	import { backend } from "$lib/api/client";
 	import { interpretActionError } from "$lib/api/forms";
 	import { session } from "$lib/auth/session.svelte";
@@ -6,7 +7,6 @@
 
 	type Mode = "signin" | "signup";
 
-	
 	let mode = $state<Mode>("signin");
 	let email = $state("");
 	let password = $state("");
@@ -45,8 +45,6 @@
 			router.navigate("/"); // or "/collections"
 		}
 	});
-
-	
 </script>
 
 <div class="mx-auto max-w-md p-8">
@@ -85,12 +83,19 @@
 			</div>
 		{/if}
 
-		<button type="submit" disabled={submitting} class="btn variant-filled-primary">
-			{submitting ? "Please wait…" : mode === "signin" ? "Sign in" : "Sign up"}
-		</button>
+		<Button
+			text={mode === "signin" ? "Sign in" : "Sign up"}
+			type="submit"
+			preset="filled"
+			color="primary"
+			loading={submitting}
+		/>
 	</form>
 
-	<button type="button" onclick={toggleMode} class="mt-4 text-sm underline">
-		{mode === "signin" ? "Need an account? Sign up" : "Already have an account? Sign in"}
-	</button>
+	<Button
+		type="button"
+		onclick={toggleMode}
+		preset="ghost"
+		text={mode === "signin" ? "Need an account? Sign up" : "Already have an account? Sign in"}
+	></Button>
 </div>

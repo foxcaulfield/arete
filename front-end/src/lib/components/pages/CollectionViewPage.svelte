@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Button from "$lib/components/common/Button.svelte";
 	import { backend } from "$lib/api/client";
 	import { interpretActionError } from "$lib/api/forms";
 	import { session } from "$lib/auth/session.svelte";
@@ -160,37 +161,54 @@
 
 				<div class="card space-y-2 p-3">
 					<span class="block text-xs font-medium opacity-60">Actions</span>
-					<button
+					<Button
+						text="Create Exercise"
 						type="button"
-						class="btn preset-filled-primary-500 w-full btn-sm"
+						preset="filled"
+						color="primary"
+						size="sm"
+						fullWidth
 						onclick={() => router.navigate(`/collections/view/${c.id}/exercises/create`)}
-						>Create Exercise</button
-					>
-					<button
+					/>
+					<Button
+						text="Start Quiz"
 						type="button"
-						class="btn preset-filled-secondary-500 w-full btn-sm"
-						onclick={() => router.navigate(`/collections/view/${c.id}/exercises/quiz`)}>Start Quiz</button
-					>
+						preset="filled"
+						color="secondary"
+						size="sm"
+						fullWidth
+						onclick={() => router.navigate(`/collections/view/${c.id}/exercises/quiz`)}
+					/>
 					<div class="flex gap-2">
-						<button
+						<Button
+							text="Back"
 							type="button"
-							class="btn preset-tonal-surface-500 flex-1 btn-sm"
-							onclick={() => router.navigate("/collections")}>Back</button
-						>
-						<button
+							preset="outlined"
+							color="surface"
+							size="sm"
+							class="flex-1"
+							onclick={() => router.navigate("/collections")}
+						/>
+						<Button
+							text="Edit"
 							type="button"
-							class="btn preset-filled-secondary-500 flex-1 btn-sm"
-							onclick={() => router.navigate(`/collections/edit/${c.id}`)}>Edit</button
-						>
+							preset="filled"
+							color="secondary"
+							size="sm"
+							class="flex-1"
+							onclick={() => router.navigate(`/collections/edit/${c.id}`)}
+						/>
 					</div>
-					<button
+					<Button
+						text="Delete Collection"
 						type="button"
-						class="btn preset-filled-error-500 w-full btn-sm"
+						preset="filled"
+						color="error"
+						size="sm"
+						fullWidth
+						loading={deleting}
 						onclick={handleDelete}
-						disabled={deleting}
-					>
-						{deleting ? "Deleting…" : "Delete Collection"}
-					</button>
+					/>
 				</div>
 			</div>
 
@@ -221,18 +239,24 @@
 								No items
 							{/if}
 						</span>
-						<button
+						<Button
+							text="Prev"
 							type="button"
-							class="btn preset-tonal-surface-500 btn-sm"
+							preset="outlined"
+							color="surface"
+							size="sm"
+							disabled={!hasPrev}
 							onclick={() => goToPage(currentPage - 1)}
-							disabled={!hasPrev}>Prev</button
-						>
-						<button
+						/>
+						<Button
+							text="Next"
 							type="button"
-							class="btn preset-tonal-surface-500 btn-sm"
+							preset="outlined"
+							color="surface"
+							size="sm"
+							disabled={!hasNext}
 							onclick={() => goToPage(currentPage + 1)}
-							disabled={!hasNext}>Next</button
-						>
+						/>
 						<span class="text-xs opacity-60">Page {currentPage} of {totalPages || 1}</span>
 					</div>
 

@@ -5,6 +5,7 @@
 	import type { Snippet } from "svelte";
 	import { TagsInput } from "@skeletonlabs/skeleton-svelte";
 	import { toastSuccess, toastWarning } from "$lib/toast";
+	import { X } from "@lucide/svelte";
 
 	interface Props {
 		mode: "create" | "edit";
@@ -393,22 +394,17 @@
 									class="w-full resize-none rounded border border-surface-600 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 								></textarea>
 								{#if translationText || (mode === "edit" && exercise?.translation)}
-									<button
+									<Button
+										icon
+										IconComponent={X}
+										useIcon
+										preset="ghost"
+										color="surface"
+										class="absolute top-2 right-2"
 										disabled={clearTranslation}
-										type="button"
-										onclick={handleClearTranslation}
-										class="absolute top-2 right-2 rounded p-1 text-surface-400 transition-colors hover:bg-surface-700 hover:text-surface-200 disabled:text-surface-500 disabled:hover:bg-transparent"
 										title="Clear translation (set to null)"
-									>
-										<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-											><path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M6 18L18 6M6 6l12 12"
-											/></svg
-										>
-									</button>
+										onclick={handleClearTranslation}
+									/>
 								{/if}
 							</div>
 							{#if clearTranslation}
@@ -483,15 +479,13 @@
 										<div class="mb-2 flex flex-wrap gap-1">
 											{#each tagsInput().value as value, index (index)}
 												<TagsInput.Item {value} {index}>
-													<TagsInput.ItemPreview>
-														<div
-															class="flex items-center gap-1 rounded border border-success-700 bg-success-900 px-1.5 py-0.5"
-														>
-															<span class="text-xs text-surface-100">{value}</span>
-															<TagsInput.ItemDeleteTrigger
-																class="cursor-pointer text-success-600 hover:text-success-500"
-															/>
-														</div>
+													<TagsInput.ItemPreview
+														class="gap-1 rounded border border-success-700 bg-success-900 px-1.5 py-0.5"
+													>
+														<span class="text-xs text-surface-100">{value}</span>
+														<TagsInput.ItemDeleteTrigger
+															class="cursor-pointer text-success-600 hover:text-success-500"
+														/>
 													</TagsInput.ItemPreview>
 													<TagsInput.ItemInput />
 												</TagsInput.Item>
@@ -551,15 +545,13 @@
 										<div class="mb-2 flex flex-wrap gap-1">
 											{#each tagsInput().value as value, index (index)}
 												<TagsInput.Item {value} {index} id={value + index}>
-													<TagsInput.ItemPreview>
-														<div
-															class="flex items-center gap-1 rounded border border-error-700 bg-error-900 px-1.5 py-0.5"
-														>
-															<span class="text-xs text-surface-100">{value}</span>
-															<TagsInput.ItemDeleteTrigger
-																class="cursor-pointer text-error-600 hover:text-error-500"
-															/>
-														</div>
+													<TagsInput.ItemPreview
+														class="gap-1 rounded border border-error-700 bg-error-900 px-1.5 py-0.5"
+													>
+														<span class="text-xs text-surface-100">{value}</span>
+														<TagsInput.ItemDeleteTrigger
+															class="cursor-pointer text-error-600 hover:text-error-500"
+														/>
 													</TagsInput.ItemPreview>
 													<TagsInput.ItemInput />
 												</TagsInput.Item>
@@ -611,22 +603,17 @@
 							class="w-full resize-none rounded border border-surface-600 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 						></textarea>
 						{#if explanationText || (mode === "edit" && exercise?.explanation)}
-							<button
+							<Button
+								icon
+								IconComponent={X}
+								useIcon
+								preset="ghost"
+								color="surface"
+								class="absolute top-2 right-2"
 								disabled={clearExplanation}
-								type="button"
 								onclick={handleClearExplanation}
-								class="absolute top-2 right-2 rounded p-1 text-surface-400 transition-colors hover:bg-surface-700 hover:text-surface-200 disabled:text-surface-500 disabled:hover:bg-transparent"
 								title="Clear explanation (set to null)"
-							>
-								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-									><path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M6 18L18 6M6 6l12 12"
-									/></svg
-								>
-							</button>
+							></Button>
 						{/if}
 					</div>
 					{#if clearExplanation}

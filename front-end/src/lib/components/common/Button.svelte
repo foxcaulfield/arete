@@ -12,6 +12,7 @@
 		preset?: StyleProps.Preset;
 		color?: StyleProps.Color;
 		size?: StyleProps.Size;
+		icon?: boolean;
 		disabled?: boolean;
 		loading?: boolean;
 		buttonElement?: HTMLButtonElement | undefined;
@@ -26,7 +27,7 @@
 		text?: string;
 		useIcon: true;
 		// IconComponent: Component<IconProps, {}, "">;
-		 IconComponent: Component<any, any, any>;
+		IconComponent: Component<any, any, any>;
 	};
 	type WithoutIcon = {
 		text: string;
@@ -53,6 +54,7 @@
 		fullWidth = false,
 		isBorderless: withoutBorder = false,
 		onclick,
+		icon = false,
 		...rest
 	}: ButtonProps = $props();
 
@@ -98,6 +100,19 @@
 	};
 
 	const presetClass = $derived(presetColorMap[preset]?.[color] ?? "preset-filled-primary-500");
+
+	const computedClass = $derived(
+		[
+			icon ? "btn-icon" : "btn", // ← btn-icon replaces btn entirely
+			!icon ? `btn-${size}` : "", // ← no btn-sm etc. when icon
+			presetClass,
+			cls,
+			fullWidth ? "full-width" : "",
+			withoutBorder ? "border-none" : "",
+		]
+			.filter(Boolean)
+			.join(" ")
+	);
 </script>
 
 <!-- <button
@@ -119,21 +134,21 @@
 </button> -->
 
 <button
-    {name}
-    {value}
-    {title}
-    bind:this={buttonElement}
-    type={type}
-    disabled={disabled}
-    class={["btn", `btn-${size}`, presetClass, cls, fullWidth ? "full-width" : "", withoutBorder ? "border-none" : ""]
-        .filter(Boolean)
-        .join(" ")}
-    onclick={(e) => { onclick?.(e); }}
-    {...rest}
+	{name}
+	{value}
+	{title}
+	bind:this={buttonElement}
+	{type}
+	{disabled}
+	class={computedClass}
+	onclick={(e) => {
+		onclick?.(e);
+	}}
+	{...rest}
 >
-    {#if loading}<span class="spinner" aria-hidden="true"></span>{/if}
-    {#if useIcon && !loading}<IconComponent size="1em" />{/if}
-    {#if text && !loading}<span>{text}</span>{/if}
+	{#if loading}<span class="spinner" aria-hidden="true"></span>{/if}
+	{#if useIcon && !loading}<IconComponent size="1em" />{/if}
+	{#if text && !loading}<span>{text}</span>{/if}
 </button>
 
 <style>
