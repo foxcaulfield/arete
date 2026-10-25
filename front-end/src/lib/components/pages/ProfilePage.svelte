@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Button from "$lib/components/common/Button.svelte";
 	import { session } from "$lib/auth/session.svelte";
 	import { router } from "$lib/routing/router.svelte";
 	import Unauthorized from "./Unauthorized.svelte";
@@ -40,8 +41,13 @@
 			</div>
 		</dl>
 
-		<button type="button" onclick={handleLogout} disabled={loggingOut} class="btn variant-filled-error">
-			{loggingOut ? "Signing out…" : "Sign out"}
-		</button>
+		<Button
+			text="Sign out"
+			type="button"
+			preset="filled"
+			color="error"
+			loading={loggingOut}
+			onclick={handleLogout}
+		/>
 	</div>
 {/if}
