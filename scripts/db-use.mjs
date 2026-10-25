@@ -1,11 +1,15 @@
-// scripts/db-use.js
 import { execSync } from "node:child_process";
 import { readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { transformToSqlite } from "./schema-transform.mjs";
+
+const POSTGRES_TPL = "prisma/templates/schema.postgres.prisma.tpl";
+const SQLITE_TPL = "prisma/templates/schema.sqlite.prisma.tpl";
+const ACTIVE = "prisma/schema.prisma";
 
 const provider = process.argv[2];
 if (!["postgres", "sqlite"].includes(provider)) {
-	console.error("Usage: node scripts/db-use.js <postgres|sqlite>");
+	console.error("Usage: node scripts/db-use.mjs <postgres|sqlite>");
 	process.exit(1);
 }
 
@@ -28,22 +32,29 @@ if (!url) {
 	process.exit(1);
 }
 
-// 1. Copy the matching template into the active schema file
-// const template = `prisma/templates/schema.${provider}.prisma`;
-const template = `prisma/templates/schema.${provider}.prisma.tpl`;
-copyFileSync(template, "prisma/schema.prisma");
-console.log(`→ Copied ${template} → prisma/schema.prisma`);
+// 1. Materialize the active schema
+if (provider === "sqlite") {
+	const pgTpl = readFileSync(POSTGRES_TPL, "utf-8");
+	const sqliteTpl = transformToSqlite(pgTpl);
+	writeFileSync(SQLITE_TPL, sqliteTpl); // gitignored — kept for inspection
+	writeFileSync(ACTIVE, sqliteTpl);
+	console.log(`→ Derived ${POSTGRES_TPL} → ${SQLITE_TPL} (transform)`);
+	console.log(`→ Wrote ${SQLITE_TPL} → ${ACTIVE}`);
+} else {
+	copyFileSync(POSTGRES_TPL, ACTIVE);
+	console.log(`→ Copied ${POSTGRES_TPL} → ${ACTIVE}`);
+}
 
-// 2. Update .env
+// 2. Update .env (unchanged)
 let updated = setEnv(envContent, "DB_PROVIDER", provider);
 updated = setEnv(updated, "DATABASE_URL", url);
 writeFileSync(ENV_PATH, updated);
 
-// 3. Regenerate Prisma client
+// 3. Regenerate Prisma client (unchanged)
 console.log(`→ Regenerating Prisma client for ${provider}…`);
 execSync("npx prisma generate", { stdio: "inherit" });
 
-// 4. For SQLite, sync schema (no migrations); for Postgres, remind about migrations
+// 4. SQLite sync vs Postgres migrate reminder (unchanged)
 if (provider === "sqlite") {
 	console.log("→ Syncing SQLite schema (db push)…");
 	execSync("npx prisma db push --skip-generate", { stdio: "inherit" });
