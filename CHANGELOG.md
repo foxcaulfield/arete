@@ -1,3 +1,10 @@
+# [2.1.0-rc.1](https://github.com/foxcaulfield/arete/compare/v2.0.5-rc.1...v2.1.0-rc.1) (2026-10-26)
+
+
+### Features
+
+* per-user collection sharing (backend) ([#67](https://github.com/foxcaulfield/arete/issues/67)) ([d82ac53](https://github.com/foxcaulfield/arete/commit/d82ac53778b3be10caf73a229215f4356d00579f))
+
 ## [2.0.5-rc.1](https://github.com/foxcaulfield/arete/compare/v2.0.4...v2.0.5-rc.1) (2026-10-25)
 
 
