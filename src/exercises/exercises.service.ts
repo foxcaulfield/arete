@@ -131,7 +131,7 @@ export class ExercisesService extends BaseService {
 		collectionId: string,
 		filter: FilterExerciseDto
 	): Promise<PaginatedResponseDto<ResponseExerciseDto>> {
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
+		await this.collectionAccessService.validateCollectionReadAccess(currentUserId, collectionId);
 
 		const {
 			page = 1,
@@ -283,7 +283,7 @@ export class ExercisesService extends BaseService {
 
 	public async getExerciseById(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
 		const exercise = await this.findExerciseOrFail(exerciseId);
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
+		await this.collectionAccessService.validateCollectionReadAccess(currentUserId, exercise.collectionId);
 
 		// Get user's attempt statistics for this exercise
 		const attemptStats = await this.prismaService.attempt.groupBy({
@@ -419,7 +419,7 @@ export class ExercisesService extends BaseService {
 			throw new NotFoundException("Exercise not found for the given file");
 		}
 
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
+		await this.collectionAccessService.validateCollectionReadAccess(currentUserId, exercise.collectionId);
 
 		return this.filesService.getFile({ filetype, filename });
 	}
