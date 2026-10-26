@@ -6,12 +6,12 @@ import {
 	Injectable,
 	NotFoundException,
 } from "@nestjs/common";
-import { Collection, Prisma, User, UserRole } from "@prisma/client";
+import { Collection, CollectionAccessLevel, Prisma, User, UserRole } from "@prisma/client";
 import { BaseService } from "src/base/base.service";
 import { PaginatedResponseDto } from "src/common/types";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateCollectionDto } from "./dto/create-collection.dto";
-import { ResponseCollectionDto } from "./dto/response-collection.dto";
+import { MyAccessLevel, ResponseCollectionDto } from "./dto/response-collection.dto";
 import { UpdateCollectionDto } from "./dto/update-collection.dto";
 import { UsersService } from "src/users/users.service";
 import { PaginationService } from "src/common/pagination.service";
@@ -75,7 +75,6 @@ export class CollectionsService extends BaseService {
 		const duplicate = await this.prismaService.collection.findFirst({
 			where: {
 				userId: userId,
-				// name: { equals: dto.name.trim(), mode: "insensitive" },
 				name: caseInsensitiveEquals(dto.name.trim()),
 			},
 			select: { id: true },
@@ -86,23 +85,28 @@ export class CollectionsService extends BaseService {
 
 		const collection = await this.prismaService.collection.create({ data: { ...dto, userId } });
 
-		return this.toResponseDto(ResponseCollectionDto, collection);
+		const responseDto = this.toResponseDto(ResponseCollectionDto, collection);
+		responseDto.myAccessLevel = "OWNER";
+		return responseDto;
 	}
 
-	public async getAllCollections(page = 1, limit = 10): Promise<PaginatedResponseDto<ResponseCollectionDto>> {
-		// const skip = (page - 1) * limit;
+	public async getAllCollections(
+		page = 1,
+		limit = 10,
+		currentUserId?: string
+	): Promise<PaginatedResponseDto<ResponseCollectionDto>> {
 		const skip = this.paginationService.calculateSkip(page, limit);
 		const [collections, total] = await Promise.all([
 			this.prismaService.collection.findMany({ skip, take: limit, include: this.withUser }),
 			this.prismaService.collection.count(),
 		]);
 
-		return this.paginationService.buildPaginatedResponse(
-			this.toResponseDto(ResponseCollectionDto, collections),
-			total,
-			page,
-			limit
-		);
+		const dtos = this.toResponseDto(ResponseCollectionDto, collections);
+		// Endpoint is @Roles(UserRole.ADMIN) gated — every caller is admin
+		// for (const dto of dtos) dto.myAccessLevel = "ADMIN";
+		for (const dto of dtos) dto.myAccessLevel = dto.user?.id === currentUserId ? "OWNER" : "ADMIN";
+
+		return this.paginationService.buildPaginatedResponse(dtos, total, page, limit);
 	}
 
 	public async getCollectionById(id: string, currentUserId: string): Promise<ResponseCollectionDto> {
@@ -120,8 +124,24 @@ export class CollectionsService extends BaseService {
 
 		const user = await this.usersService.findUser(currentUserId);
 
-		if (!this.canAccessCollection(collection, user)) {
-			throw new ForbiddenException("You are not allowed to access this collection.");
+		// Resolve access level in one pass — owner / admin / shared-with-level
+		let accessLevel: MyAccessLevel;
+		if (this.canAccessCollection(collection, user)) {
+			accessLevel = user.role === UserRole.ADMIN && collection.userId !== currentUserId ? "ADMIN" : "OWNER";
+		} else {
+			const share = await this.prismaService.collectionShare.findUnique({
+				where: { collectionId_userId: { collectionId: id, userId: currentUserId } },
+				select: { accessLevel: true },
+			});
+			if (!share) {
+				throw new ForbiddenException("You are not allowed to access this collection.");
+			}
+			accessLevel =
+				share.accessLevel === CollectionAccessLevel.EDIT
+					? "EDIT"
+					: share.accessLevel === CollectionAccessLevel.STUDY
+						? "STUDY"
+						: "VIEW";
 		}
 
 		// Enrich with analytics (coverage, attempt counts)
@@ -130,8 +150,9 @@ export class CollectionsService extends BaseService {
 			currentUserId
 		);
 		const enriched = enrichedCollections[0] ?? collection;
-
-		return this.toResponseDto(ResponseCollectionDto, enriched);
+		const dto = this.toResponseDto(ResponseCollectionDto, enriched);
+		dto.myAccessLevel = accessLevel;
+		return dto;
 	}
 
 	public async deleteCollection(collectionId: string, currentUserId: string): Promise<ResponseCollectionDto> {
@@ -151,8 +172,9 @@ export class CollectionsService extends BaseService {
 			throw new BadRequestException("Failed to delete the collection.");
 		}
 
-		return this.toResponseDto(ResponseCollectionDto, deleteResult);
-		// return { success: true };
+		const dto = this.toResponseDto(ResponseCollectionDto, deleteResult);
+		dto.myAccessLevel = user.role === UserRole.ADMIN && collection.userId !== currentUserId ? "ADMIN" : "OWNER";
+		return dto;
 	}
 
 	public async updateCollection(
@@ -171,12 +193,17 @@ export class CollectionsService extends BaseService {
 			throw new ForbiddenException("You are not allowed to update this collection.");
 		}
 
+		const myAccessLevel: MyAccessLevel =
+			currentUser.role === UserRole.ADMIN && fetchedCollection.userId !== currentUserId ? "ADMIN" : "OWNER";
+
 		// 4) No-op guard: if nothing really changes, return existing
 		if (
 			(!dto.name || dto.name === fetchedCollection.name) &&
 			(!dto.description || dto.description === fetchedCollection.description)
 		) {
-			return this.toResponseDto(ResponseCollectionDto, fetchedCollection);
+			const noopDto = this.toResponseDto(ResponseCollectionDto, fetchedCollection);
+			noopDto.myAccessLevel = myAccessLevel;
+			return noopDto;
 		}
 
 		// 5) Unique-by-author name check (case-insensitive) if name changes
@@ -185,7 +212,6 @@ export class CollectionsService extends BaseService {
 				where: {
 					userId: fetchedCollection.userId,
 					id: { not: collectionId },
-					// name: { equals: dto.name.trim(), mode: "insensitive" },
 					name: caseInsensitiveEquals(dto.name.trim()),
 				},
 				select: { id: true },
@@ -209,7 +235,9 @@ export class CollectionsService extends BaseService {
 			where: { id: collectionId },
 			data,
 		});
-		return this.toResponseDto(ResponseCollectionDto, updated);
+		const updatedDto = this.toResponseDto(ResponseCollectionDto, updated);
+		updatedDto.myAccessLevel = myAccessLevel;
+		return updatedDto;
 	}
 
 	public async getCollectionsByUserId(
@@ -229,12 +257,7 @@ export class CollectionsService extends BaseService {
 		const where: Prisma.CollectionWhereInput = {
 			userId: targetUserId,
 			...(search && {
-				OR: [
-					// { name: { contains: search, mode: "insensitive" } },
-					// { description: { contains: search, mode: "insensitive" } },
-					{ name: caseInsensitiveContains(search) },
-					{ description: caseInsensitiveContains(search) },
-				],
+				OR: [{ name: caseInsensitiveContains(search) }, { description: caseInsensitiveContains(search) }],
 			}),
 		};
 
@@ -262,17 +285,67 @@ export class CollectionsService extends BaseService {
 			targetUserId
 		);
 
-		return this.paginationService.buildPaginatedResponse(
-			this.toResponseDto(ResponseCollectionDto, collectionsWithAttempts),
-			total,
-			page,
-			limit
-		);
+		const dtos = this.toResponseDto(ResponseCollectionDto, collectionsWithAttempts);
+		// Endpoint is scoped to the caller's own collections (where: { userId: targetUserId })
+		for (const dto of dtos) dto.myAccessLevel = "OWNER";
+		return this.paginationService.buildPaginatedResponse(dtos, total, page, limit);
 	}
 
 	public async countCollections(userId?: string): Promise<number> {
 		return this.prismaService.collection.count({
 			where: userId ? { userId } : undefined,
 		});
+	}
+
+	public async listSharedWithMe(
+		userId: string,
+		filter: FilterCollectionDto
+	): Promise<PaginatedResponseDto<ResponseCollectionDto>> {
+		const {
+			page = 1,
+			limit = 10,
+			search,
+			sortBy = CollectionSortBy.UPDATED_AT,
+			sortOrder = SortOrder.DESC,
+		} = filter;
+		const skip = this.paginationService.calculateSkip(page, limit);
+
+		const where: Prisma.CollectionShareWhereInput = {
+			userId,
+			...(search && {
+				collection: {
+					OR: [{ name: caseInsensitiveContains(search) }, { description: caseInsensitiveContains(search) }],
+				},
+			}),
+		};
+
+		const [shares, total] = await Promise.all([
+			this.prismaService.collectionShare.findMany({
+				where,
+				skip,
+				take: limit,
+				orderBy: { collection: { [sortBy]: sortOrder } },
+				include: {
+					collection: {
+						include: {
+							user: { select: { id: true, name: true } },
+							_count: { select: { exercises: true } },
+						},
+					},
+				},
+			}),
+			this.prismaService.collectionShare.count({ where }),
+		]);
+
+		const collections = shares.map((s): typeof s.collection => s.collection);
+		const enriched = await this.collectionAnalyticsService.enrichCollectionsForUser(collections, userId);
+
+		const dtos = this.toResponseDto(ResponseCollectionDto, enriched);
+		for (let i = 0; i < dtos.length; i++) {
+			const lvl = shares[i]!.accessLevel;
+			dtos[i]!.myAccessLevel =
+				lvl === CollectionAccessLevel.EDIT ? "EDIT" : lvl === CollectionAccessLevel.STUDY ? "STUDY" : "VIEW";
+		}
+		return this.paginationService.buildPaginatedResponse(dtos, total, page, limit);
 	}
 }

@@ -1,14 +1,18 @@
-import { Controller, Patch, Delete, Post, Body, Param } from "@nestjs/common";
+import { Controller, Patch, Delete, Post, Body, Param, Get } from "@nestjs/common";
 import { Session, type UserSession } from "@thallesp/nestjs-better-auth";
 import { AdminUsersService } from "./users.service";
 import { Roles } from "src/decorators/roles.decorator";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { CollectionSharingService } from "src/collections/collection-sharing.service";
 
 @Controller("admin/users")
 @Roles("ADMIN")
 export class AdminUsersController {
-	public constructor(private readonly service: AdminUsersService) {}
+	public constructor(
+		private readonly service: AdminUsersService,
+		private readonly sharingService: CollectionSharingService
+	) {}
 
 	@Post()
 	public async createUser(
@@ -37,5 +41,20 @@ export class AdminUsersController {
 		@Param("id") id: string
 	): Promise<{ success: boolean; message: string }> {
 		return await this.service.deleteUser(session, id);
+	}
+
+	@Get(":id/access")
+	public async getUserAccess(@Param("id") userId: string): Promise<{
+		owned: Array<{ id: string; name: string }>;
+		shared: Array<{
+			collectionId: string;
+			name: string;
+			ownerId: string;
+			ownerName: string | null;
+			accessLevel: string;
+			grantedAt: Date;
+		}>;
+	}> {
+		return this.sharingService.listForUser(userId);
 	}
 }
