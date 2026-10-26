@@ -1,26 +1,25 @@
 /* 1. Tailwind core FIRST — sets up @tailwind utilities/base/components */
-@import 'tailwindcss';
+@import "tailwindcss";
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/forms';
 /* 2. Skeleton core CSS */
-@import '@skeletonlabs/skeleton';
-@import '@skeletonlabs/skeleton-svelte';
-@import '@skeletonlabs/skeleton/themes/cerberus';
-@import '@skeletonlabs/skeleton/themes/crimson'; 
-@import '@skeletonlabs/skeleton/themes/fennec'; 
-@import '@skeletonlabs/skeleton/themes/nosh'; 
-@import '@skeletonlabs/skeleton/themes/vintage'; 
-@import '@skeletonlabs/skeleton/themes/catppuccin'; 
-@import '@skeletonlabs/skeleton/themes/hamlindigo'; 
+@import "@skeletonlabs/skeleton";
+@import "@skeletonlabs/skeleton-svelte";
+@import "@skeletonlabs/skeleton/themes/cerberus";
+@import "@skeletonlabs/skeleton/themes/crimson";
+@import "@skeletonlabs/skeleton/themes/fennec";
+@import "@skeletonlabs/skeleton/themes/nosh";
+@import "@skeletonlabs/skeleton/themes/vintage";
+@import "@skeletonlabs/skeleton/themes/catppuccin";
+@import "@skeletonlabs/skeleton/themes/hamlindigo";
 
 /* 4. Tailwind plugins — AFTER imports */
 
-
-[data-theme='near-monochrome'] {
+[data-theme="near-monochrome"] {
 	--text-scaling: 1.067;
 	--base-font-color: var(--color-surface-900);
 	--base-font-color-dark: var(--color-surface-100);
-	--base-font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+	--base-font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
 	--base-font-size: inherit;
 	--base-line-height: 1.8;
 	--base-font-weight: 400;
@@ -28,7 +27,7 @@
 	--base-letter-spacing: 0.02em;
 	--heading-font-color: var(--color-surface-950);
 	--heading-font-color-dark: var(--color-surface-50);
-	--heading-font-family: 'SF Mono', monospace;
+	--heading-font-family: "SF Mono", monospace;
 	--heading-font-weight: 900;
 	--heading-font-style: normal;
 	--heading-letter-spacing: 0em;
@@ -52,7 +51,7 @@
 	--default-ring-width: 1px;
 	--body-background-color: var(--color-surface-50);
 	--body-background-color-dark: var(--color-surface-950);
-	
+
 	--color-primary-50: oklch(97% 0 none);
 	--color-primary-100: oklch(94% 0 none);
 	--color-primary-200: oklch(90% 0 none);
@@ -77,7 +76,7 @@
 	--color-primary-contrast-800: var(--color-primary-contrast-light);
 	--color-primary-contrast-900: var(--color-primary-contrast-light);
 	--color-primary-contrast-950: var(--color-primary-contrast-light);
-	
+
 	--color-secondary-50: oklch(98% 0 none);
 	--color-secondary-100: oklch(95% 0 none);
 	--color-secondary-200: oklch(92% 0 none);
@@ -102,7 +101,7 @@
 	--color-secondary-contrast-800: var(--color-secondary-contrast-light);
 	--color-secondary-contrast-900: var(--color-secondary-contrast-light);
 	--color-secondary-contrast-950: var(--color-secondary-contrast-light);
-	
+
 	--color-tertiary-50: oklch(99% 0 none);
 	--color-tertiary-100: oklch(96% 0 none);
 	--color-tertiary-200: oklch(93% 0 none);
@@ -127,7 +126,7 @@
 	--color-tertiary-contrast-800: var(--color-tertiary-contrast-light);
 	--color-tertiary-contrast-900: var(--color-tertiary-contrast-light);
 	--color-tertiary-contrast-950: var(--color-tertiary-contrast-light);
-	
+
 	--color-success-50: oklch(96% 0.02 160deg);
 	--color-success-100: oklch(92% 0.03 160deg);
 	--color-success-200: oklch(88% 0.04 160deg);
@@ -152,7 +151,7 @@
 	--color-success-contrast-800: var(--color-success-contrast-light);
 	--color-success-contrast-900: var(--color-success-contrast-light);
 	--color-success-contrast-950: var(--color-success-contrast-light);
-	
+
 	--color-warning-50: oklch(97% 0 none);
 	--color-warning-100: oklch(94% 0 none);
 	--color-warning-200: oklch(90% 0 none);
@@ -177,7 +176,7 @@
 	--color-warning-contrast-800: var(--color-warning-contrast-light);
 	--color-warning-contrast-900: var(--color-warning-contrast-light);
 	--color-warning-contrast-950: var(--color-warning-contrast-light);
-	
+
 	--color-error-50: oklch(95% 0.02 20deg);
 	--color-error-100: oklch(92% 0.03 20deg);
 	--color-error-200: oklch(88% 0.04 20deg);
@@ -202,7 +201,7 @@
 	--color-error-contrast-800: var(--color-error-contrast-light);
 	--color-error-contrast-900: var(--color-error-contrast-light);
 	--color-error-contrast-950: var(--color-error-contrast-light);
-	
+
 	--color-surface-50: oklch(99% 0 none);
 	--color-surface-100: oklch(97% 0 none);
 	--color-surface-200: oklch(94% 0 none);
@@ -229,11 +228,11 @@
 	--color-surface-contrast-950: var(--color-surface-contrast-light);
 }
 
-[data-theme='obsidian-focus'] {
+[data-theme="obsidian-focus"] {
 	--text-scaling: 1.067;
 	--base-font-color: var(--color-surface-900);
 	--base-font-color-dark: var(--color-surface-100);
-	--base-font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', monospace, system-ui;
+	--base-font-family: "SF Mono", "Menlo", "Monaco", "Consolas", "Liberation Mono", monospace, system-ui;
 	--base-font-size: inherit;
 	--base-line-height: 1.7;
 	--base-font-weight: 400;
@@ -241,7 +240,7 @@
 	--base-letter-spacing: 0.015em;
 	--heading-font-color: var(--color-surface-950);
 	--heading-font-color-dark: var(--color-surface-50);
-	--heading-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+	--heading-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
 	--heading-font-weight: 800;
 	--heading-font-style: normal;
 	--heading-letter-spacing: -0.03em;
@@ -265,7 +264,7 @@
 	--default-ring-width: 2px;
 	--body-background-color: var(--color-surface-50);
 	--body-background-color-dark: var(--color-surface-950);
-	
+
 	--color-primary-50: oklch(97% 0.08 210deg);
 	--color-primary-100: oklch(94% 0.1 210deg);
 	--color-primary-200: oklch(90% 0.13 210deg);
@@ -290,7 +289,7 @@
 	--color-primary-contrast-800: var(--color-primary-contrast-light);
 	--color-primary-contrast-900: var(--color-primary-contrast-light);
 	--color-primary-contrast-950: var(--color-primary-contrast-light);
-	
+
 	--color-secondary-50: oklch(97% 0 none);
 	--color-secondary-100: oklch(94% 0 none);
 	--color-secondary-200: oklch(90% 0 none);
@@ -315,7 +314,7 @@
 	--color-secondary-contrast-800: var(--color-secondary-contrast-light);
 	--color-secondary-contrast-900: var(--color-secondary-contrast-light);
 	--color-secondary-contrast-950: var(--color-secondary-contrast-light);
-	
+
 	--color-tertiary-50: oklch(97% 0.005 270deg);
 	--color-tertiary-100: oklch(94% 0.005 270deg);
 	--color-tertiary-200: oklch(90% 0.005 270deg);
@@ -340,7 +339,7 @@
 	--color-tertiary-contrast-800: var(--color-tertiary-contrast-light);
 	--color-tertiary-contrast-900: var(--color-tertiary-contrast-light);
 	--color-tertiary-contrast-950: var(--color-tertiary-contrast-light);
-	
+
 	--color-success-50: oklch(97% 0.06 155deg);
 	--color-success-100: oklch(94% 0.08 155deg);
 	--color-success-200: oklch(90% 0.1 155deg);
@@ -365,7 +364,7 @@
 	--color-success-contrast-800: var(--color-success-contrast-light);
 	--color-success-contrast-900: var(--color-success-contrast-light);
 	--color-success-contrast-950: var(--color-success-contrast-light);
-	
+
 	--color-warning-50: oklch(97% 0.05 90deg);
 	--color-warning-100: oklch(94% 0.07 90deg);
 	--color-warning-200: oklch(90% 0.1 90deg);
@@ -390,7 +389,7 @@
 	--color-warning-contrast-800: var(--color-warning-contrast-light);
 	--color-warning-contrast-900: var(--color-warning-contrast-light);
 	--color-warning-contrast-950: var(--color-warning-contrast-light);
-	
+
 	--color-error-50: oklch(97% 0.04 20deg);
 	--color-error-100: oklch(94% 0.07 20deg);
 	--color-error-200: oklch(90% 0.1 20deg);
@@ -415,7 +414,7 @@
 	--color-error-contrast-800: var(--color-error-contrast-light);
 	--color-error-contrast-900: var(--color-error-contrast-light);
 	--color-error-contrast-950: var(--color-error-contrast-light);
-	
+
 	--color-surface-50: oklch(99% 0 none);
 	--color-surface-100: oklch(97% 0 none);
 	--color-surface-200: oklch(94% 0 none);
@@ -442,11 +441,11 @@
 	--color-surface-contrast-950: var(--color-surface-contrast-light);
 }
 
-[data-theme='ocean-breeze'] {
+[data-theme="ocean-breeze"] {
 	--text-scaling: 1.067;
 	--base-font-color: var(--color-surface-900);
 	--base-font-color-dark: var(--color-surface-100);
-	--base-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+	--base-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
 	--base-font-size: inherit;
 	--base-line-height: 1.65;
 	--base-font-weight: 400;
@@ -478,7 +477,7 @@
 	--default-ring-width: 3px;
 	--body-background-color: var(--color-surface-50);
 	--body-background-color-dark: var(--color-surface-950);
-	
+
 	--color-primary-50: oklch(97% 0.03 235deg);
 	--color-primary-100: oklch(94% 0.05 235deg);
 	--color-primary-200: oklch(90% 0.08 235deg);
@@ -503,7 +502,7 @@
 	--color-primary-contrast-800: var(--color-primary-contrast-light);
 	--color-primary-contrast-900: var(--color-primary-contrast-light);
 	--color-primary-contrast-950: var(--color-primary-contrast-light);
-	
+
 	--color-secondary-50: oklch(97% 0.04 190deg);
 	--color-secondary-100: oklch(94% 0.06 190deg);
 	--color-secondary-200: oklch(90% 0.09 190deg);
@@ -528,7 +527,7 @@
 	--color-secondary-contrast-800: var(--color-secondary-contrast-light);
 	--color-secondary-contrast-900: var(--color-secondary-contrast-light);
 	--color-secondary-contrast-950: var(--color-secondary-contrast-light);
-	
+
 	--color-tertiary-50: oklch(97% 0.03 215deg);
 	--color-tertiary-100: oklch(94% 0.05 215deg);
 	--color-tertiary-200: oklch(90% 0.08 215deg);
@@ -553,7 +552,7 @@
 	--color-tertiary-contrast-800: var(--color-tertiary-contrast-light);
 	--color-tertiary-contrast-900: var(--color-tertiary-contrast-light);
 	--color-tertiary-contrast-950: var(--color-tertiary-contrast-light);
-	
+
 	--color-success-50: oklch(97% 0.04 165deg);
 	--color-success-100: oklch(94% 0.07 165deg);
 	--color-success-200: oklch(90% 0.1 165deg);
@@ -578,7 +577,7 @@
 	--color-success-contrast-800: var(--color-success-contrast-light);
 	--color-success-contrast-900: var(--color-success-contrast-light);
 	--color-success-contrast-950: var(--color-success-contrast-light);
-	
+
 	--color-warning-50: oklch(97% 0.04 55deg);
 	--color-warning-100: oklch(94% 0.07 55deg);
 	--color-warning-200: oklch(90% 0.11 55deg);
@@ -603,7 +602,7 @@
 	--color-warning-contrast-800: var(--color-warning-contrast-light);
 	--color-warning-contrast-900: var(--color-warning-contrast-light);
 	--color-warning-contrast-950: var(--color-warning-contrast-light);
-	
+
 	--color-error-50: oklch(97% 0.03 15deg);
 	--color-error-100: oklch(94% 0.06 15deg);
 	--color-error-200: oklch(90% 0.09 15deg);
@@ -628,7 +627,7 @@
 	--color-error-contrast-800: var(--color-error-contrast-light);
 	--color-error-contrast-900: var(--color-error-contrast-light);
 	--color-error-contrast-950: var(--color-error-contrast-light);
-	
+
 	--color-surface-50: oklch(99% 0 none);
 	--color-surface-100: oklch(97.5% 0.002 235deg);
 	--color-surface-200: oklch(95% 0.004 235deg);
@@ -655,11 +654,12 @@
 	--color-surface-contrast-950: var(--color-surface-contrast-light);
 }
 
-[data-theme='serene-sanctuary'] {
+[data-theme="serene-sanctuary"] {
 	--text-scaling: 1.067;
 	--base-font-color: var(--color-surface-900);
 	--base-font-color-dark: var(--color-surface-100);
-	--base-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', 'SF Pro Display', system-ui, sans-serif;
+	--base-font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "SF Pro Display", system-ui, sans-serif;
 	--base-font-size: inherit;
 	--base-line-height: 1.6;
 	--base-font-weight: 400;
@@ -691,7 +691,7 @@
 	--default-ring-width: 2px;
 	--body-background-color: var(--color-surface-50);
 	--body-background-color-dark: var(--color-surface-950);
-	
+
 	--color-primary-50: oklch(97% 0.04 155deg);
 	--color-primary-100: oklch(94% 0.06 155deg);
 	--color-primary-200: oklch(90% 0.08 155deg);
@@ -716,7 +716,7 @@
 	--color-primary-contrast-800: var(--color-primary-contrast-light);
 	--color-primary-contrast-900: var(--color-primary-contrast-light);
 	--color-primary-contrast-950: var(--color-primary-contrast-light);
-	
+
 	--color-secondary-50: oklch(97% 0.01 250deg);
 	--color-secondary-100: oklch(94% 0.015 250deg);
 	--color-secondary-200: oklch(90% 0.02 250deg);
@@ -741,7 +741,7 @@
 	--color-secondary-contrast-800: var(--color-secondary-contrast-light);
 	--color-secondary-contrast-900: var(--color-secondary-contrast-light);
 	--color-secondary-contrast-950: var(--color-secondary-contrast-light);
-	
+
 	--color-tertiary-50: oklch(97% 0.04 290deg);
 	--color-tertiary-100: oklch(94% 0.06 290deg);
 	--color-tertiary-200: oklch(90% 0.08 290deg);
@@ -766,7 +766,7 @@
 	--color-tertiary-contrast-800: var(--color-tertiary-contrast-light);
 	--color-tertiary-contrast-900: var(--color-tertiary-contrast-light);
 	--color-tertiary-contrast-950: var(--color-tertiary-contrast-light);
-	
+
 	--color-success-50: oklch(97% 0.05 150deg);
 	--color-success-100: oklch(94% 0.08 150deg);
 	--color-success-200: oklch(90% 0.11 150deg);
@@ -791,7 +791,7 @@
 	--color-success-contrast-800: var(--color-success-contrast-light);
 	--color-success-contrast-900: var(--color-success-contrast-light);
 	--color-success-contrast-950: var(--color-success-contrast-light);
-	
+
 	--color-warning-50: oklch(97% 0.05 80deg);
 	--color-warning-100: oklch(94% 0.08 80deg);
 	--color-warning-200: oklch(90% 0.12 80deg);
@@ -816,7 +816,7 @@
 	--color-warning-contrast-800: var(--color-warning-contrast-light);
 	--color-warning-contrast-900: var(--color-warning-contrast-light);
 	--color-warning-contrast-950: var(--color-warning-contrast-light);
-	
+
 	--color-error-50: oklch(97% 0.04 25deg);
 	--color-error-100: oklch(94% 0.07 25deg);
 	--color-error-200: oklch(90% 0.1 25deg);
@@ -841,7 +841,7 @@
 	--color-error-contrast-800: var(--color-error-contrast-light);
 	--color-error-contrast-900: var(--color-error-contrast-light);
 	--color-error-contrast-950: var(--color-error-contrast-light);
-	
+
 	--color-surface-50: oklch(99% 0 none);
 	--color-surface-100: oklch(97% 0.003 250deg);
 	--color-surface-200: oklch(94% 0.005 250deg);

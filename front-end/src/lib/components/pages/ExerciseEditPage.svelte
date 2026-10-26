@@ -3,7 +3,7 @@
 	import { interpretActionError } from "$lib/api/forms";
 	import { session } from "$lib/auth/session.svelte";
 	import { router } from "$lib/routing/router.svelte";
-	import {/* toastSuccess, */toastError } from "$lib/toast";
+	import { /* toastSuccess, */ toastError } from "$lib/toast";
 	import ExerciseEditForm from "$lib/components/exercises/ExerciseEditForm.svelte";
 	import Unauthorized from "./Unauthorized.svelte";
 	import Forbidden from "./Forbidden.svelte";

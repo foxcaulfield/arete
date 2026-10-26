@@ -13,19 +13,19 @@ import QuizPage from "$lib/components/pages/QuizPage.svelte";
 import ErrorPage from "$lib/components/pages/ErrorPage.svelte";
 
 export function registerRoutes(): void {
-    router.register("/", HomePage);
-    router.register("/profile", ProfilePage);
-    router.register("/auth", AuthPage);
+	router.register("/", HomePage);
+	router.register("/profile", ProfilePage);
+	router.register("/auth", AuthPage);
 
-    router.register("/collections", CollectionsPage);
-    router.register("/collections/all", CollectionAllPage);
-    router.register("/collections/create", CollectionCreatePage);
-    router.register("/collections/view/:slug", CollectionViewPage);
-    router.register("/collections/edit/:slug", CollectionEditPage);
+	router.register("/collections", CollectionsPage);
+	router.register("/collections/all", CollectionAllPage);
+	router.register("/collections/create", CollectionCreatePage);
+	router.register("/collections/view/:slug", CollectionViewPage);
+	router.register("/collections/edit/:slug", CollectionEditPage);
 
-    router.register("/collections/view/:slug/exercises/create", ExerciseCreatePage);
-    router.register("/collections/view/:slug/exercises/edit/:id", ExerciseEditPage);
-    router.register("/collections/view/:slug/exercises/quiz", QuizPage);
+	router.register("/collections/view/:slug/exercises/create", ExerciseCreatePage);
+	router.register("/collections/view/:slug/exercises/edit/:id", ExerciseEditPage);
+	router.register("/collections/view/:slug/exercises/quiz", QuizPage);
 
-    router.registerNotFound(ErrorPage);
+	router.registerNotFound(ErrorPage);
 }
