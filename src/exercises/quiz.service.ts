@@ -82,7 +82,7 @@ export class QuizService extends BaseService {
 		collectionId: string,
 		exerciseSelectionMode: string = "random"
 	): Promise<QuizQuestionDto> {
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
+		await this.collectionAccessService.validateCollectionStudyAccess(currentUserId, collectionId);
 
 		// Get collection stats
 		const [totalExercises, exercisesWithAttempts] = await Promise.all([
@@ -122,7 +122,7 @@ export class QuizService extends BaseService {
 		collectionId: string,
 		dto: UserAnswerDto
 	): Promise<UserAnswerFeedbackDto> {
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
+		await this.collectionAccessService.validateCollectionStudyAccess(currentUserId, collectionId);
 
 		const exercise = await this.exercisesService.findExerciseOrFail(dto.exerciseId);
 		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);

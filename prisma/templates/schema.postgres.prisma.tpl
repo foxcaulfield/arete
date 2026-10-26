@@ -35,6 +35,14 @@ enum ExerciseType {
     CHOICE_SINGLE
 }
 
+enum CollectionAccessLevel {
+    VIEW
+    STUDY
+    EDIT
+
+    @@map("collection_access_level")
+}
+
 model Permissions {
     id          String         @id @default(cuid())
     name        UserPermission @unique
@@ -60,6 +68,8 @@ model User {
     collections   Collection[]
     permissions   Permissions[]
     Attempt       Attempt[]
+    collectionShares        CollectionShare[] @relation("SharedWithUser")
+    grantedCollectionShares CollectionShare[] @relation("GrantedByUser")
 
     @@index([role], name: "user_role_idx")
     @@index([createdAt], name: "user_created_at_idx")
@@ -122,6 +132,7 @@ model Collection {
     user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     exercises Exercise[]
+    shares    CollectionShare[]
 
     @@map("collections")
 }
@@ -163,4 +174,22 @@ model Attempt {
     @@index([userId, exerciseId])
     @@index([createdAt])
     @@map("attempts")
+}
+
+model CollectionShare {
+    id           String                @id @default(cuid())
+    collectionId String
+    collection   Collection            @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+    userId       String
+    user         User                  @relation("SharedWithUser", fields: [userId], references: [id], onDelete: Cascade)
+    accessLevel  CollectionAccessLevel @default(STUDY) @map("access_level")
+    grantedById  String?
+    grantedBy    User?                 @relation("GrantedByUser", fields: [grantedById], references: [id], onDelete: SetNull)
+    grantedAt    DateTime              @default(now()) @map("granted_at")
+
+    @@unique([collectionId, userId])
+    @@index([userId])
+    @@index([grantedById])
+
+    @@map("collection_shares")
 }

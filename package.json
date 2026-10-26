@@ -1,6 +1,6 @@
 {
 	"name": "arete",
-	"version": "2.0.5-rc.1",
+	"version": "2.1.0-rc.1",
 	"description": "",
 	"author": "foxcaulfield",
 	"private": true,
@@ -31,6 +31,7 @@
 		"db:combine": "node scripts/db-combine.mjs",
 		"db:clone:pg-to-sqlite": "node scripts/db-clone.mjs pg-to-sqlite",
 		"db:counts": "docker compose exec -T db psql -U postgres -d arete -c \"SELECT 'exercises' AS tbl, COUNT(*) FROM exercises UNION ALL SELECT 'collections', COUNT(*) FROM collections UNION ALL SELECT 'attempts', COUNT(*) FROM attempts UNION ALL SELECT 'users', COUNT(*) FROM users;\"",
+		"db:dump": "docker exec arete-db-1 pg_dump -U postgres -F c arete > arete_backup_$(date +%F).dump",
 		"prisma:generate": "prisma generate",
 		"format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
 		"test": "jest",

@@ -28,7 +28,13 @@ export class CollectionsController {
 	): Promise<Paginated<ResponseCollectionDto>> {
 		return this.service.getCollectionsByUserId(session.user.id, filter);
 	}
-
+	@Get("shared")
+	public getSharedWithMe(
+		@Query() filter: FilterCollectionDto,
+		@Session() session: UserSession
+	): Promise<Paginated<ResponseCollectionDto>> {
+		return this.service.listSharedWithMe(session.user.id, filter);
+	}
 	@Get("get_by_id/:id")
 	public getById(@Param("id") id: string, @Session() session: UserSession): Promise<ResponseCollectionDto> {
 		return this.service.getCollectionById(id, session.user.id);
@@ -38,9 +44,10 @@ export class CollectionsController {
 	@Get("all")
 	public getAllCollections(
 		@Query("page", AsInt) page: number = 1,
-		@Query("limit", AsInt) limit: number = 5
+		@Query("limit", AsInt) limit: number = 5,
+		@Session() session: UserSession
 	): Promise<Paginated<ResponseCollectionDto>> {
-		return this.service.getAllCollections(page, limit);
+		return this.service.getAllCollections(page, limit, session.user.id);
 	}
 
 	@Patch("update/:id")
