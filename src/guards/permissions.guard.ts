@@ -2,13 +2,11 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@
 import { Reflector } from "@nestjs/core";
 import { UserPermission } from "@prisma/client";
 import { UserSession } from "@thallesp/nestjs-better-auth";
-import { IncomingMessage } from "node:http";
 import { PERMISSIONS_KEY } from "src/decorators/permissions.decorator";
 import { UsersService } from "src/users/users.service";
+import type { Request } from "express";
 
-interface AuthenticatedRequest extends UserSession, IncomingMessage {
-	user: UserSession["user"];
-}
+type RequestWithSession = Request & { session?: UserSession };
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -23,22 +21,15 @@ export class PermissionsGuard implements CanActivate {
 			ctx.getClass(),
 		]);
 		if (!required?.length) return true;
-		// 		if (!requiredRoles || requiredRoles.length === 0) {
-		// 	return true;
-		// }
 
-		const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
+		const request = ctx.switchToHttp().getRequest<RequestWithSession>();
+		const sessionUser = request.session?.user;
 
-		const userId = request.user?.id;
-
-		if (!userId) {
+		if (!sessionUser?.id) {
 			throw new ForbiddenException("User is not authenticated");
 		}
 
-		if (!userId) return false;
-
-		const user = await this.users.findUser(userId);
-		// const userPermissions = user?.permissions?.map((p): UserPermission => p.name) || [];
+		const user = await this.users.findUser(sessionUser.id);
 		const userPermissions = user?.permissions?.map((p: { name: UserPermission }): UserPermission => p.name) || [];
 		const hasPermission = required.every((p): boolean => userPermissions.includes(p));
 

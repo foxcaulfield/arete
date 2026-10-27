@@ -1,16 +1,12 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ROLES_KEY } from "../decorators/roles.decorator";
-import { UserSession } from "@thallesp/nestjs-better-auth";
 import { UserRole } from "@prisma/client";
-import { IncomingMessage } from "node:http";
 import { UsersService } from "src/users/users.service";
+import { UserSession } from "@thallesp/nestjs-better-auth";
+import type { Request } from "express";
 
-interface AuthenticatedRequest extends UserSession, IncomingMessage {
-	user: UserSession["user"] & {
-		role?: UserRole;
-	};
-}
+type RequestWithSession = Request & { session?: UserSession };
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -29,13 +25,16 @@ export class RolesGuard implements CanActivate {
 			return true;
 		}
 
-		const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+		// AuthGuard (global) runs before this guard (controller-scoped) and
+		// populates request.session = { user, session }. Read from there.
+		const request = context.switchToHttp().getRequest<RequestWithSession>();
+		const sessionUser = request.session?.user;
 
-		if (!request.user) {
+		if (!sessionUser?.id) {
 			throw new ForbiddenException("User is not authenticated");
 		}
-		const userId = request.user.id;
-		const user = await this.usersService.findUser(userId);
+
+		const user = await this.usersService.findUser(sessionUser.id);
 
 		const hasRole = user?.role && requiredRoles.includes(user?.role);
 		if (!hasRole) {

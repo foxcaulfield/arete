@@ -103,8 +103,8 @@ export class CollectionsService extends BaseService {
 
 		const dtos = this.toResponseDto(ResponseCollectionDto, collections);
 		// Endpoint is @Roles(UserRole.ADMIN) gated — every caller is admin
-		// for (const dto of dtos) dto.myAccessLevel = "ADMIN";
 		for (const dto of dtos) dto.myAccessLevel = dto.user?.id === currentUserId ? "OWNER" : "ADMIN";
+		// for (const dto of dtos) dto.myAccessLevel = "ADMIN";
 
 		return this.paginationService.buildPaginatedResponse(dtos, total, page, limit);
 	}
@@ -152,6 +152,7 @@ export class CollectionsService extends BaseService {
 		const enriched = enrichedCollections[0] ?? collection;
 		const dto = this.toResponseDto(ResponseCollectionDto, enriched);
 		dto.myAccessLevel = accessLevel;
+		dto.canManageSharing = user.role === UserRole.ADMIN;
 		return dto;
 	}
 

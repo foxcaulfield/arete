@@ -7,6 +7,7 @@ import { CommonModule } from "src/common/common.module";
 import { CollectionAnalyticsService } from "./collection-analytics.service";
 import { CollectionAccessService } from "./collection-access.service";
 import { CollectionSharingService } from "./collection-sharing.service";
+import { RolesGuard } from "src/guards/roles.guard";
 
 @Module({
 	imports: [UsersModule, CommonModule],
@@ -16,6 +17,7 @@ import { CollectionSharingService } from "./collection-sharing.service";
 		CollectionAnalyticsService,
 		CollectionAccessService,
 		CollectionSharingService,
+		RolesGuard,
 	],
 	controllers: [CollectionsController],
 	exports: [CollectionsService, CollectionAccessService, CollectionSharingService],
