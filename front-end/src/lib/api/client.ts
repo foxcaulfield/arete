@@ -70,6 +70,16 @@ class BackendClient {
 				const r = await this.request("GET", `/collections/all?page=${page}&limit=${limit}`);
 				return (await r.json()) as PaginatedResponse<Collection.ResponseDto>;
 			},
+			shared: async (
+				page = 1,
+				limit = 10,
+				search?: string
+			): Promise<PaginatedResponse<Collection.ResponseDto>> => {
+				const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+				if (search) qs.set("search", search);
+				const r = await this.request("GET", `/collections/shared?${qs.toString()}`);
+				return (await r.json()) as PaginatedResponse<Collection.ResponseDto>;
+			},
 			create: async (name: string, description?: string): Promise<Collection.ResponseDto> => {
 				const r = await this.request("POST", "/collections/create", { name, description });
 				return (await r.json()) as Collection.ResponseDto;

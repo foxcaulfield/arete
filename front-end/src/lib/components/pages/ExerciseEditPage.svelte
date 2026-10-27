@@ -3,7 +3,7 @@
 	import { interpretActionError } from "$lib/api/forms";
 	import { session } from "$lib/auth/session.svelte";
 	import { router } from "$lib/routing/router.svelte";
-	import { /* toastSuccess, */ toastError } from "$lib/toast";
+	import { toastError } from "$lib/toast";
 	import ExerciseEditForm from "$lib/components/exercises/ExerciseEditForm.svelte";
 	import Unauthorized from "./Unauthorized.svelte";
 	import Forbidden from "./Forbidden.svelte";
@@ -14,9 +14,16 @@
 	let exercise = $state<Exercise.ResponseDto | null>(null);
 	let loading = $state(true);
 	let pageStatus = $state<number | null>(null);
+	let pageError = $state<string | null>(null);
 	let generalError = $state<string | null>(null);
 	let fieldErrors = $state<Record<string, string[]>>({});
 	let deleting = $state(false);
+
+	// Server resolves effective access via getExerciseById (edit-only endpoint).
+	// This is a defense-in-depth UI check — backend already 403s for STUDY/VIEW.
+	const canEdit = $derived(
+		exercise?.myAccessLevel === "OWNER" || exercise?.myAccessLevel === "ADMIN" || exercise?.myAccessLevel === "EDIT"
+	);
 
 	$effect(() => {
 		if (session.loading) return;
@@ -29,10 +36,13 @@
 		void (async () => {
 			loading = true;
 			pageStatus = null;
+			pageError = null;
 			try {
 				exercise = await backend.api.exercises.getById(exId);
 			} catch (e) {
-				pageStatus = interpretActionError(e).status;
+				const err = interpretActionError(e);
+				pageStatus = err.status;
+				pageError = err.message;
 			} finally {
 				loading = false;
 			}
@@ -44,7 +54,6 @@
 		fieldErrors = {};
 		try {
 			await backend.api.exercises.update(id, formData);
-			// toastSuccess("Exercise updated!");
 			router.navigate(`/collections/view/${slug}?exerciseUpdated=1`);
 		} catch (e) {
 			const err = interpretActionError(e);
@@ -58,7 +67,6 @@
 		deleting = true;
 		try {
 			await backend.api.exercises.delete(id);
-			// toastSuccess("Exercise deleted!");
 			router.navigate(`/collections/view/${slug}?exerciseDeleted=1`);
 		} catch (e) {
 			toastError(interpretActionError(e).message);
@@ -75,9 +83,11 @@
 {:else if pageStatus === 404}
 	<NotFound />
 {:else if pageStatus === 403}
-	<Forbidden />
+	<Forbidden message={pageError ?? "You do not have edit access to this exercise."} />
 {:else if pageStatus !== null}
 	<div class="p-8 text-red-600">Error {pageStatus}</div>
+{:else if !canEdit}
+	<Forbidden message="You can view this collection but not edit its exercises." />
 {:else if exercise}
 	<ExerciseEditForm
 		mode="edit"

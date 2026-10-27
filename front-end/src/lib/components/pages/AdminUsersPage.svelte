@@ -106,7 +106,7 @@
 	}
 </script>
 
-{#if session.loading}
+{#if session.loading || (loading && !pagination)}
 	<div class="p-8">Loading…</div>
 {:else if !session.user}
 	<Unauthorized />

@@ -26,9 +26,27 @@
 	const totalPages = $derived(pagination?.totalPages ?? 0);
 	const hasNext = $derived(Boolean(pagination?.hasNextPage));
 	const hasPrev = $derived(Boolean(pagination?.hasPreviousPage));
-	const canEdit = $derived(collection?.myAccessLevel === "OWNER" || collection?.myAccessLevel === "ADMIN");
+	// const canEdit = $derived(collection?.myAccessLevel === "OWNER" || collection?.myAccessLevel === "ADMIN");
+
+	// Collection-level writes — rename / delete the collection itself
+	const canEditCollection = $derived(collection?.myAccessLevel === "OWNER" || collection?.myAccessLevel === "ADMIN");
+	// Exercise CRUD — OWNER, ADMIN, or EDIT-share holder
+	const canEditExercises = $derived(
+		collection?.myAccessLevel === "OWNER" ||
+			collection?.myAccessLevel === "ADMIN" ||
+			collection?.myAccessLevel === "EDIT"
+	);
 	const canStudy = $derived(collection?.myAccessLevel !== "VIEW" && collection?.myAccessLevel !== undefined);
 	const canManageSharing = $derived(collection?.canManageSharing === true);
+
+	// Shared with me — show owner badge
+	const isShared = $derived(
+		collection !== null &&
+			collection.myAccessLevel !== undefined &&
+			collection.myAccessLevel !== "OWNER" &&
+			collection.myAccessLevel !== "ADMIN"
+	);
+	const ownerName = $derived(collection?.user?.name ?? "someone else");
 
 	$effect(() => {
 		if (session.loading) return;
@@ -139,10 +157,20 @@
 {:else if collection}
 	{@const c = collection}
 	<div class="space-y-4 p-4">
-		<div class="flex items-start justify-between">
+		<div class="flex items-start justify-between gap-3">
 			<div class="min-w-0 flex-1">
 				<h1 class="mb-0.5 h3 truncate">{collection.name}</h1>
 				<p class="line-clamp-2 text-xs opacity-60">{collection.description}</p>
+				{#if isShared}
+					<div
+						class="mt-2 inline-flex items-center gap-1.5 rounded border border-surface-700 bg-surface-800 px-2 py-0.5 text-xs text-surface-300"
+					>
+						<span class="opacity-70">Shared by</span>
+						<span class="font-medium">{ownerName}</span>
+						<span class="opacity-50">·</span>
+						<span class="font-medium">{collection.myAccessLevel}</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 
@@ -152,7 +180,9 @@
 					<div>
 						<span class="mb-1 block font-medium opacity-60">Owner</span>
 						<div class="rounded bg-black/10 p-2">
-							<p class="font-medium">{collection.user.name ?? "Unnamed User"}</p>
+							<p class="font-medium">
+								{collection.user.name ?? "Unnamed User"}
+							</p>
 							<code class="block text-xs break-all opacity-75">{collection.user.id}</code>
 						</div>
 					</div>
@@ -164,7 +194,7 @@
 
 				<div class="card space-y-2 p-3">
 					<span class="block text-xs font-medium opacity-60">Actions</span>
-					{#if canEdit}
+					{#if canEditExercises}
 						<Button
 							text="Create Exercise"
 							type="button"
@@ -196,7 +226,7 @@
 							class="flex-1"
 							onclick={() => router.navigate("/collections")}
 						/>
-						{#if canEdit}
+						{#if canEditCollection}
 							<Button
 								text="Edit"
 								type="button"
@@ -208,7 +238,7 @@
 							/>
 						{/if}
 					</div>
-					{#if canEdit}
+					{#if canEditCollection}
 						<Button
 							text="Delete Collection"
 							type="button"
@@ -282,7 +312,9 @@
 						</div>
 					{:else}
 						<div class="overflow-x-auto">
-							<ExercisesTable {exercises} />
+							<!-- <ExercisesTable {exercises} /> -->
+							<!-- <ExercisesTable {exercises} canEdit={canEditExercises} /> -->
+							<ExercisesTable {exercises} canEdit={canEditExercises} showAnswers={canEditExercises} />
 						</div>
 					{/if}
 				</div>
