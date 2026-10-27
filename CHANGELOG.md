@@ -1,3 +1,10 @@
+# [2.1.0-rc.2](https://github.com/foxcaulfield/arete/compare/v2.1.0-rc.1...v2.1.0-rc.2) (2026-10-27)
+
+
+### Features
+
+* admin UI for collection sharing ([#69](https://github.com/foxcaulfield/arete/issues/69)) ([425d0d2](https://github.com/foxcaulfield/arete/commit/425d0d2aabf7dc620ea502f40ce85de249f0b902))
+
 # [2.1.0-rc.1](https://github.com/foxcaulfield/arete/compare/v2.0.5-rc.1...v2.1.0-rc.1) (2026-10-26)
 
 
