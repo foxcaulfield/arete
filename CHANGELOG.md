@@ -1,3 +1,10 @@
+# [2.1.0-rc.3](https://github.com/foxcaulfield/arete/compare/v2.1.0-rc.2...v2.1.0-rc.3) (2026-10-27)
+
+
+### Features
+
+* user-facing shared collections view + EDIT-share enforcement ([#70](https://github.com/foxcaulfield/arete/issues/70)) ([54ad304](https://github.com/foxcaulfield/arete/commit/54ad3040f4a4d15a33d3843ac2e995f63f36abe4))
+
 # [2.1.0-rc.2](https://github.com/foxcaulfield/arete/compare/v2.1.0-rc.1...v2.1.0-rc.2) (2026-10-27)
 
 
