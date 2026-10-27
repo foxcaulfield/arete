@@ -6,7 +6,7 @@
 	import { router } from "$lib/routing/router.svelte";
 	import { toastSuccess, toastError } from "$lib/toast";
 	import ExercisesTable from "$lib/components/exercises/ExercisesTable.svelte";
-
+	import CollectionSharingPanel from "$lib/components/collections/CollectionSharingPanel.svelte";
 	import Unauthorized from "./Unauthorized.svelte";
 	import Forbidden from "./Forbidden.svelte";
 	import NotFound from "./NotFound.svelte";
@@ -26,6 +26,9 @@
 	const totalPages = $derived(pagination?.totalPages ?? 0);
 	const hasNext = $derived(Boolean(pagination?.hasNextPage));
 	const hasPrev = $derived(Boolean(pagination?.hasPreviousPage));
+	const canEdit = $derived(collection?.myAccessLevel === "OWNER" || collection?.myAccessLevel === "ADMIN");
+	const canStudy = $derived(collection?.myAccessLevel !== "VIEW" && collection?.myAccessLevel !== undefined);
+	const canManageSharing = $derived(collection?.canManageSharing === true);
 
 	$effect(() => {
 		if (session.loading) return;
@@ -161,24 +164,28 @@
 
 				<div class="card space-y-2 p-3">
 					<span class="block text-xs font-medium opacity-60">Actions</span>
-					<Button
-						text="Create Exercise"
-						type="button"
-						preset="filled"
-						color="primary"
-						size="sm"
-						fullWidth
-						onclick={() => router.navigate(`/collections/view/${c.id}/exercises/create`)}
-					/>
-					<Button
-						text="Start Quiz"
-						type="button"
-						preset="filled"
-						color="secondary"
-						size="sm"
-						fullWidth
-						onclick={() => router.navigate(`/collections/view/${c.id}/exercises/quiz`)}
-					/>
+					{#if canEdit}
+						<Button
+							text="Create Exercise"
+							type="button"
+							preset="filled"
+							color="primary"
+							size="sm"
+							fullWidth
+							onclick={() => router.navigate(`/collections/view/${c.id}/exercises/create`)}
+						/>
+					{/if}
+					{#if canStudy}
+						<Button
+							text="Start Quiz"
+							type="button"
+							preset="filled"
+							color="secondary"
+							size="sm"
+							fullWidth
+							onclick={() => router.navigate(`/collections/view/${c.id}/exercises/quiz`)}
+						/>
+					{/if}
 					<div class="flex gap-2">
 						<Button
 							text="Back"
@@ -189,27 +196,35 @@
 							class="flex-1"
 							onclick={() => router.navigate("/collections")}
 						/>
+						{#if canEdit}
+							<Button
+								text="Edit"
+								type="button"
+								preset="filled"
+								color="secondary"
+								size="sm"
+								class="flex-1"
+								onclick={() => router.navigate(`/collections/edit/${c.id}`)}
+							/>
+						{/if}
+					</div>
+					{#if canEdit}
 						<Button
-							text="Edit"
+							text="Delete Collection"
 							type="button"
 							preset="filled"
-							color="secondary"
+							color="error"
 							size="sm"
-							class="flex-1"
-							onclick={() => router.navigate(`/collections/edit/${c.id}`)}
+							fullWidth
+							loading={deleting}
+							onclick={handleDelete}
 						/>
-					</div>
-					<Button
-						text="Delete Collection"
-						type="button"
-						preset="filled"
-						color="error"
-						size="sm"
-						fullWidth
-						loading={deleting}
-						onclick={handleDelete}
-					/>
+					{/if}
 				</div>
+
+				{#if canManageSharing}
+					<CollectionSharingPanel collectionId={c.id} />
+				{/if}
 			</div>
 
 			<div class="lg:col-span-2">

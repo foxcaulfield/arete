@@ -25,4 +25,5 @@ export class ResponseCollectionDto {
 	@Expose() public uniqueExercisesAttempted?: number;
 	@Expose() public coverage?: string;
 	@Expose() public myAccessLevel?: MyAccessLevel;
+	@Expose() public canManageSharing?: boolean;
 }

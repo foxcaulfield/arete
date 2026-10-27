@@ -9,8 +9,8 @@ import { AuthModule } from "@thallesp/nestjs-better-auth";
 import { APP_GUARD } from "@nestjs/core";
 import { CollectionsModule } from "./collections/collections.module";
 import { AdminModule } from "./admin/admin.module";
-import { PermissionsGuard } from "./guards/permissions.guard";
-import { RolesGuard } from "./guards/roles.guard";
+// import { PermissionsGuard } from "./guards/permissions.guard";
+// import { RolesGuard } from "./guards/roles.guard";
 import { SignUpHook } from "./hooks/auth.hook";
 import { ExercisesModule } from "./exercises/exercises.module";
 import { ServeStaticModule } from "@nestjs/serve-static";
@@ -60,8 +60,8 @@ import { APP_LIMITS_SYMBOL, defaultAppLimits } from "./configs/app-limits.config
 		PrismaService,
 		{ provide: APP_LIMITS_SYMBOL, useValue: defaultAppLimits },
 		// AuthGuard removed — registered globally by AuthModule
-		{ provide: APP_GUARD, useClass: RolesGuard },
-		{ provide: APP_GUARD, useClass: PermissionsGuard },
+		// { provide: APP_GUARD, useClass: RolesGuard },
+		// { provide: APP_GUARD, useClass: PermissionsGuard },
 		{ provide: APP_GUARD, useClass: ThrottlerGuard },
 		SignUpHook,
 	],

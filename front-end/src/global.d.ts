@@ -26,6 +26,7 @@ declare global {
 			name?: string;
 			description?: string;
 		}
+		type MyAccessLevel = "OWNER" | "ADMIN" | "EDIT" | "STUDY" | "VIEW";
 
 		interface ResponseDto {
 			id: string;
@@ -39,6 +40,8 @@ declare global {
 			updatedAt: Date;
 			attemptCount: number;
 			exerciseCount: number;
+			myAccessLevel?: MyAccessLevel;
+			canManageSharing?: boolean;
 		}
 	}
 
@@ -129,6 +132,48 @@ declare global {
 		type Shade = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 950;
 		type Preset = "filled" | "tonal" | "outlined" | "ghost";
 		type Size = "sm" | "base" | "lg";
+	}
+
+	/* Admin Interfaces */
+	namespace Admin {
+		type AccessLevel = "VIEW" | "STUDY" | "EDIT";
+
+		interface UserListItem {
+			id: string;
+			email: string;
+			name: string | null;
+			role: string;
+			isActive: boolean;
+			createdAt: string;
+		}
+
+		interface CollectionGrant {
+			userId: string;
+			name: string | null;
+			email: string;
+			accessLevel: AccessLevel;
+			grantedAt: string;
+			grantedById: string | null;
+			grantedByName: string | null;
+		}
+
+		interface CollectionAccess {
+			collection: { id: string; name: string };
+			owner: { id: string; name: string | null; email: string };
+			grants: CollectionGrant[];
+		}
+
+		interface UserAccess {
+			owned: Array<{ id: string; name: string }>;
+			shared: Array<{
+				collectionId: string;
+				name: string;
+				ownerId: string;
+				ownerName: string | null;
+				accessLevel: AccessLevel;
+				grantedAt: string;
+			}>;
+		}
 	}
 }
 

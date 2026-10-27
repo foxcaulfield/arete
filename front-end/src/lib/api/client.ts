@@ -133,6 +133,46 @@ class BackendClient {
 			getFile: (fileType: string, filename: string): Promise<Response> =>
 				this.request("GET", `/exercises/files/${encodeURIComponent(fileType)}/${encodeURIComponent(filename)}`),
 		},
+		admin: {
+			users: {
+				list: async (page = 1, limit = 20, search?: string): Promise<PaginatedResponse<Admin.UserListItem>> => {
+					const qs = new URLSearchParams({
+						page: String(page),
+						limit: String(limit),
+						...(search ? { search } : {}),
+					});
+					const r = await this.request("GET", `/admin/users?${qs.toString()}`);
+					return (await r.json()) as PaginatedResponse<Admin.UserListItem>;
+				},
+				access: async (userId: string): Promise<Admin.UserAccess> => {
+					const r = await this.request("GET", `/admin/users/${userId}/access`);
+					return (await r.json()) as Admin.UserAccess;
+				},
+			},
+			collections: {
+				access: {
+					list: async (collectionId: string): Promise<Admin.CollectionAccess> => {
+						const r = await this.request("GET", `/admin/collections/${collectionId}/access`);
+						return (await r.json()) as Admin.CollectionAccess;
+					},
+					grant: async (
+						collectionId: string,
+						userId: string,
+						accessLevel: Admin.AccessLevel
+					): Promise<Admin.CollectionGrant> => {
+						const r = await this.request("POST", `/admin/collections/${collectionId}/access`, {
+							userId,
+							accessLevel,
+						});
+						return (await r.json()) as Admin.CollectionGrant;
+					},
+					revoke: async (collectionId: string, userId: string): Promise<{ success: true }> => {
+						const r = await this.request("DELETE", `/admin/collections/${collectionId}/access/${userId}`);
+						return (await r.json()) as { success: true };
+					},
+				},
+			},
+		},
 	};
 }
 

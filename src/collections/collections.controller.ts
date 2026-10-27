@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe as AsInt, Patch, Post, Query } from "@nestjs/common";
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	Param,
+	ParseIntPipe as AsInt,
+	Patch,
+	Post,
+	Query,
+	UseGuards,
+} from "@nestjs/common";
 import { CollectionsService } from "./collections.service";
 import { CreateCollectionDto } from "./dto/create-collection.dto";
 import { ResponseCollectionDto } from "./dto/response-collection.dto";
@@ -6,16 +17,17 @@ import { UpdateCollectionDto } from "./dto/update-collection.dto";
 import { FilterCollectionDto } from "./dto/filter-collection.dto";
 import { Session, type UserSession } from "@thallesp/nestjs-better-auth";
 import { Roles } from "src/decorators/roles.decorator";
+import { RolesGuard } from "src/guards/roles.guard";
 import { UserRole } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/types";
 
 type Paginated<T> = PaginatedResponseDto<T>;
 
 @Controller("collections")
+@UseGuards(RolesGuard)
 export class CollectionsController {
 	public constructor(private readonly service: CollectionsService) {}
 
-	// @Roles(UserRole.ADMIN)
 	@Post("create")
 	public create(@Body() dto: CreateCollectionDto, @Session() session: UserSession): Promise<ResponseCollectionDto> {
 		return this.service.createCollection(dto, session.user.id);
@@ -28,6 +40,7 @@ export class CollectionsController {
 	): Promise<Paginated<ResponseCollectionDto>> {
 		return this.service.getCollectionsByUserId(session.user.id, filter);
 	}
+
 	@Get("shared")
 	public getSharedWithMe(
 		@Query() filter: FilterCollectionDto,
@@ -35,6 +48,7 @@ export class CollectionsController {
 	): Promise<Paginated<ResponseCollectionDto>> {
 		return this.service.listSharedWithMe(session.user.id, filter);
 	}
+
 	@Get("get_by_id/:id")
 	public getById(@Param("id") id: string, @Session() session: UserSession): Promise<ResponseCollectionDto> {
 		return this.service.getCollectionById(id, session.user.id);

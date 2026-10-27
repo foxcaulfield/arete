@@ -1,11 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from "@nestjs/common";
 import { Session, type UserSession } from "@thallesp/nestjs-better-auth";
 import { Roles } from "src/decorators/roles.decorator";
 import { UserRole } from "@prisma/client";
 import { CollectionSharingService, type ShareDto } from "src/collections/collection-sharing.service";
 import { GrantCollectionAccessDto } from "./dto/grant-collection-access.dto";
+import { RolesGuard } from "src/guards/roles.guard";
 
 @Controller("admin/collections")
+@UseGuards(RolesGuard)
 @Roles(UserRole.ADMIN)
 export class AdminCollectionsController {
 	public constructor(private readonly sharingService: CollectionSharingService) {}

@@ -8,16 +8,62 @@ import {
 import { PrismaService } from "src/prisma/prisma.service";
 import { AuthService, type UserSession } from "@thallesp/nestjs-better-auth";
 import { BetterAuthInstanceType } from "src/configs/better-auth.config";
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
+import { PaginatedResponseDto } from "src/common/types";
+import { PaginationService } from "src/common/pagination.service";
+import { caseInsensitiveContains } from "src/common/prisma-filters";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { FilterUserDto } from "./dto/filter-user.dto";
+
+export interface UserListItem {
+	id: string;
+	email: string;
+	name: string | null;
+	role: UserRole;
+	isActive: boolean;
+	createdAt: Date;
+}
 
 @Injectable()
 export class AdminUsersService {
 	public constructor(
 		private readonly prisma: PrismaService,
+		private readonly paginationService: PaginationService,
 		private readonly authService: AuthService<BetterAuthInstanceType>
 	) {}
+
+	public async findAll(filter: FilterUserDto): Promise<PaginatedResponseDto<UserListItem>> {
+		const { page = 1, limit = 20, search } = filter;
+		const skip = this.paginationService.calculateSkip(page, limit);
+
+		const searchTerm = search?.trim() || undefined;
+		const where: Prisma.UserWhereInput = searchTerm
+			? {
+					OR: [{ email: caseInsensitiveContains(searchTerm) }, { name: caseInsensitiveContains(searchTerm) }],
+				}
+			: {};
+
+		const [users, total] = await Promise.all([
+			this.prisma.user.findMany({
+				where,
+				skip,
+				take: limit,
+				orderBy: { createdAt: "desc" },
+				select: {
+					id: true,
+					email: true,
+					name: true,
+					role: true,
+					isActive: true,
+					createdAt: true,
+				},
+			}),
+			this.prisma.user.count({ where }),
+		]);
+
+		return this.paginationService.buildPaginatedResponse(users, total, page, limit);
+	}
 
 	public async createUser(dto: CreateUserDto): Promise<{ id: string; name: string; email: string }> {
 		if (!dto.name || !dto.email || !dto.password) {
@@ -34,8 +80,6 @@ export class AdminUsersService {
 			id: signUpResult.user.id,
 			name: signUpResult.user.name,
 			email: signUpResult.user.email,
-			// role: dto.role || UserRole.USER,
-			// isActive: true,
 		};
 	}
 
@@ -66,7 +110,6 @@ export class AdminUsersService {
 	}
 
 	public async deleteUser(session: UserSession, userId: string): Promise<{ success: boolean; message: string }> {
-		// Prevent admin from deleting themselves
 		if (userId === session.user.id) {
 			throw new ForbiddenException("Cannot delete your own account");
 		}

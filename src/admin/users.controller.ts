@@ -1,18 +1,40 @@
-import { Controller, Patch, Delete, Post, Body, Param, Get } from "@nestjs/common";
+import { Controller, Patch, Delete, Post, Get, Body, Param, Query, UseGuards } from "@nestjs/common";
 import { Session, type UserSession } from "@thallesp/nestjs-better-auth";
-import { AdminUsersService } from "./users.service";
+import { AdminUsersService, type UserListItem } from "./users.service";
 import { Roles } from "src/decorators/roles.decorator";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { FilterUserDto } from "./dto/filter-user.dto";
 import { CollectionSharingService } from "src/collections/collection-sharing.service";
+import { PaginatedResponseDto } from "src/common/types";
+import { UserRole } from "@prisma/client";
+import { RolesGuard } from "src/guards/roles.guard";
+
+type UserAccessResponse = {
+	owned: Array<{ id: string; name: string }>;
+	shared: Array<{
+		collectionId: string;
+		name: string;
+		ownerId: string;
+		ownerName: string | null;
+		accessLevel: string;
+		grantedAt: Date;
+	}>;
+};
 
 @Controller("admin/users")
-@Roles("ADMIN")
+@UseGuards(RolesGuard)
+@Roles(UserRole.ADMIN)
 export class AdminUsersController {
 	public constructor(
 		private readonly service: AdminUsersService,
 		private readonly sharingService: CollectionSharingService
 	) {}
+
+	@Get()
+	public findAll(@Query() filter: FilterUserDto): Promise<PaginatedResponseDto<UserListItem>> {
+		return this.service.findAll(filter);
+	}
 
 	@Post()
 	public async createUser(
@@ -44,17 +66,7 @@ export class AdminUsersController {
 	}
 
 	@Get(":id/access")
-	public async getUserAccess(@Param("id") userId: string): Promise<{
-		owned: Array<{ id: string; name: string }>;
-		shared: Array<{
-			collectionId: string;
-			name: string;
-			ownerId: string;
-			ownerName: string | null;
-			accessLevel: string;
-			grantedAt: Date;
-		}>;
-	}> {
+	public async getUserAccess(@Param("id") userId: string): Promise<UserAccessResponse> {
 		return this.sharingService.listForUser(userId);
 	}
 }
