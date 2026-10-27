@@ -45,6 +45,26 @@ export class CollectionSharingService {
 		return [CollectionAccessLevel.STUDY, CollectionAccessLevel.EDIT].some((l): boolean => l === share?.accessLevel);
 	}
 
+	/** EDIT share grants write access to exercises in the collection. */
+	public async hasEditAccess(userId: string, collectionId: string): Promise<boolean> {
+		const share = await this.prismaService.collectionShare.findUnique({
+			where: { collectionId_userId: { collectionId, userId } },
+			select: { accessLevel: true },
+		});
+		return share?.accessLevel === CollectionAccessLevel.EDIT;
+	}
+
+	/** Returns the raw share row, or null if no share exists for this user+collection. */
+	public async getShare(
+		userId: string,
+		collectionId: string
+	): Promise<{ accessLevel: CollectionAccessLevel } | null> {
+		return this.prismaService.collectionShare.findUnique({
+			where: { collectionId_userId: { collectionId, userId } },
+			select: { accessLevel: true },
+		});
+	}
+
 	public async grant(
 		adminId: string,
 		collectionId: string,

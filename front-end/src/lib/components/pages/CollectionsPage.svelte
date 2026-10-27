@@ -72,7 +72,7 @@
 	}
 </script>
 
-{#if session.loading}
+{#if session.loading || (loading && !pagination)}
 	<div class="p-8">Loading…</div>
 {:else if !session.user}
 	<Unauthorized />
@@ -83,7 +83,15 @@
 				<h1 class="h3 mb-1">Your Collections</h1>
 				<p class="text-xs opacity-60">{totalItems} collection{totalItems !== 1 ? "s" : ""} total</p>
 			</div>
-			<div class="flex gap-2">
+			<div class="flex flex-wrap gap-2">
+				<Button
+					text="Shared with me"
+					type="button"
+					preset="outlined"
+					color="secondary"
+					size="sm"
+					onclick={() => router.navigate("/collections/shared")}
+				/>
 				<Button
 					text="All Collections"
 					type="button"

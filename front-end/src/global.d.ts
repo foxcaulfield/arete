@@ -66,6 +66,7 @@ declare global {
 			correctAnswer: string | null;
 			totalAttempts: number;
 			correctAttempts: number;
+			myAccessLevel?: Collection.MyAccessLevel | null;
 		}
 
 		interface CreateDto {
