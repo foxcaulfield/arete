@@ -53,23 +53,24 @@ model Permissions {
 }
 
 model User {
-    id            String        @id @default(cuid())
-    email         String        @unique @db.Citext
-    name          String        @default("default name")
-    role          UserRole      @default(USER)
-    isActive      Boolean       @default(true) @map("is_active")
-    lastLogin     DateTime?     @map("last_login_at")
-    createdAt     DateTime      @default(now()) @map("created_at")
-    updatedAt     DateTime      @updatedAt @map("updated_at")
-    emailVerified Boolean       @default(false)
-    image         String?
-    sessions      Session[]
-    accounts      Account[]
-    collections   Collection[]
-    permissions   Permissions[]
-    Attempt       Attempt[]
+    id                      String            @id @default(cuid())
+    email                   String            @unique @db.Citext
+    name                    String            @default("default name")
+    role                    UserRole          @default(USER)
+    isActive                Boolean           @default(true) @map("is_active")
+    lastLogin               DateTime?         @map("last_login_at")
+    createdAt               DateTime          @default(now()) @map("created_at")
+    updatedAt               DateTime          @updatedAt @map("updated_at")
+    emailVerified           Boolean           @default(false)
+    image                   String?
+    sessions                Session[]
+    accounts                Account[]
+    collections             Collection[]
+    permissions             Permissions[]
+    Attempt                 Attempt[]
     collectionShares        CollectionShare[] @relation("SharedWithUser")
     grantedCollectionShares CollectionShare[] @relation("GrantedByUser")
+    cardStates              CardState[]
 
     @@index([role], name: "user_role_idx")
     @@index([createdAt], name: "user_created_at_idx")
@@ -156,20 +157,21 @@ model Exercise {
     createdAt                DateTime     @default(now())
     updatedAt                DateTime     @updatedAt
     Attempt                  Attempt[]
+    cardStates               CardState[]
 
     @@index([collectionId])
     @@map("exercises")
 }
 
 model Attempt {
-    id         String   @id @default(cuid())
-    exerciseId String
-    exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
-    userId     String
-    user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    answer     String   @default("")
-    isCorrect  Boolean
-    createdAt  DateTime @default(now())
+    id                      String            @id @default(cuid())
+    exerciseId              String
+    exercise                Exercise          @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+    userId                  String
+    user                    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+    answer                  String            @default("")
+    isCorrect               Boolean
+    createdAt               DateTime          @default(now())
 
     @@index([userId, exerciseId])
     @@index([createdAt])
@@ -190,6 +192,25 @@ model CollectionShare {
     @@unique([collectionId, userId])
     @@index([userId])
     @@index([grantedById])
-
     @@map("collection_shares")
+}
+
+model CardState {
+    id             String    @id @default(cuid())
+    userId         String
+    exerciseId     String
+    user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    exercise       Exercise  @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+    easiness       Float     @default(2.5)
+    repetitions    Int       @default(0)
+    interval       Int       @default(0)
+    nextReviewAt   DateTime  @default(now())
+    lastReviewedAt DateTime?
+    lapses         Int       @default(0)
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+
+    @@unique([userId, exerciseId])
+    @@index([userId, nextReviewAt])
+    @@map("card_states")
 }

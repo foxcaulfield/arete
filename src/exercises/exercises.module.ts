@@ -9,6 +9,7 @@ import { ExerciseQueryService } from "./exercise-query.service";
 import { ExerciseValidationService } from "./exercise-validation.service";
 import { EXERCISE_RULES_SYMBOL, ExerciseRulesConfig } from "src/exercises/exercise-rules.config";
 import { QUIZ_SESSION_STORE, InMemoryQuizSessionStore } from "./quiz-session.store";
+import { SrsModule } from "src/srs/srs.module";
 
 export const exerciseRulesSettings: ExerciseRulesConfig = {
 	DISTRACTORS_PER_QUESTION: 3,
@@ -18,7 +19,7 @@ export const exerciseRulesSettings: ExerciseRulesConfig = {
 };
 
 @Module({
-	imports: [CommonModule, CollectionsModule],
+	imports: [CommonModule, CollectionsModule, SrsModule],
 	controllers: [ExercisesController],
 	providers: [
 		{ provide: EXERCISE_RULES_SYMBOL, useValue: exerciseRulesSettings },

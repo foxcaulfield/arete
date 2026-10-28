@@ -563,4 +563,26 @@ export class ExercisesService extends BaseService {
 		);
 		return { audioFilename: result[0]?.filename ?? null, imageFilename: result[1]?.filename ?? null };
 	}
+
+	// В ExercisesService
+	public toPublicExerciseDto(exercise: Exercise): Partial<ResponseExerciseDto> {
+		return {
+			id: exercise.id,
+			question: exercise.question,
+			audioUrl: exercise.audioUrl,
+			imageUrl: exercise.imageUrl,
+			type: exercise.type,
+			translation: exercise.translation,
+			explanation: exercise.explanation,
+			distractors: parseJsonArray(exercise.distractors),
+			collectionId: exercise.collectionId,
+			createdAt: exercise.createdAt,
+			updatedAt: exercise.updatedAt,
+			isActive: exercise.isActive,
+			additionalCorrectAnswers: parseJsonArray(exercise.additionalCorrectAnswers),
+			correctAnswer: exercise.correctAnswer,
+			totalAttempts: 0,
+			correctAttempts: 0,
+		};
+	}
 }

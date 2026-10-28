@@ -66,8 +66,8 @@ export class UserAnswerFeedbackDto {
 	@Expose()
 	public sessionTotal?: number;
 
-	@Expose()
-	public nextExerciseId!: string;
+	@Expose() public nextExerciseId?: string;
+	@Expose() public nextReviewAt?: Date;
 }
 
 export class CollectionStatsDto {

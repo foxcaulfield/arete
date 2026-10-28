@@ -21,6 +21,8 @@ import { CommonModule } from "./common/common.module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { auth } from "./configs/better-auth.config";
 import { APP_LIMITS_SYMBOL, defaultAppLimits } from "./configs/app-limits.config";
+import { SrsService } from "./srs/srs.service";
+import { SrsModule } from "./srs/srs.module";
 
 @Module({
 	imports: [
@@ -53,6 +55,7 @@ import { APP_LIMITS_SYMBOL, defaultAppLimits } from "./configs/app-limits.config
 			serveRoot: "/app",
 		}),
 		ScheduleModule.forRoot(),
+		SrsModule,
 	],
 	controllers: [AppController],
 	providers: [
@@ -64,6 +67,7 @@ import { APP_LIMITS_SYMBOL, defaultAppLimits } from "./configs/app-limits.config
 		// { provide: APP_GUARD, useClass: PermissionsGuard },
 		{ provide: APP_GUARD, useClass: ThrottlerGuard },
 		SignUpHook,
+		SrsService,
 	],
 })
 export class AppModule {}
