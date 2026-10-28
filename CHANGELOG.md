@@ -1,3 +1,10 @@
+# [2.1.0-rc.4](https://github.com/foxcaulfield/arete/compare/v2.1.0-rc.3...v2.1.0-rc.4) (2026-10-28)
+
+
+### Features
+
+* persistent drill stats endpoint + quiz stats strip ([#71](https://github.com/foxcaulfield/arete/issues/71)) ([580d8b6](https://github.com/foxcaulfield/arete/commit/580d8b629299f8d941c5834795cc0b3b6acadf1a))
+
 # [2.1.0-rc.3](https://github.com/foxcaulfield/arete/compare/v2.1.0-rc.2...v2.1.0-rc.3) (2026-10-27)
 
 
