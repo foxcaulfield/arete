@@ -26,6 +26,7 @@ import { PaginationService } from "src/common/pagination.service";
 import { CollectionAccessService } from "src/collections/collection-access.service";
 import { APP_LIMITS_SYMBOL } from "src/configs/app-limits.config";
 import type { AppLimitsConfig } from "src/configs/app-limits.config";
+import type { MyAccessLevel } from "src/collections/dto/response-collection.dto";
 import { caseInsensitiveContains } from "src/common/prisma-filters";
 
 type MulterFile = Express.Multer.File;
@@ -63,7 +64,7 @@ export class ExercisesService extends BaseService {
 		dto: CreateExerciseDto,
 		files?: UploadedFiles
 	): Promise<ResponseExerciseDto> {
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, dto.collectionId);
+		await this.collectionAccessService.validateExerciseWriteAccess(currentUserId, dto.collectionId);
 
 		// Check exercise limit for non-admin users
 		const user = await this.prismaService.user.findUnique({ where: { id: currentUserId }, select: { role: true } });
@@ -108,7 +109,6 @@ export class ExercisesService extends BaseService {
 			});
 
 			this.logger.log(`Exercise created: ${exercise.id} by user ${currentUserId}`);
-			// return this.toResponseDto(ResponseExerciseDto, exercise);
 			return this.toResponseDto(ResponseExerciseDto, {
 				...exercise,
 				distractors: parseJsonArray(exercise.distractors),
@@ -131,7 +131,21 @@ export class ExercisesService extends BaseService {
 		collectionId: string,
 		filter: FilterExerciseDto
 	): Promise<PaginatedResponseDto<ResponseExerciseDto>> {
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
+		const { collection, currentUser } = await this.collectionAccessService.validateCollectionReadAccess(
+			currentUserId,
+			collectionId
+		);
+
+		// Resolve caller's effective access level (single source of truth) and
+		// decide whether answers may be revealed. STUDY / VIEW get sanitized rows
+		// (correctAnswer / additionalCorrectAnswers / distractors / explanation
+		// stripped) so nothing leaks into the browser Network tab.
+		const myAccessLevel = await this.collectionAccessService.resolveAccessLevel(
+			currentUserId,
+			collection,
+			currentUser
+		);
+		const canSeeAnswers = myAccessLevel === "OWNER" || myAccessLevel === "ADMIN" || myAccessLevel === "EDIT";
 
 		const {
 			page = 1,
@@ -144,17 +158,12 @@ export class ExercisesService extends BaseService {
 			hasAudio,
 		} = filter;
 
-		// Normalize search - treat empty string as undefined
 		const searchTerm = search?.trim() || undefined;
 
-		// Build where clause
 		const where: Prisma.ExerciseWhereInput = {
 			collectionId,
 			...(searchTerm && {
 				OR: [
-					// { question: { contains: searchTerm, mode: "insensitive" } },
-					// { correctAnswer: { contains: searchTerm, mode: "insensitive" } },
-					// { translation: { contains: searchTerm, mode: "insensitive" } },
 					{ question: caseInsensitiveContains(searchTerm) },
 					{ correctAnswer: caseInsensitiveContains(searchTerm) },
 					{ translation: caseInsensitiveContains(searchTerm) },
@@ -180,19 +189,18 @@ export class ExercisesService extends BaseService {
 
 		const skip = this.paginationService.calculateSkip(page, limit);
 
-		// If searching or filtering, use standard Prisma query
+		// Path 1: search / filter — standard Prisma query
 		if (searchTerm || type || hasImage || hasAudio) {
 			const exercises = await this.prismaService.exercise.findMany({
 				where,
 				skip,
 				take: limit,
 				orderBy:
-					sortBy === ExerciseSortBy.TOTAL_ATTEMPTS
-						? { createdAt: sortOrder } // fallback for totalAttempts
+					sortBy === ExerciseSortBy.TOTAL_ATTEMPTS || sortBy === ExerciseSortBy.MOST_FAILED
+						? { createdAt: sortOrder } // fallback: raw sort unavailable when filters active
 						: { [sortBy]: sortOrder },
 			});
 
-			// Enrich with attempt counts
 			const exerciseIds = exercises.map((e): string => e.id);
 			const attemptCounts = await this.prismaService.attempt.groupBy({
 				by: ["exerciseId", "isCorrect"],
@@ -204,7 +212,6 @@ export class ExercisesService extends BaseService {
 				const attempts = attemptCounts.filter((a): boolean => a.exerciseId === e.id);
 				const totalAttempts = attempts.reduce((sum, a): number => sum + a._count.id, 0);
 				const correctAttempts = attempts.find((a): boolean => a.isCorrect)?._count.id || 0;
-				// return { ...e, totalAttempts, correctAttempts };
 				return {
 					...e,
 					distractors: parseJsonArray(e.distractors),
@@ -214,36 +221,47 @@ export class ExercisesService extends BaseService {
 				};
 			});
 
+			const dtos = this.toResponseDto(ResponseExerciseDto, enriched);
 			return this.paginationService.buildPaginatedResponse(
-				this.toResponseDto(ResponseExerciseDto, enriched),
+				this.sanitizeExercisesForReadOnly(dtos, canSeeAnswers, myAccessLevel),
 				total,
 				page,
 				limit
 			);
 		}
 
-		// Use optimized raw query only for default sort (totalAttempts desc)
-		if (sortBy === ExerciseSortBy.TOTAL_ATTEMPTS) {
+		// Path 2: optimized raw query for attempt-based sorts
+		if (sortBy === ExerciseSortBy.TOTAL_ATTEMPTS || sortBy === ExerciseSortBy.MOST_FAILED) {
 			const rows: Array<
 				Exercise & {
 					totalAttempts: number;
 					correctAttempts: number;
 				}
-			> = await this.exerciseQueryService.getTopMostAttemptedExercises(collectionId, currentUserId, limit, skip);
+			> =
+				sortBy === ExerciseSortBy.MOST_FAILED
+					? await this.exerciseQueryService.getMostFailedExercises(collectionId, currentUserId, limit, skip)
+					: await this.exerciseQueryService.getTopMostAttemptedExercises(
+							collectionId,
+							currentUserId,
+							limit,
+							skip,
+							sortOrder
+						);
 			const parsedRows = rows.map((r): ResponseExerciseDto => ({
 				...r,
 				distractors: parseJsonArray(r.distractors),
 				additionalCorrectAnswers: parseJsonArray(r.additionalCorrectAnswers),
 			}));
+			const dtos = this.toResponseDto(ResponseExerciseDto, parsedRows);
 			return this.paginationService.buildPaginatedResponse(
-				this.toResponseDto(ResponseExerciseDto, parsedRows),
+				this.sanitizeExercisesForReadOnly(dtos, canSeeAnswers, myAccessLevel),
 				total,
 				page,
 				limit
 			);
 		}
 
-		// Standard Prisma query with sorting for non-filtered, non-totalAttempts cases
+		// Path 3: default — Prisma query with sort, enrich with attempt counts
 		const exercises = await this.prismaService.exercise.findMany({
 			where,
 			skip,
@@ -251,7 +269,6 @@ export class ExercisesService extends BaseService {
 			orderBy: { [sortBy]: sortOrder },
 		});
 
-		// Enrich with attempt counts
 		const exerciseIds = exercises.map((e): string => e.id);
 		const attemptCounts = await this.prismaService.attempt.groupBy({
 			by: ["exerciseId", "isCorrect"],
@@ -263,7 +280,6 @@ export class ExercisesService extends BaseService {
 			const attempts = attemptCounts.filter((a): boolean => a.exerciseId === e.id);
 			const totalAttempts = attempts.reduce((sum, a): number => sum + a._count.id, 0);
 			const correctAttempts = attempts.find((a): boolean => a.isCorrect)?._count.id || 0;
-			// return { ...e, totalAttempts, correctAttempts };
 			return {
 				...e,
 				distractors: parseJsonArray(e.distractors),
@@ -273,19 +289,43 @@ export class ExercisesService extends BaseService {
 			};
 		});
 
+		const dtos = this.toResponseDto(ResponseExerciseDto, enriched);
 		return this.paginationService.buildPaginatedResponse(
-			this.toResponseDto(ResponseExerciseDto, enriched),
+			this.sanitizeExercisesForReadOnly(dtos, canSeeAnswers, myAccessLevel),
 			total,
 			page,
 			limit
 		);
 	}
 
+	/**
+	 * Single-exercise fetch, **edit-only** (OWNER | ADMIN | EDIT).
+	 *
+	 * STUDY / VIEW callers get 403 BEFORE reaching the sanitizer path —
+	 * they never see the response, so no answer-stripping is needed here.
+	 * Contrast with getExercisesInCollection, which is ReadAccess and must
+	 * strip `correctAnswer` / `additionalCorrectAnswers` / `distractors` /
+	 * `explanation` for STUDY / VIEW.
+	 *
+	 * If this endpoint is ever opened to read-only callers (e.g. a preview
+	 * feature), switch to validateCollectionReadAccess AND route the return
+	 * through applyStudyViewFilter with canSeeAnswers=false — otherwise
+	 * answers leak via the Network tab.
+	 */
 	public async getExerciseById(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
 		const exercise = await this.findExerciseOrFail(exerciseId);
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
 
-		// Get user's attempt statistics for this exercise
+		const { collection, currentUser } = await this.collectionAccessService.validateExerciseWriteAccess(
+			currentUserId,
+			exercise.collectionId
+		);
+
+		const myAccessLevel = await this.collectionAccessService.resolveAccessLevel(
+			currentUserId,
+			collection,
+			currentUser
+		);
+
 		const attemptStats = await this.prismaService.attempt.groupBy({
 			by: ["isCorrect"],
 			where: { userId: currentUserId, exerciseId },
@@ -295,7 +335,6 @@ export class ExercisesService extends BaseService {
 		const totalAttempts = attemptStats.reduce((sum, a): number => sum + a._count.id, 0);
 		const correctAttempts = attemptStats.find((a): boolean => a.isCorrect)?._count.id || 0;
 
-		// Get last attempt date
 		const lastAttempt = await this.prismaService.attempt.findFirst({
 			where: { userId: currentUserId, exerciseId },
 			orderBy: { createdAt: "desc" },
@@ -309,6 +348,7 @@ export class ExercisesService extends BaseService {
 			totalAttempts,
 			correctAttempts,
 			lastAttemptAt: lastAttempt?.createdAt || null,
+			myAccessLevel,
 		});
 	}
 
@@ -319,12 +359,10 @@ export class ExercisesService extends BaseService {
 		files?: UploadedFiles
 	): Promise<ResponseExerciseDto> {
 		const exercise = await this.findExerciseOrFail(exerciseId);
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
+		await this.collectionAccessService.validateExerciseWriteAccess(currentUserId, exercise.collectionId);
 
 		this.exerciseValidationService.validateAnswersAndDistractors(
 			dto.correctAnswer ?? exercise.correctAnswer,
-			// dto.additionalCorrectAnswers ?? exercise.additionalCorrectAnswers,
-			// dto.distractors ?? exercise.distractors,
 			dto.additionalCorrectAnswers ?? parseJsonArray(exercise.additionalCorrectAnswers),
 			dto.distractors ?? parseJsonArray(exercise.distractors),
 			dto.type ?? exercise.type
@@ -351,8 +389,6 @@ export class ExercisesService extends BaseService {
 				where: { id: exerciseId },
 				data: {
 					...dto,
-					// additionalCorrectAnswers: dto.additionalCorrectAnswers === null ? [] : dto.additionalCorrectAnswers,
-					// distractors: dto.distractors === null ? [] : dto.distractors,
 					additionalCorrectAnswers:
 						dto.additionalCorrectAnswers === undefined
 							? undefined
@@ -364,7 +400,6 @@ export class ExercisesService extends BaseService {
 			});
 
 			this.logger.log(`Exercise updated: ${exerciseId} by user ${currentUserId}`);
-			// return this.toResponseDto(ResponseExerciseDto, updated);
 			return this.toResponseDto(ResponseExerciseDto, {
 				...updated,
 				distractors: parseJsonArray(updated.distractors),
@@ -384,9 +419,8 @@ export class ExercisesService extends BaseService {
 
 	public async delete(currentUserId: string, exerciseId: string): Promise<ResponseExerciseDto> {
 		const exercise = await this.findExerciseOrFail(exerciseId);
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
+		await this.collectionAccessService.validateExerciseWriteAccess(currentUserId, exercise.collectionId);
 
-		// Delete associated files (non-blocking)
 		await this.deleteExerciseFiles(exercise);
 
 		const deleted = await this.prismaService.exercise.delete({
@@ -394,7 +428,6 @@ export class ExercisesService extends BaseService {
 		});
 
 		this.logger.log(`Exercise deleted: ${exerciseId} by user ${currentUserId}`);
-		// return this.toResponseDto(ResponseExerciseDto, deleted);
 		return this.toResponseDto(ResponseExerciseDto, {
 			...deleted,
 			distractors: parseJsonArray(deleted.distractors),
@@ -419,12 +452,41 @@ export class ExercisesService extends BaseService {
 			throw new NotFoundException("Exercise not found for the given file");
 		}
 
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, exercise.collectionId);
+		await this.collectionAccessService.validateCollectionReadAccess(currentUserId, exercise.collectionId);
 
 		return this.filesService.getFile({ filetype, filename });
 	}
 
 	/* ===== PRIVATE HELPER METHODS ===== */
+
+	/**
+	 * Applies the "study view" filter to a batch of exercise DTOs.
+	 *
+	 * - Always attaches `myAccessLevel` so the frontend can derive UI gates.
+	 * - When `canSeeAnswers` is false (STUDY / VIEW), strips the fields that
+	 *   would otherwise expose the answer: `correctAnswer`,
+	 *   `additionalCorrectAnswers`, `distractors`, `explanation`.
+	 *
+	 * Defense-in-depth alongside `<ExercisesTable showAnswers={canEditExercises} />`
+	 * — even if a STUDY user calls the endpoint directly, they get stripped rows.
+	 */
+	private sanitizeExercisesForReadOnly(
+		dtos: ResponseExerciseDto[],
+		canSeeAnswers: boolean,
+		myAccessLevel: MyAccessLevel | null
+	): ResponseExerciseDto[] {
+		if (canSeeAnswers) {
+			return dtos.map((d): ResponseExerciseDto => ({ ...d, myAccessLevel }));
+		}
+		return dtos.map((d): ResponseExerciseDto => ({
+			...d,
+			myAccessLevel,
+			correctAnswer: null,
+			additionalCorrectAnswers: null,
+			distractors: null,
+			explanation: null,
+		}));
+	}
 
 	/**
 	 * Finds an exercise by ID or throws NotFoundException
@@ -441,9 +503,6 @@ export class ExercisesService extends BaseService {
 		return exercise;
 	}
 
-	/**
-	 * Deletes all files associated with an exercise
-	 */
 	private async deleteExerciseFiles(exercise: Exercise): Promise<void> {
 		const deletionPromises: Promise<void>[] = [];
 
@@ -456,7 +515,6 @@ export class ExercisesService extends BaseService {
 
 		const results = await Promise.allSettled(deletionPromises);
 
-		// Log any failures but don't throw
 		results.forEach((result, index): void => {
 			if (result.status === "rejected") {
 				const fileType = index === 0 ? "audio" : "image";
@@ -465,7 +523,6 @@ export class ExercisesService extends BaseService {
 		});
 	}
 
-	/* Private */
 	private validateFileSize(file: MulterFile | undefined, fileType: ExerciseFileType): void {
 		if (!file) return;
 
@@ -493,7 +550,6 @@ export class ExercisesService extends BaseService {
 		setNullAudio?: boolean;
 		setNullImage?: boolean;
 	}): Promise<{ audioFilename: string | null; imageFilename: string | null }> {
-		// Validate file sizes before upload
 		this.validateFileSize(files?.audio?.[0], ExerciseFileType.AUDIO);
 		this.validateFileSize(files?.image?.[0], ExerciseFileType.IMAGE);
 

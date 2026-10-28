@@ -1,5 +1,6 @@
 import { ExerciseType } from "@prisma/client";
 import { Expose } from "class-transformer";
+import type { MyAccessLevel } from "src/collections/dto/response-collection.dto";
 
 export class ResponseExerciseDto {
 	@Expose()
@@ -52,4 +53,7 @@ export class ResponseExerciseDto {
 
 	@Expose()
 	public lastAttemptAt?: Date | null;
+
+	@Expose()
+	public myAccessLevel?: MyAccessLevel | null;
 }

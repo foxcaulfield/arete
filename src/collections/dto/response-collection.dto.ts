@@ -11,35 +11,19 @@ class ResponseUserDto {
 	public name?: string | null;
 }
 
+export type MyAccessLevel = "OWNER" | "ADMIN" | "EDIT" | "STUDY" | "VIEW";
+
 export class ResponseCollectionDto {
-	@Expose()
-	public id!: string;
-
-	@Expose()
-	public name!: string;
-
-	@Expose()
-	public description?: string;
-
-	@Expose()
-	public createdAt!: Date;
-
-	@Expose()
-	public updatedAt!: Date;
-
-	@Expose()
-	@Type((): typeof ResponseUserDto => ResponseUserDto)
-	public user?: ResponseUserDto;
-
-	@Expose()
-	public attemptCount?: number;
-
-	@Expose()
-	public exerciseCount?: number;
-
-	@Expose()
-	public uniqueExercisesAttempted?: number;
-
-	@Expose()
-	public coverage?: string;
+	@Expose() public id!: string;
+	@Expose() public name!: string;
+	@Expose() public description?: string;
+	@Expose() public createdAt!: Date;
+	@Expose() public updatedAt!: Date;
+	@Expose() @Type((): typeof ResponseUserDto => ResponseUserDto) public user?: ResponseUserDto;
+	@Expose() public attemptCount?: number;
+	@Expose() public exerciseCount?: number;
+	@Expose() public uniqueExercisesAttempted?: number;
+	@Expose() public coverage?: string;
+	@Expose() public myAccessLevel?: MyAccessLevel;
+	@Expose() public canManageSharing?: boolean;
 }

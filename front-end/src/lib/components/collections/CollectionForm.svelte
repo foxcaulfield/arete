@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from "$lib/components/common/Button.svelte";
-import { untrack } from "svelte";
+	import { untrack } from "svelte";
 
 	interface Props {
 		mode: "create" | "edit";
@@ -13,10 +13,8 @@ import { untrack } from "svelte";
 
 	let { mode, initialValues = {}, onSave, onCancel, generalError = null, fieldErrors = {} }: Props = $props();
 
-
-
-let name = $state(untrack(() => initialValues.name ?? ""));
-let description = $state(untrack(() => initialValues.description ?? ""));
+	let name = $state(untrack(() => initialValues.name ?? ""));
+	let description = $state(untrack(() => initialValues.description ?? ""));
 	let submitting = $state(false);
 
 	const hasNameError = $derived((fieldErrors.name?.length ?? 0) > 0);

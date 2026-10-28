@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Button from "$lib/components/common/Button.svelte";
 	import { backend } from "$lib/api/client";
 	import { interpretActionError } from "$lib/api/forms";
 	import { session } from "$lib/auth/session.svelte";
@@ -44,13 +45,14 @@
 	<div class="space-y-4 p-4">
 		<div class="flex items-center justify-between">
 			<h1 class="h3">All collections</h1>
-			<button
+			<Button
+				text="Back to Your Collections"
 				type="button"
-				class="btn preset-tonal-primary-500 btn-sm"
+				preset="outlined"
+				color="primary"
+				size="sm"
 				onclick={() => router.navigate("/collections")}
-			>
-				Back to Your Collections
-			</button>
+			/>
 		</div>
 
 		{#if collections.length === 0}

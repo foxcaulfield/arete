@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { Exercise, ExerciseType } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ExercisesService } from "./exercises.service";
-import { QuizQuestionDto, UserAnswerDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
+import { QuizQuestionDto, UserAnswerDto, UserAnswerFeedbackDto, CollectionStatsDto } from "./dto/quiz.dto";
 import { BaseService } from "src/base/base.service";
 import { UtilsService } from "src/common/utils.service";
 import { ExerciseQueryService } from "./exercise-query.service";
@@ -82,7 +82,7 @@ export class QuizService extends BaseService {
 		collectionId: string,
 		exerciseSelectionMode: string = "random"
 	): Promise<QuizQuestionDto> {
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
+		await this.collectionAccessService.validateCollectionStudyAccess(currentUserId, collectionId);
 
 		// Get collection stats
 		const [totalExercises, exercisesWithAttempts] = await Promise.all([
@@ -122,7 +122,7 @@ export class QuizService extends BaseService {
 		collectionId: string,
 		dto: UserAnswerDto
 	): Promise<UserAnswerFeedbackDto> {
-		await this.collectionAccessService.validateCollectionAccess(currentUserId, collectionId);
+		await this.collectionAccessService.validateCollectionStudyAccess(currentUserId, collectionId);
 
 		const exercise = await this.exercisesService.findExerciseOrFail(dto.exerciseId);
 		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
@@ -146,5 +146,64 @@ export class QuizService extends BaseService {
 			sessionTotal: sessionStats.total,
 			nextExerciseId: nextExercise.id,
 		};
+	}
+
+	/**
+	 * Persistent lifetime stats for the current user on a given collection.
+	 * Computed from the `Attempt` table — survives server restarts, no
+	 * in-memory store involved. Streak and maxStreak are derived by walking
+	 * the attempts in `createdAt ASC` order.
+	 *
+	 * Requires STUDY access (same as drill). VIEW-only users can't answer,
+	 * so stats are meaningless for them.
+	 */
+	public async getCollectionStats(currentUserId: string, collectionId: string): Promise<CollectionStatsDto> {
+		await this.collectionAccessService.validateCollectionStudyAccess(currentUserId, collectionId);
+
+		const [totalExercises, exercisesWithAttempts, attempts] = await Promise.all([
+			this.prismaService.exercise.count({ where: { collectionId, isActive: true } }),
+			this.prismaService.exercise.count({
+				where: {
+					collectionId,
+					isActive: true,
+					Attempt: { some: { userId: currentUserId } },
+				},
+			}),
+			this.prismaService.attempt.findMany({
+				where: {
+					userId: currentUserId,
+					exercise: { collectionId, isActive: true },
+				},
+				select: { isCorrect: true },
+				orderBy: { createdAt: "asc" },
+			}),
+		]);
+
+		const totalAttempts = attempts.length;
+		const correctAttempts = attempts.filter((a): boolean => a.isCorrect).length;
+		const accuracy = totalAttempts > 0 ? correctAttempts / totalAttempts : 0;
+
+		let streak = 0;
+		let maxStreak = 0;
+		let current = 0;
+		for (const a of attempts) {
+			if (a.isCorrect) {
+				current++;
+				if (current > maxStreak) maxStreak = current;
+			} else {
+				current = 0;
+			}
+		}
+		streak = current;
+
+		return this.toResponseDto(CollectionStatsDto, {
+			totalExercises,
+			exercisesWithAttempts,
+			totalAttempts,
+			correctAttempts,
+			accuracy,
+			streak,
+			maxStreak,
+		});
 	}
 }

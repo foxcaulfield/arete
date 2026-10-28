@@ -174,7 +174,54 @@ async function main() {
 		bump(inserted, "exercises");
 	}
 
-	// 6. Attempts — skip if parent exercise or user not in target
+	// 6. CollectionShares — skip if collection or grantee not in target.
+	//    Nullify grantedById if that user isn't present (would violate FK).
+	for (const s of dump.data.collectionShares ?? []) {
+		if (!(await prisma.collection.findUnique({ where: { id: s.collectionId } }))) {
+			bump(skipped, "collectionShares");
+			continue;
+		}
+		if (!(await prisma.user.findUnique({ where: { id: s.userId } }))) {
+			bump(skipped, "collectionShares");
+			continue;
+		}
+		const existing = await prisma.collectionShare.findUnique({
+			where: { collectionId_userId: { collectionId: s.collectionId, userId: s.userId } },
+		});
+		if (existing) {
+			bump(skipped, "collectionShares");
+			if (!MERGE) throw new Error(`CollectionShare ${s.collectionId}/${s.userId} exists`);
+			continue;
+		}
+
+		let grantedById = s.grantedById ?? null;
+		if (grantedById) {
+			const grantorExists = await prisma.user.findUnique({
+				where: { id: grantedById },
+				select: { id: true },
+			});
+			if (!grantorExists) {
+				warn(
+					`CollectionShare ${s.collectionId}/${s.userId} — grantor ${grantedById} missing, setting grantedById=null`
+				);
+				grantedById = null;
+			}
+		}
+
+		await prisma.collectionShare.create({
+			data: {
+				id: s.id,
+				collectionId: s.collectionId,
+				userId: s.userId,
+				accessLevel: s.accessLevel,
+				grantedById,
+				grantedAt: toDate(s.grantedAt),
+			},
+		});
+		bump(inserted, "collectionShares");
+	}
+
+	// 7. Attempts — skip if parent exercise or user not in target
 	for (const a of dump.data.attempts) {
 		if (!(await prisma.exercise.findUnique({ where: { id: a.exerciseId } }))) {
 			bump(skipped, "attempts");
