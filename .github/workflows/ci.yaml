@@ -33,8 +33,11 @@ jobs:
             - name: Type-check (backend)
               run: npx tsc -p tsconfig.build.json --noEmit
 
-            - name: Type-check (frontend)
+            - name: Type-check (frontend — tsc)
               run: npx tsc -p front-end/tsconfig.app.json --noEmit
+
+            - name: Type-check (frontend — svelte-check)
+              run: npx svelte-check --tsconfig front-end/tsconfig.app.json
 
             - name: Test
               run: npm test -- --passWithNoTests
