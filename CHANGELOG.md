@@ -1,3 +1,20 @@
+# [2.1.0](https://github.com/foxcaulfield/arete/compare/v2.0.4...v2.1.0) (2026-10-28)
+
+
+### Bug Fixes
+
+* migrate all preset buttons to Button component; document UI conventions ([#66](https://github.com/foxcaulfield/arete/issues/66)) ([8b5d232](https://github.com/foxcaulfield/arete/commit/8b5d232f796ca2c7f88a275ed315dbfb706fe0c8))
+
+
+### Features
+
+* admin UI for collection sharing ([#69](https://github.com/foxcaulfield/arete/issues/69)) ([425d0d2](https://github.com/foxcaulfield/arete/commit/425d0d2aabf7dc620ea502f40ce85de249f0b902))
+* collection and exercise search, filters, presets, saved filters ([#73](https://github.com/foxcaulfield/arete/issues/73)) ([d1b2084](https://github.com/foxcaulfield/arete/commit/d1b208417f9145cbf089d74b5ca90b6bef3e2a7e))
+* per-user collection sharing (backend) ([#67](https://github.com/foxcaulfield/arete/issues/67)) ([d82ac53](https://github.com/foxcaulfield/arete/commit/d82ac53778b3be10caf73a229215f4356d00579f))
+* persistent drill stats endpoint + quiz stats strip ([#71](https://github.com/foxcaulfield/arete/issues/71)) ([580d8b6](https://github.com/foxcaulfield/arete/commit/580d8b629299f8d941c5834795cc0b3b6acadf1a))
+* profile stats — aggregated lifetime statistics ([#75](https://github.com/foxcaulfield/arete/issues/75)) ([b46ddd1](https://github.com/foxcaulfield/arete/commit/b46ddd1684d3c7affdc8267cbfd9ce7e98a4db7c))
+* user-facing shared collections view + EDIT-share enforcement ([#70](https://github.com/foxcaulfield/arete/issues/70)) ([54ad304](https://github.com/foxcaulfield/arete/commit/54ad3040f4a4d15a33d3843ac2e995f63f36abe4))
+
 # [2.1.0-rc.6](https://github.com/foxcaulfield/arete/compare/v2.1.0-rc.5...v2.1.0-rc.6) (2026-10-28)
 
 
