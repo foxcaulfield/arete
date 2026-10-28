@@ -26,6 +26,7 @@ import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { multerConfig, multerField as field } from "src/configs/multer.config";
 import { ExerciseFileType } from "../common/enums/exercise-file-type.enum";
 import { QuizService } from "./quiz.service";
+import { SrsService } from "src/srs/srs.service";
 
 type MulterFiles = Express.Multer.File[];
 type UploadedExerciseFiles = { audio?: MulterFiles; image?: MulterFiles };
@@ -34,7 +35,8 @@ type UploadedExerciseFiles = { audio?: MulterFiles; image?: MulterFiles };
 export class ExercisesController {
 	public constructor(
 		private readonly exercisesService: ExercisesService,
-		private readonly quizService: QuizService
+		private readonly quizService: QuizService,
+		private readonly srsService: SrsService
 	) {}
 
 	@Post("create")
@@ -88,9 +90,10 @@ export class ExercisesController {
 	@Get("drill/:collectionId")
 	public async getDrillExercise(
 		@Param("collectionId") collectionId: string,
+		@Query("mode") mode: string | undefined,
 		@Session() session: UserSession
 	): Promise<QuizQuestionDto> {
-		return this.quizService.getDrillExercise(session.user.id, collectionId);
+		return this.quizService.getDrillExercise(session.user.id, collectionId, mode ?? "random");
 	}
 
 	@Get("drill/:collectionId/stats")
@@ -109,6 +112,34 @@ export class ExercisesController {
 		@Body() dto: UserAnswerDto
 	): Promise<UserAnswerFeedbackDto> {
 		return this.quizService.submitDrillAnswer(session.user.id, collectionId, dto);
+	}
+
+	@Get("due-count")
+	public async getDueCount(
+		@Query("collectionId") collectionId: string | undefined,
+		@Session() session: UserSession
+	): Promise<{ count: number }> {
+		const count = await this.srsService.getDueCount(session.user.id, collectionId || undefined);
+		return { count };
+	}
+
+	@Get("due/:collectionId")
+	public async getDueInCollection(
+		@Param("collectionId") collectionId: string,
+		@Query("limit") limitStr: string | undefined,
+		@Query("offset") offsetStr: string | undefined,
+		@Session() session: UserSession
+	): Promise<{ data: ResponseExerciseDto[]; total: number }> {
+		const limit = Math.min(parseInt(limitStr ?? "20", 10) || 20, 100);
+		const offset = parseInt(offsetStr ?? "0", 10) || 0;
+		const [exercises, total] = await Promise.all([
+			this.srsService.getDueExercises(session.user.id, collectionId, limit, offset),
+			this.srsService.getDueCount(session.user.id, collectionId),
+		]);
+		const data = exercises.map(
+			(e): ResponseExerciseDto => this.exercisesService.toPublicExerciseDto(e) as ResponseExerciseDto
+		);
+		return { data, total };
 	}
 
 	@Get("files/:type/:filename")

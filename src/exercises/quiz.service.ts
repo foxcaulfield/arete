@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { Exercise, ExerciseType } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ExercisesService } from "./exercises.service";
@@ -10,6 +10,7 @@ import { EXERCISE_RULES_SYMBOL, type ExerciseRulesConfig } from "src/exercises/e
 import { CollectionAccessService } from "src/collections/collection-access.service";
 import { QUIZ_SESSION_STORE, type IQuizSessionStore, type QuizSessionStats } from "./quiz-session.store";
 import { parseJsonArray } from "src/common/json-array";
+import { SrsService } from "src/srs/srs.service";
 
 @Injectable()
 export class QuizService extends BaseService {
@@ -19,6 +20,7 @@ export class QuizService extends BaseService {
 		private readonly collectionAccessService: CollectionAccessService,
 		private readonly utilsService: UtilsService,
 		private readonly exerciseQueryService: ExerciseQueryService,
+		private readonly srsService: SrsService,
 		@Inject(EXERCISE_RULES_SYMBOL) private readonly exerciseConfig: ExerciseRulesConfig,
 		@Inject(QUIZ_SESSION_STORE) private readonly sessionStore: IQuizSessionStore
 	) {
@@ -84,7 +86,6 @@ export class QuizService extends BaseService {
 	): Promise<QuizQuestionDto> {
 		await this.collectionAccessService.validateCollectionStudyAccess(currentUserId, collectionId);
 
-		// Get collection stats
 		const [totalExercises, exercisesWithAttempts] = await Promise.all([
 			this.prismaService.exercise.count({ where: { collectionId, isActive: true } }),
 			this.prismaService.exercise.count({
@@ -97,7 +98,13 @@ export class QuizService extends BaseService {
 		]);
 
 		let exercise: Exercise;
-		if (exerciseSelectionMode === "least-attempted") {
+		if (exerciseSelectionMode === "due") {
+			const due = await this.srsService.getDueExercises(currentUserId, collectionId, 1, 0);
+			if (due.length === 0) {
+				throw new NotFoundException("No exercises due for review in this collection");
+			}
+			exercise = due[0]!;
+		} else if (exerciseSelectionMode === "least-attempted") {
 			exercise = await this.exerciseQueryService.getLeastAttemptedExercise(collectionId, currentUserId);
 		} else {
 			exercise = await this.exerciseQueryService.getRandomActiveExercise(collectionId);
@@ -105,8 +112,7 @@ export class QuizService extends BaseService {
 
 		const updatedDistractors =
 			exercise.type === ExerciseType.CHOICE_SINGLE
-				? // ? this.getRandomDistractors(exercise.correctAnswer, exercise.distractors ?? [])
-					this.getRandomDistractors(exercise.correctAnswer, parseJsonArray(exercise.distractors))
+				? this.getRandomDistractors(exercise.correctAnswer, parseJsonArray(exercise.distractors))
 				: [];
 
 		return this.toResponseDto(QuizQuestionDto, {
@@ -116,7 +122,6 @@ export class QuizService extends BaseService {
 			exercisesWithAttempts,
 		});
 	}
-
 	public async submitDrillAnswer(
 		currentUserId: string,
 		collectionId: string,
@@ -127,24 +132,19 @@ export class QuizService extends BaseService {
 		const exercise = await this.exercisesService.findExerciseOrFail(dto.exerciseId);
 		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
 
-		// Update session stats
 		const sessionStats = this.sessionStore.recordAnswer(currentUserId, collectionId, exercise.id, isCorrect);
-
-		// Record attempt in database
 		await this.recordAttempt(currentUserId, exercise.id, dto.userAnswer, isCorrect);
-
-		const nextExercise = await this.getDrillExercise(currentUserId, collectionId);
+		const cardState = await this.srsService.scheduleReview(currentUserId, exercise.id, isCorrect);
 
 		return {
 			isCorrect,
 			correctAnswer: exercise.correctAnswer,
 			explanation: exercise.explanation ?? undefined,
-			// additionalCorrectAnswers: exercise.additionalCorrectAnswers ?? undefined,
 			additionalCorrectAnswers: parseJsonArray(exercise.additionalCorrectAnswers),
 			streak: sessionStats.streak,
 			sessionCorrect: sessionStats.correct,
 			sessionTotal: sessionStats.total,
-			nextExerciseId: nextExercise.id,
+			nextReviewAt: cardState.nextReviewAt,
 		};
 	}
 
