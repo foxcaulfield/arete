@@ -1,3 +1,10 @@
+# [2.2.0-rc.1](https://github.com/foxcaulfield/arete/compare/v2.1.0...v2.2.0-rc.1) (2026-10-28)
+
+
+### Features
+
+* SRS backend — SM-2 spaced repetition scheduling ([3e89e0c](https://github.com/foxcaulfield/arete/commit/3e89e0cbc97a70f5a52d41bb5d17319167cdc36e))
+
 # [2.1.0](https://github.com/foxcaulfield/arete/compare/v2.0.4...v2.1.0) (2026-10-28)
 
 
