@@ -129,6 +129,10 @@ class BackendClient {
 				});
 				return (await r.json()) as Quiz.UserAnswerFeedbackDto;
 			},
+			getDrillStats: async (collectionId: string): Promise<Quiz.CollectionStatsDto> => {
+				const r = await this.request("GET", `/exercises/drill/${collectionId}/stats`);
+				return (await r.json()) as Quiz.CollectionStatsDto;
+			},
 			getListByCollectionId: async (
 				collectionId: string,
 				page = 1,
