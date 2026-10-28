@@ -195,7 +195,10 @@ export class ExercisesService extends BaseService {
 				where,
 				skip,
 				take: limit,
-				orderBy: sortBy === ExerciseSortBy.TOTAL_ATTEMPTS ? { createdAt: sortOrder } : { [sortBy]: sortOrder },
+				orderBy:
+					sortBy === ExerciseSortBy.TOTAL_ATTEMPTS || sortBy === ExerciseSortBy.MOST_FAILED
+						? { createdAt: sortOrder } // fallback: raw sort unavailable when filters active
+						: { [sortBy]: sortOrder },
 			});
 
 			const exerciseIds = exercises.map((e): string => e.id);
@@ -227,14 +230,23 @@ export class ExercisesService extends BaseService {
 			);
 		}
 
-		// Path 2: optimized raw query for totalAttempts sort
-		if (sortBy === ExerciseSortBy.TOTAL_ATTEMPTS) {
+		// Path 2: optimized raw query for attempt-based sorts
+		if (sortBy === ExerciseSortBy.TOTAL_ATTEMPTS || sortBy === ExerciseSortBy.MOST_FAILED) {
 			const rows: Array<
 				Exercise & {
 					totalAttempts: number;
 					correctAttempts: number;
 				}
-			> = await this.exerciseQueryService.getTopMostAttemptedExercises(collectionId, currentUserId, limit, skip);
+			> =
+				sortBy === ExerciseSortBy.MOST_FAILED
+					? await this.exerciseQueryService.getMostFailedExercises(collectionId, currentUserId, limit, skip)
+					: await this.exerciseQueryService.getTopMostAttemptedExercises(
+							collectionId,
+							currentUserId,
+							limit,
+							skip,
+							sortOrder
+						);
 			const parsedRows = rows.map((r): ResponseExerciseDto => ({
 				...r,
 				distractors: parseJsonArray(r.distractors),

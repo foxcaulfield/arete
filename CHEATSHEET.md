@@ -197,3 +197,20 @@ strip is the actual security boundary — verified: no leak in Network tab.
 - `ResponseCollectionDto.canManageSharing` (bool) → admin-only, drives sharing panel
 - `ResponseExerciseDto.myAccessLevel` (from server) → same enum, used on edit page
 - **Frontend never reads `session.user.role`** — backend is the sole gate.
+
+
+---
+
+### Type-check frontend with `svelte-check`, not `tsc`
+
+`tsc -p front-end/tsconfig.app.json --noEmit` skips `.svelte` files — only
+`.ts` files are checked. Type errors inside `<script lang="ts">` blocks in
+`.svelte` files are invisible to `tsc`. `svelte-check` bridges the gap.
+
+Run before every frontend PR:
+
+    npx svelte-check --tsconfig front-end/tsconfig.app.json
+
+Add it to CI's `build-and-test` step after `tsc -p front-end/... --noEmit`.
+It's ~3s on this codebase, catches real bugs (like a stale union type
+missed by `tsc` in PR #73).
