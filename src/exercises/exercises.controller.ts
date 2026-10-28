@@ -21,7 +21,7 @@ import { ResponseExerciseDto } from "./dto/response-exercise.dto";
 import { FilterExerciseDto } from "./dto/filter-exercise.dto";
 import { PaginatedResponseDto } from "src/common/types";
 import { UpdateExerciseDto } from "./dto/update-exercise.dto";
-import { UserAnswerDto, QuizQuestionDto, UserAnswerFeedbackDto } from "./dto/quiz.dto";
+import { UserAnswerDto, QuizQuestionDto, UserAnswerFeedbackDto, CollectionStatsDto } from "./dto/quiz.dto";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { multerConfig, multerField as field } from "src/configs/multer.config";
 import { ExerciseFileType } from "../common/enums/exercise-file-type.enum";
@@ -91,6 +91,14 @@ export class ExercisesController {
 		@Session() session: UserSession
 	): Promise<QuizQuestionDto> {
 		return this.quizService.getDrillExercise(session.user.id, collectionId);
+	}
+
+	@Get("drill/:collectionId/stats")
+	public async getDrillStats(
+		@Param("collectionId") collectionId: string,
+		@Session() session: UserSession
+	): Promise<CollectionStatsDto> {
+		return this.quizService.getCollectionStats(session.user.id, collectionId);
 	}
 
 	@Post("drill/:collectionId/submit")

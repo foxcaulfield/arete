@@ -69,3 +69,13 @@ export class UserAnswerFeedbackDto {
 	@Expose()
 	public nextExerciseId!: string;
 }
+
+export class CollectionStatsDto {
+	@Expose() public totalExercises!: number;
+	@Expose() public exercisesWithAttempts!: number;
+	@Expose() public totalAttempts!: number;
+	@Expose() public correctAttempts!: number;
+	@Expose() public accuracy!: number; // 0..1, correctAttempts / totalAttempts
+	@Expose() public streak!: number; // trailing consecutive correct (0 if last was wrong)
+	@Expose() public maxStreak!: number; // best ever in this collection
+}

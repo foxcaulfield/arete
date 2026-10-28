@@ -93,6 +93,8 @@ declare global {
 			translation?: string | null;
 			explanation?: string | null;
 			distractors?: string[] | null;
+			totalExercises?: number;
+			exercisesWithAttempts?: number;
 		}
 
 		interface UserAnswerFeedbackDto {
@@ -105,6 +107,16 @@ declare global {
 		interface UserAnswerDto {
 			exerciseId: string;
 			userAnswer: string;
+		}
+
+		interface CollectionStatsDto {
+			totalExercises: number;
+			exercisesWithAttempts: number;
+			totalAttempts: number;
+			correctAttempts: number;
+			accuracy: number; // 0..1
+			streak: number;
+			maxStreak: number;
 		}
 	}
 

@@ -34,6 +34,17 @@
 	let lastResult = $state<Quiz.UserAnswerFeedbackDto | null>(null);
 	let lastUserAnswer = $state("");
 
+	let stats = $state<Quiz.CollectionStatsDto | null>(null);
+
+	async function loadStats(): Promise<void> {
+		try {
+			stats = await backend.api.exercises.getDrillStats(slug);
+		} catch {
+			// Stats are decorative — never block the quiz on a stats fetch failure
+			stats = null;
+		}
+	}
+
 	let inputElement = $state<HTMLInputElement | undefined>(undefined);
 	let imageElement = $state<HTMLImageElement | undefined>(undefined);
 	let audioElement = $state<HTMLAudioElement | undefined>(undefined);
@@ -75,6 +86,7 @@
 		const s = slug;
 		void s;
 		void fetchQuestion();
+		void loadStats();
 	});
 
 	async function submitAnswer(rawAnswer: string): Promise<void> {
@@ -95,6 +107,7 @@
 			}
 			await tick();
 			nextButtonElement?.focus?.();
+			void loadStats();
 		} catch (e) {
 			error = interpretActionError(e).message;
 		} finally {
@@ -186,6 +199,44 @@
 					<ExerciseTypeBadge exerciseType={currentQuestion.type} />
 				{/if}
 			</div>
+
+			{#if stats && stats.totalExercises > 0}
+				<div class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-surface-400">
+					<span>
+						<strong class="text-surface-200">{stats.exercisesWithAttempts}/{stats.totalExercises}</strong>
+						seen
+					</span>
+					<span class="opacity-40">·</span>
+					<span>
+						<strong class="text-surface-200">{stats.totalAttempts}</strong>
+						attempts
+					</span>
+					{#if stats.totalAttempts > 0}
+						<span class="opacity-40">·</span>
+						<span>
+							<strong
+								class={stats.accuracy >= 0.7
+									? "text-success-400"
+									: stats.accuracy >= 0.4
+										? "text-warning-400"
+										: "text-error-400"}
+							>
+								{Math.round(stats.accuracy * 100)}%
+							</strong>
+							correct
+						</span>
+					{/if}
+					{#if stats.streak > 0}
+						<span class="opacity-40">·</span>
+						<span class="text-warning-400">
+							🔥 streak {stats.streak}
+							{#if stats.maxStreak > stats.streak}
+								<span class="text-surface-500">(best {stats.maxStreak})</span>
+							{/if}
+						</span>
+					{/if}
+				</div>
+			{/if}
 
 			{#if error}
 				<div
