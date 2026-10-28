@@ -14,7 +14,7 @@
 	let errorMessage = $state<string | null>(null);
 
 	const currentPage = $derived(parseInt(router.page.url.searchParams.get("page") ?? "1", 10) || 1);
-	const limit = $derived(parseInt(router.page.url.searchParams.get("limit") ?? "10", 10) || 10);
+	const limit = $derived(parseInt(router.page.url.searchParams.get("limit") ?? "20", 10) || 20);
 	const totalItems = $derived(pagination?.totalItems ?? 0);
 	const totalPages = $derived(pagination?.totalPages ?? 0);
 	const hasNext = $derived(Boolean(pagination?.hasNextPage));

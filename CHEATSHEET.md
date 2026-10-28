@@ -149,3 +149,51 @@ If padding still looks wrong (logical-property conflict in some Tailwind v4 buil
 Migration `20251022130000_arrays_to_json_strings` fails shadow replay (`column "additional_correct_answers" does not exist`) because its assumptions came from `db push` drift, not prior migrations. **Use `prisma migrate diff` + `prisma migrate deploy`** (no shadow check) until the migration history is squashed/baselined. `migrate dev` will fail with P3006. Not urgent — prod uses `migrate deploy` via `start:migrate:prod`.
 
 ---
+
+---
+
+## 14. Collection access model (per-user sharing)
+
+Four access levels in `CollectionShare.accessLevel` (enum `CollectionAccessLevel`):
+`VIEW` | `STUDY` | `EDIT` (owner of the collection is `OWNER`, admin is `ADMIN`).
+
+Effective access resolves to `MyAccessLevel` = `OWNER | ADMIN | EDIT | STUDY | VIEW`
+via `CollectionAccessService.resolveAccessLevel(userId, collection, user)`.
+
+Access matrix (source of truth):
+
+| Operation             | OWNER | ADMIN | EDIT | STUDY | VIEW |
+| :-------------------- | :---: | :---: | :--: | :---: | :--: |
+| read / view files     |  ✅   |  ✅   |  ✅  |  ✅   |  ✅  |
+| drill (quiz)          |  ✅   |  ✅   |  ✅  |  ✅   |  ❌  |
+| exercise CRUD         |  ✅   |  ✅   |  ✅  |  ❌   |  ❌  |
+| rename / delete coll. |  ✅   |  ✅   |  ❌  |  ❌   |  ❌  |
+
+### Four guards in `CollectionAccessService`
+
+| Method                           | Allows                    | Used for                                                                                   |
+| :------------------------------- | :------------------------ | :----------------------------------------------------------------------------------------- |
+| `validateCollectionReadAccess`   | OWNER, ADMIN, any share   | listing exercises, metadata, files                                                         |
+| `validateCollectionStudyAccess`  | OWNER, ADMIN, STUDY, EDIT | drill endpoints                                                                            |
+| `validateExerciseWriteAccess`    | OWNER, ADMIN, EDIT        | exercise create/update/delete                                                              |
+| `validateCollectionManageAccess` | OWNER, ADMIN              | (defined, not called — manage route uses `canAccessCollection` inline due to circular dep) |
+
+### Answer stripping for STUDY / VIEW
+
+`getExercisesInCollection` calls `resolveAccessLevel`, then
+`sanitizeExercisesForReadOnly(dtos, canSeeAnswers, myAccessLevel)`:
+when caller is STUDY or VIEW, strips `correctAnswer`, `additionalCorrectAnswers`,
+`distractors`, `explanation` from every row before returning. UI hides the answer
+column via `<ExercisesTable showAnswers={canEditExercises} />`, but the backend
+strip is the actual security boundary — verified: no leak in Network tab.
+
+`getExerciseById` is **edit-only** (`validateExerciseWriteAccess`). STUDY/VIEW get
+403 with an empty body — no exercise JSON leaks at all.
+
+### Frontend gating contract
+
+- `ResponseCollectionDto.myAccessLevel` (from server) → derive `canEditCollection`
+  (= OWNER|ADMIN) and `canEditExercises` (= OWNER|ADMIN|EDIT)
+- `ResponseCollectionDto.canManageSharing` (bool) → admin-only, drives sharing panel
+- `ResponseExerciseDto.myAccessLevel` (from server) → same enum, used on edit page
+- **Frontend never reads `session.user.role`** — backend is the sole gate.
