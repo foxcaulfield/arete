@@ -7,6 +7,7 @@ export enum ExerciseSortBy {
 	CREATED_AT = "createdAt",
 	UPDATED_AT = "updatedAt",
 	TOTAL_ATTEMPTS = "totalAttempts",
+	MOST_FAILED = "mostFailed",
 }
 
 export enum SortOrder {

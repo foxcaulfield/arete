@@ -62,8 +62,20 @@ class BackendClient {
 			signout: (): Promise<Response> => this.request("POST", "/api/auth/sign-out", {}),
 		},
 		collections: {
-			list: async (page = 1, limit = 10): Promise<PaginatedResponse<Collection.ResponseDto>> => {
-				const r = await this.request("GET", `/collections/list?page=${page}&limit=${limit}`);
+			list: async (
+				page = 1,
+				limit = 10,
+				filters?: {
+					search?: string;
+					sortBy?: "name" | "createdAt" | "updatedAt";
+					sortOrder?: "asc" | "desc";
+				}
+			): Promise<PaginatedResponse<Collection.ResponseDto>> => {
+				const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+				if (filters?.search) qs.set("search", filters.search);
+				if (filters?.sortBy) qs.set("sortBy", filters.sortBy);
+				if (filters?.sortOrder) qs.set("sortOrder", filters.sortOrder);
+				const r = await this.request("GET", `/collections/list?${qs.toString()}`);
 				return (await r.json()) as PaginatedResponse<Collection.ResponseDto>;
 			},
 			all: async (page = 1, limit = 10): Promise<PaginatedResponse<Collection.ResponseDto>> => {
@@ -136,12 +148,24 @@ class BackendClient {
 			getListByCollectionId: async (
 				collectionId: string,
 				page = 1,
-				limit = 20
+				limit = 20,
+				filters?: {
+					search?: string;
+					type?: "FILL_IN_THE_BLANK" | "CHOICE_SINGLE";
+					hasImage?: "has" | "none";
+					hasAudio?: "has" | "none";
+					sortBy?: "question" | "createdAt" | "updatedAt" | "totalAttempts" | "mostFailed";
+					sortOrder?: "asc" | "desc";
+				}
 			): Promise<PaginatedResponse<Exercise.ResponseDto>> => {
-				const r = await this.request(
-					"GET",
-					`/exercises/by_collection/${collectionId}?page=${page}&limit=${limit}`
-				);
+				const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+				if (filters?.search) qs.set("search", filters.search);
+				if (filters?.type) qs.set("type", filters.type);
+				if (filters?.hasImage) qs.set("hasImage", filters.hasImage);
+				if (filters?.hasAudio) qs.set("hasAudio", filters.hasAudio);
+				if (filters?.sortBy) qs.set("sortBy", filters.sortBy);
+				if (filters?.sortOrder) qs.set("sortOrder", filters.sortOrder);
+				const r = await this.request("GET", `/exercises/by_collection/${collectionId}?${qs.toString()}`);
 				return (await r.json()) as PaginatedResponse<Exercise.ResponseDto>;
 			},
 			getFile: (fileType: string, filename: string): Promise<Response> =>

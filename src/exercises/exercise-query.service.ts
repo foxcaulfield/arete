@@ -5,7 +5,77 @@ import { PrismaService } from "src/prisma/prisma.service";
 @Injectable()
 export class ExerciseQueryService {
 	public constructor(private readonly prismaService: PrismaService) {}
+
+	/**
+	 * Sorts exercises by total attempts for the current user.
+	 * `sortOrder` determines ascending (least attempted first) or descending
+	 * (most attempted first). Unattempted exercises fall to the bottom of
+	 * DESC and top of ASC — both via NULLS LAST/FIRST respectively.
+	 */
 	public async getTopMostAttemptedExercises(
+		collectionId: string,
+		userId: string,
+		limit: number = 5,
+		skip: number = 0,
+		sortOrder: "asc" | "desc" = "desc"
+	): Promise<
+		Array<
+			Exercise & {
+				totalAttempts: number;
+				correctAttempts: number;
+			}
+		>
+	> {
+		const orderBy =
+			sortOrder === "asc"
+				? Prisma.sql`COALESCE(a.total, 0) ASC NULLS FIRST`
+				: Prisma.sql`COALESCE(a.total, 0) DESC NULLS LAST`;
+		return await this.prismaService.$queryRaw(
+			Prisma.sql`
+			SELECT
+				e.id,
+				e.question,
+				e."audioUrl"                   AS "audioUrl",
+				e."imageUrl"                   AS "imageUrl",
+				e.type                         AS "type",
+				e.translation                  AS "translation",
+				e.explanation                  AS "explanation",
+				e.distractors                  AS "distractors",
+				e."collectionId"               AS "collectionId",
+				e."createdAt"                  AS "createdAt",
+				e."updatedAt"                  AS "updatedAt",
+				e."isActive"                   AS "isActive",
+				e."additional_correct_answers" AS "additionalCorrectAnswers",
+				e."correct_answer"             AS "correctAnswer",
+				COALESCE(a.total, 0)   AS "totalAttempts",
+				COALESCE(c.correct, 0) AS "correctAttempts"
+			FROM "exercises" e
+			LEFT JOIN (
+				SELECT "exerciseId", COUNT(*)::int AS total
+				FROM "attempts"
+				WHERE "userId" = ${userId}
+				GROUP BY "exerciseId"
+			) a ON e.id = a."exerciseId"
+			LEFT JOIN (
+				SELECT "exerciseId", COUNT(*)::int AS correct
+				FROM "attempts"
+				WHERE "userId" = ${userId} AND "isCorrect" = true
+				GROUP BY "exerciseId"
+			) c ON e.id = c."exerciseId"
+			WHERE e."collectionId" = ${collectionId}
+			ORDER BY ${orderBy}
+			LIMIT ${limit} OFFSET ${skip};
+		`
+		);
+	}
+
+	/**
+	 * Sorts exercises by failed attempts (total − correct) DESC.
+	 * "Hardest" for the current user: exercises they've gotten wrong the most.
+	 * Exercises with no failed attempts (including never-attempted) fall to
+	 * the bottom via COALESCE, tiebroken by total attempts DESC.
+	 */
+	public async getMostFailedExercises(
 		collectionId: string,
 		userId: string,
 		limit: number = 5,
@@ -20,45 +90,45 @@ export class ExerciseQueryService {
 	> {
 		return await this.prismaService.$queryRaw(
 			Prisma.sql`
-            SELECT
+			SELECT
 				e.id,
-                e.question,
-                e."audioUrl"                               AS "audioUrl",
-                e."imageUrl"                               AS "imageUrl",
-                e.type                                     AS "type",
-                e.translation                              AS "translation",
-                e.explanation                              AS "explanation",
-                e.distractors                              AS "distractors",
-                e."collectionId"                           AS "collectionId",
-                e."createdAt"                              AS "createdAt",
-                e."updatedAt"                              AS "updatedAt",
-                e."isActive"                               AS "isActive",
-                e."additional_correct_answers"             AS "additionalCorrectAnswers",
-                e."correct_answer"                         AS "correctAnswer",
-                COALESCE(a.total, 0)    AS "totalAttempts",
-                COALESCE(c.correct, 0)  AS "correctAttempts"
-            FROM "exercises" e
-            LEFT JOIN (
-                SELECT "exerciseId", COUNT(*)::int AS total
-                FROM "attempts"
-                WHERE "userId" = ${userId}
-                GROUP BY "exerciseId"
-            ) a ON e.id = a."exerciseId"
-            LEFT JOIN (
-                SELECT "exerciseId", COUNT(*)::int AS correct
-                FROM "attempts"
-                WHERE "userId" = ${userId} AND "isCorrect" = true
-                GROUP BY "exerciseId"
-            ) c ON e.id = c."exerciseId"
-            WHERE e."collectionId" = ${collectionId}
-            ORDER BY COALESCE(a.total, 0) DESC NULLS LAST
-            LIMIT ${limit} OFFSET ${skip};
-        `
+				e.question,
+				e."audioUrl"                   AS "audioUrl",
+				e."imageUrl"                   AS "imageUrl",
+				e.type                         AS "type",
+				e.translation                  AS "translation",
+				e.explanation                  AS "explanation",
+				e.distractors                  AS "distractors",
+				e."collectionId"               AS "collectionId",
+				e."createdAt"                  AS "createdAt",
+				e."updatedAt"                  AS "updatedAt",
+				e."isActive"                   AS "isActive",
+				e."additional_correct_answers" AS "additionalCorrectAnswers",
+				e."correct_answer"             AS "correctAnswer",
+				COALESCE(a.total, 0)   AS "totalAttempts",
+				COALESCE(c.correct, 0) AS "correctAttempts"
+			FROM "exercises" e
+			LEFT JOIN (
+				SELECT "exerciseId", COUNT(*)::int AS total
+				FROM "attempts"
+				WHERE "userId" = ${userId}
+				GROUP BY "exerciseId"
+			) a ON e.id = a."exerciseId"
+			LEFT JOIN (
+				SELECT "exerciseId", COUNT(*)::int AS correct
+				FROM "attempts"
+				WHERE "userId" = ${userId} AND "isCorrect" = true
+				GROUP BY "exerciseId"
+			) c ON e.id = c."exerciseId"
+			WHERE e."collectionId" = ${collectionId}
+			ORDER BY
+				(COALESCE(a.total, 0) - COALESCE(c.correct, 0)) DESC NULLS LAST,
+				COALESCE(a.total, 0) DESC NULLS LAST
+			LIMIT ${limit} OFFSET ${skip};
+		`
 		);
 	}
-	/**
-	 * Retrieves a random active exercise from a collection
-	 */
+
 	public async getRandomActiveExercise(collectionId: string): Promise<Exercise> {
 		const count = await this.prismaService.exercise.count({
 			where: { collectionId, isActive: true },
@@ -82,6 +152,7 @@ export class ExerciseQueryService {
 
 		return exercise;
 	}
+
 	public async getLeastAttemptedExercise(collectionId: string, userId: string): Promise<Exercise> {
 		const baseWhere = { collectionId, isActive: true };
 
@@ -97,7 +168,7 @@ export class ExerciseQueryService {
 			by: ["exerciseId"],
 			where: {
 				userId,
-				exercise: { collectionId, isActive: true }, // restrict to the collection
+				exercise: { collectionId, isActive: true },
 			},
 			_count: { _all: true },
 		});
