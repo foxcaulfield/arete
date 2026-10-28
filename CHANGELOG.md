@@ -1,3 +1,10 @@
+# [2.1.0-rc.6](https://github.com/foxcaulfield/arete/compare/v2.1.0-rc.5...v2.1.0-rc.6) (2026-10-28)
+
+
+### Features
+
+* profile stats — aggregated lifetime statistics ([#75](https://github.com/foxcaulfield/arete/issues/75)) ([b46ddd1](https://github.com/foxcaulfield/arete/commit/b46ddd1684d3c7affdc8267cbfd9ce7e98a4db7c))
+
 # [2.1.0-rc.5](https://github.com/foxcaulfield/arete/compare/v2.1.0-rc.4...v2.1.0-rc.5) (2026-10-28)
 
 
