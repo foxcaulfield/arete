@@ -1,5 +1,7 @@
 import { Controller, Get, Redirect } from "@nestjs/common";
 import { AppService } from "./app.service";
+import { UsersService } from "./users/users.service";
+import { UserStatsDto } from "./users/dto/user-stats.dto";
 import { AllowAnonymous, Session, type UserSession } from "@thallesp/nestjs-better-auth";
 
 type UserToReturn = {
@@ -10,7 +12,10 @@ type UserToReturn = {
 
 @Controller()
 export class AppController {
-	public constructor(private readonly appService: AppService) {}
+	public constructor(
+		private readonly appService: AppService,
+		private readonly usersService: UsersService
+	) {}
 
 	@Get()
 	@AllowAnonymous()
@@ -30,5 +35,10 @@ export class AppController {
 			email: session.user.email,
 			name: session.user.name,
 		};
+	}
+
+	@Get("me/stats")
+	public getMyStats(@Session() session: UserSession): Promise<UserStatsDto> {
+		return this.usersService.getStats(session.user.id);
 	}
 }

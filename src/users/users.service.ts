@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { BaseService } from "src/base/base.service";
 import { Prisma } from "@prisma/client";
+import { UserStatsDto } from "./dto/user-stats.dto";
 
 type UserWithPermissions = Prisma.UserGetPayload<{
 	include: { permissions: true };
@@ -9,12 +10,6 @@ type UserWithPermissions = Prisma.UserGetPayload<{
 
 @Injectable()
 export class UsersService extends BaseService {
-	// private readonly defaultUserSelect: Prisma.UserSelect = {
-	// 	id: true,
-	// 	email: true,
-	// 	isActive: true,
-	// };
-
 	public constructor(private readonly prismaService: PrismaService) {
 		super();
 	}
@@ -22,17 +17,68 @@ export class UsersService extends BaseService {
 	public async findUser(userId: string): Promise<UserWithPermissions> {
 		const user = await this.prismaService.user.findUnique({
 			where: { id: userId },
-			include: {
-				permissions: true,
-			},
-			// select: this.defaultUserSelect,
+			include: { permissions: true },
 		});
 		if (!user) {
 			throw new NotFoundException("User not found");
 		}
-
 		return user;
-		// return this.toResponseDto(ResponseUserDto, user);
+	}
+
+	/**
+	 * Aggregated profile stats for the current user.
+	 *
+	 * Streak semantics:
+	 *   - currentStreak — trailing consecutive correct answers across ALL of
+	 *     the user's attempts (global, not per-collection), ordered by
+	 *     createdAt ASC. Resets on any wrong answer.
+	 *   - longestStreak — historical maximum streak, same global attempt stream.
+	 *
+	 * Performance note: attempts for a single user are loaded in one pass.
+	 * Fine for hundreds to low thousands of rows (typical). If it ever
+	 * becomes a bottleneck, replace the streak walk with a raw SQL window
+	 * function and aggregate counts via GROUP BY / COUNT FILTER.
+	 */
+	public async getStats(userId: string): Promise<UserStatsDto> {
+		const [collectionsOwned, collectionsSharedWithMe, exercisesCreated, attempts] = await Promise.all([
+			this.prismaService.collection.count({ where: { userId } }),
+			this.prismaService.collectionShare.count({ where: { userId } }),
+			this.prismaService.exercise.count({ where: { collection: { userId } } }),
+			this.prismaService.attempt.findMany({
+				where: { userId },
+				select: { isCorrect: true, createdAt: true },
+				orderBy: { createdAt: "asc" },
+			}),
+		]);
+
+		const totalAttempts = attempts.length;
+		const correctAttempts = attempts.filter((a): boolean => a.isCorrect).length;
+		const accuracy = totalAttempts > 0 ? correctAttempts / totalAttempts : 0;
+
+		let current = 0;
+		let longest = 0;
+		for (const a of attempts) {
+			if (a.isCorrect) {
+				current++;
+				if (current > longest) longest = current;
+			} else {
+				current = 0;
+			}
+		}
+
+		const lastActiveAt = totalAttempts > 0 ? attempts[totalAttempts - 1]!.createdAt : null;
+
+		return this.toResponseDto(UserStatsDto, {
+			collectionsOwned,
+			collectionsSharedWithMe,
+			exercisesCreated,
+			totalAttempts,
+			correctAttempts,
+			accuracy,
+			currentStreak: current,
+			longestStreak: longest,
+			lastActiveAt,
+		});
 	}
 
 	protected async updateLastLogin(userId: string): Promise<void> {
@@ -43,8 +89,6 @@ export class UsersService extends BaseService {
 	}
 
 	protected async delete(id: string): Promise<void> {
-		await this.prismaService.user.delete({
-			where: { id },
-		});
+		await this.prismaService.user.delete({ where: { id } });
 	}
 }

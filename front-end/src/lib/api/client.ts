@@ -55,6 +55,10 @@ class BackendClient {
 				const r = await this.request("GET", "/me");
 				return (await r.json()) as User;
 			},
+			meStats: async (): Promise<MeStats> => {
+				const r = await this.request("GET", "/me/stats");
+				return (await r.json()) as MeStats;
+			},
 			signup: (data: { name?: string; email?: string; password?: string }): Promise<Response> =>
 				this.request("POST", "/api/auth/sign-up/email", data),
 			signin: (data: { email?: string; password?: string }): Promise<Response> =>
