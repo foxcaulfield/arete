@@ -140,6 +140,19 @@ declare global {
 		name: string | null;
 	}
 
+	/* Profile stats */
+	interface MeStats {
+		collectionsOwned: number;
+		collectionsSharedWithMe: number;
+		exercisesCreated: number;
+		totalAttempts: number;
+		correctAttempts: number;
+		accuracy: number; // 0..1
+		currentStreak: number;
+		longestStreak: number;
+		lastActiveAt: string | null; // ISO timestamp
+	}
+
 	namespace StyleProps {
 		type Color = "primary" | "secondary" | "tertiary" | "success" | "warning" | "error" | "surface";
 		type Shade = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 950;
