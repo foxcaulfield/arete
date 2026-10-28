@@ -1,3 +1,10 @@
+# [2.1.0-rc.5](https://github.com/foxcaulfield/arete/compare/v2.1.0-rc.4...v2.1.0-rc.5) (2026-10-28)
+
+
+### Features
+
+* collection and exercise search, filters, presets, saved filters ([#73](https://github.com/foxcaulfield/arete/issues/73)) ([d1b2084](https://github.com/foxcaulfield/arete/commit/d1b208417f9145cbf089d74b5ca90b6bef3e2a7e))
+
 # [2.1.0-rc.4](https://github.com/foxcaulfield/arete/compare/v2.1.0-rc.3...v2.1.0-rc.4) (2026-10-28)
 
 
