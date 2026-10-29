@@ -10,7 +10,7 @@
 		handleShowExplanation: () => void;
 		handleForceTextInput: () => void;
 		handleCopyQuestionText: () => void;
-		handleClickEdit: () => void;
+		handleClickEdit?: () => void;
 		isImageShown: boolean;
 		isExplanationShown: boolean;
 	}
@@ -91,14 +91,16 @@
 		isBorderless={true}
 		title="Copy question text"
 	/>
-	<Button
-		preset="outlined"
-		color="surface"
-		class={`${controlButtonStyles} ${controlButtonTextColor}`}
-		onclick={handleClickEdit}
-		useIcon={true}
-		IconComponent={Pen}
-		isBorderless={true}
-		title="Edit this exercise"
-	/>
+	{#if handleClickEdit}
+		<Button
+			preset="outlined"
+			color="surface"
+			class={`${controlButtonStyles} ${controlButtonTextColor}`}
+			onclick={handleClickEdit}
+			useIcon={true}
+			IconComponent={Pen}
+			isBorderless={true}
+			title="Edit this exercise"
+		/>
+	{/if}
 </div>

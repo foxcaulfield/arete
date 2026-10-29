@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { CardState, Exercise, Prisma } from "@prisma/client";
+import { CardState, CollectionAccessLevel, Exercise, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 
 export interface Sm2State {
@@ -147,7 +147,19 @@ export class SrsService {
 		skip = 0
 	): Promise<Exercise[]> {
 		const now = new Date();
-		const baseWhere = { isActive: true, ...(collectionId ? { collectionId } : {}) };
+
+		// Same scoping as getDueCount: when no specific collection is given,
+		// restrict to STUDY+ collections. Without this, the global case would
+		// pick exercises from every collection in the system, then fail on
+		// validateCollectionStudyAccess when the caller tries to submit.
+		let baseWhere: Prisma.ExerciseWhereInput;
+		if (collectionId) {
+			baseWhere = { collectionId, isActive: true };
+		} else {
+			const studyableIds = await this.getStudyableCollectionIds(userId);
+			if (studyableIds.length === 0) return [];
+			baseWhere = { collectionId: { in: studyableIds }, isActive: true };
+		}
 
 		const dueStates = await this.prisma.cardState.findMany({
 			where: { userId, nextReviewAt: { lte: now }, exercise: baseWhere },
@@ -174,18 +186,42 @@ export class SrsService {
 
 		const exercises = await this.prisma.exercise.findMany({ where: { id: { in: allIds } } });
 		const byId = new Map(exercises.map((e): [string, Exercise] => [e.id, e]));
-		return allIds.map((id): Exercise | undefined => byId.get(id)).filter((e): e is Exercise => e !== undefined);
+		return allIds
+			.map((id): string extends never ? never : Exercise | undefined => byId.get(id))
+			.filter((e): e is Exercise => e !== undefined);
 	}
 
-	/** Collection IDs the user can access (owned + shared). */
-	private async getAccessibleCollectionIds(userId: string): Promise<string[]> {
+	// /** Collection IDs the user can access (owned + shared). */
+	// private async getAccessibleCollectionIds(userId: string): Promise<string[]> {
+	// 	const [owned, shared] = await Promise.all([
+	// 		this.prisma.collection.findMany({
+	// 			where: { userId },
+	// 			select: { id: true },
+	// 		}),
+	// 		this.prisma.collectionShare.findMany({
+	// 			where: { userId },
+	// 			select: { collectionId: true },
+	// 		}),
+	// 	]);
+	// 	return [...owned.map((c): string => c.id), ...shared.map((s): string => s.collectionId)];
+	// }
+
+	/**
+	 * Collection IDs where the user can drill (STUDY or EDIT share, or owns).
+	 * Strict subset of getAccessibleCollectionIds — VIEW-only collections
+	 * are excluded because they can't be practiced.
+	 */
+	private async getStudyableCollectionIds(userId: string): Promise<string[]> {
 		const [owned, shared] = await Promise.all([
 			this.prisma.collection.findMany({
 				where: { userId },
 				select: { id: true },
 			}),
 			this.prisma.collectionShare.findMany({
-				where: { userId },
+				where: {
+					userId,
+					accessLevel: { in: [CollectionAccessLevel.STUDY, CollectionAccessLevel.EDIT] },
+				},
 				select: { collectionId: true },
 			}),
 		]);
@@ -199,9 +235,11 @@ export class SrsService {
 		if (collectionId) {
 			exerciseWhere = { collectionId, isActive: true };
 		} else {
-			const accessibleIds = await this.getAccessibleCollectionIds(userId);
-			if (accessibleIds.length === 0) return 0;
-			exerciseWhere = { collectionId: { in: accessibleIds }, isActive: true };
+			// Global badge must reflect what the user can actually drill.
+			// VIEW-only shares are excluded — they can be seen but not practiced.
+			const studyableIds = await this.getStudyableCollectionIds(userId);
+			if (studyableIds.length === 0) return 0;
+			exerciseWhere = { collectionId: { in: studyableIds }, isActive: true };
 		}
 
 		const [dueCount, newCount] = await Promise.all([
@@ -236,13 +274,13 @@ export class SrsService {
 		mature: number;
 		dueForReview: number;
 	}> {
-		const accessibleIds = await this.getAccessibleCollectionIds(userId);
-		if (accessibleIds.length === 0) {
+		const studyableIds = await this.getStudyableCollectionIds(userId);
+		if (studyableIds.length === 0) {
 			return { new: 0, learning: 0, mature: 0, dueForReview: 0 };
 		}
 		const now = new Date();
 		const exerciseWhere: Prisma.ExerciseWhereInput = {
-			collectionId: { in: accessibleIds },
+			collectionId: { in: studyableIds },
 			isActive: true,
 		};
 
@@ -251,25 +289,13 @@ export class SrsService {
 				where: { ...exerciseWhere, cardStates: { none: { userId } } },
 			}),
 			this.prisma.cardState.count({
-				where: {
-					userId,
-					repetitions: { lt: 3 },
-					exercise: exerciseWhere,
-				},
+				where: { userId, repetitions: { lt: 3 }, exercise: exerciseWhere },
 			}),
 			this.prisma.cardState.count({
-				where: {
-					userId,
-					repetitions: { gte: 3 },
-					exercise: exerciseWhere,
-				},
+				where: { userId, repetitions: { gte: 3 }, exercise: exerciseWhere },
 			}),
 			this.prisma.cardState.count({
-				where: {
-					userId,
-					nextReviewAt: { lte: now },
-					exercise: exerciseWhere,
-				},
+				where: { userId, nextReviewAt: { lte: now }, exercise: exerciseWhere },
 			}),
 		]);
 		return { new: newCount, learning, mature, dueForReview };

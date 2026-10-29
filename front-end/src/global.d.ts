@@ -96,6 +96,8 @@ declare global {
 			distractors?: string[] | null;
 			totalExercises?: number;
 			exercisesWithAttempts?: number;
+			collectionId?: string;
+			collectionName?: string | null;
 		}
 
 		interface UserAnswerFeedbackDto {

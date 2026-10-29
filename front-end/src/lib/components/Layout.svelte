@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 	import { SvelteToast } from "@zerodevx/svelte-toast";
-	import { BookIcon, HouseIcon, KeyIcon, Share2Icon, TreePalmIcon, UsersIcon } from "@lucide/svelte";
+	import { BookIcon, HouseIcon, KeyIcon, Share2Icon, SparklesIcon, TreePalmIcon, UsersIcon } from "@lucide/svelte";
 	import { Navigation } from "@skeletonlabs/skeleton-svelte";
 	import { router } from "$lib/routing/router.svelte";
 	import { session } from "$lib/auth/session.svelte";
@@ -25,6 +25,7 @@
 		{ href: "/", text: "Home", icon: HouseIcon },
 		{ href: "/profile", text: "Profile", icon: TreePalmIcon },
 		{ href: "/collections", text: "Collections", icon: BookIcon },
+		{ href: "/practice", text: "Practice", icon: SparklesIcon },
 		{ href: "/collections/shared", text: "Shared", icon: Share2Icon },
 		{ href: "/admin/users", text: "Admin", icon: UsersIcon },
 		{ href: "/auth", text: "Auth", icon: KeyIcon },
@@ -40,7 +41,7 @@
 </script>
 
 <Navigation layout="bar">
-	<Navigation.Menu class="grid grid-cols-6 gap-2">
+	<Navigation.Menu class="grid grid-cols-7 gap-2">
 		{#each links as link (link.href)}
 			{@const Icon = link.icon}
 			<a href={link.href} class={anchorBar} onclick={(e) => handleNav(e, link.href)}>

@@ -89,6 +89,23 @@ export class ExercisesController {
 	}
 
 	/* Drill endpoints */
+
+	/* Global drill endpoints — MUST come before :collectionId routes,
+	   otherwise Express matches "global" as collectionId */
+	@Get("drill/global")
+	public async getGlobalDrillExercise(@Session() session: UserSession): Promise<QuizQuestionDto> {
+		return this.quizService.getGlobalDrillExercise(session.user.id);
+	}
+
+	@Post("drill/global/submit")
+	@HttpCode(HttpStatus.OK)
+	public async submitGlobalDrillAnswer(
+		@Session() session: UserSession,
+		@Body() dto: UserAnswerDto
+	): Promise<UserAnswerFeedbackDto> {
+		return this.quizService.submitGlobalDrillAnswer(session.user.id, dto);
+	}
+
 	@Get("drill/:collectionId")
 	public async getDrillExercise(
 		@Param("collectionId") collectionId: string,
@@ -110,10 +127,11 @@ export class ExercisesController {
 	@HttpCode(HttpStatus.OK)
 	public async submitDrillAnswer(
 		@Param("collectionId") collectionId: string,
+		@Query("mode") mode: string | undefined,
 		@Session() session: UserSession,
 		@Body() dto: UserAnswerDto
 	): Promise<UserAnswerFeedbackDto> {
-		return this.quizService.submitDrillAnswer(session.user.id, collectionId, dto);
+		return this.quizService.submitDrillAnswer(session.user.id, collectionId, dto, mode ?? "random");
 	}
 
 	@Get("due-count")

@@ -32,6 +32,9 @@ export class QuizQuestionDto {
 
 	@Expose()
 	public exercisesWithAttempts?: number;
+
+	@Expose() public collectionId?: string;
+	@Expose() public collectionName?: string | null;
 }
 
 export class UserAnswerDto {
@@ -68,6 +71,9 @@ export class UserAnswerFeedbackDto {
 
 	@Expose() public nextExerciseId?: string;
 	@Expose() public nextReviewAt?: Date;
+
+	@Expose() public collectionId?: string;
+	@Expose() public collectionName?: string | null;
 }
 
 export class CollectionStatsDto {

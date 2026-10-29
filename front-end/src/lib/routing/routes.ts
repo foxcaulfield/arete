@@ -13,6 +13,7 @@ import QuizPage from "$lib/components/pages/QuizPage.svelte";
 import ErrorPage from "$lib/components/pages/ErrorPage.svelte";
 import AdminUsersPage from "$lib/components/pages/AdminUsersPage.svelte";
 import SharedCollectionsPage from "$lib/components/pages/SharedCollectionsPage.svelte";
+import GlobalPracticePage from "$lib/components/pages/GlobalPracticePage.svelte";
 
 export function registerRoutes(): void {
 	router.register("/", HomePage);
@@ -30,6 +31,8 @@ export function registerRoutes(): void {
 	router.register("/collections/view/:slug/exercises/edit/:id", ExerciseEditPage);
 	router.register("/collections/view/:slug/exercises/quiz", QuizPage);
 
+	router.register("/practice", GlobalPracticePage);
+	
 	router.register("/admin/users", AdminUsersPage);
 	router.registerNotFound(ErrorPage);
 }
