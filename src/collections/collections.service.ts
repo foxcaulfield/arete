@@ -65,7 +65,7 @@ export class CollectionsService extends BaseService {
 	public async createCollection(dto: CreateCollectionDto, userId: string): Promise<ResponseCollectionDto> {
 		// Check collection limit for non-admin users
 		const user = await this.prismaService.user.findUnique({ where: { id: userId }, select: { role: true } });
-		if (user?.role === UserRole.USER) {
+		if (user?.role !== UserRole.ADMIN) {
 			const collectionCount = await this.prismaService.collection.count({ where: { userId } });
 			if (collectionCount >= this.appLimits.USER_MAX_COLLECTIONS) {
 				throw new ForbiddenException(

@@ -113,7 +113,6 @@
 			<select bind:value={role} class="select w-full text-sm">
 				<option value="USER">User</option>
 				<option value="ADMIN">Admin</option>
-				<option value="MODERATOR">Moderator</option>
 			</select>
 		</label>
 

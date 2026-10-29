@@ -17,7 +17,6 @@ datasource db {
 enum UserRole {
     USER
     ADMIN
-    MODERATOR
 
     @@map("user_role")
 }

@@ -68,7 +68,7 @@ export class ExercisesService extends BaseService {
 
 		// Check exercise limit for non-admin users
 		const user = await this.prismaService.user.findUnique({ where: { id: currentUserId }, select: { role: true } });
-		if (user?.role === UserRole.USER) {
+		if (user?.role !== UserRole.ADMIN) {
 			const exerciseCount = await this.prismaService.exercise.count({
 				where: { collectionId: dto.collectionId },
 			});
