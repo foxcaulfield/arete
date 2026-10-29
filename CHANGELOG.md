@@ -1,3 +1,10 @@
+# [2.2.0-rc.4](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.3...v2.2.0-rc.4) (2026-10-29)
+
+
+### Features
+
+* add cross-collection due drill ([#81](https://github.com/foxcaulfield/arete/issues/81)) ([99bd8b2](https://github.com/foxcaulfield/arete/commit/99bd8b249488241e57b0ccd4ab4f1fd70080e644))
+
 # [2.2.0-rc.3](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.2...v2.2.0-rc.3) (2026-10-29)
 
 
