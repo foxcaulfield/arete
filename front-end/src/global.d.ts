@@ -183,7 +183,8 @@ declare global {
 			createdAt: string;
 		}
 
-		type UserRole = "USER" | "ADMIN" | "MODERATOR";
+		// type UserRole = "USER" | "ADMIN" | "MODERATOR";
+		type UserRole = "USER" | "ADMIN";
 
 		interface CreateUserPayload {
 			name: string;
