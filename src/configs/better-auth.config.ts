@@ -26,6 +26,16 @@ export const auth = betterAuth({
 	database: prismaAdapter(prismaClient, {
 		provider: process.env.DB_PROVIDER === "sqlite" ? "sqlite" : "postgresql",
 	}),
+	user: {
+		additionalFields: {
+			isActive: {
+				type: "boolean",
+				required: false,
+				defaultValue: true,
+				input: false,
+			},
+		},
+	},
 	hooks: {
 		// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/require-await
 		before: createAuthMiddleware(async (ctx) => {
@@ -34,6 +44,23 @@ export const auth = betterAuth({
 				throw new APIError("FORBIDDEN", { message: "Disabled" });
 			}
 		}),
+	},
+	databaseHooks: {
+		session: {
+			create: {
+				// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+				before: async (session) => {
+					const user = await prismaClient.user.findUnique({
+						where: { id: session.userId },
+						select: { isActive: true },
+					});
+					if (user && !user.isActive) {
+						throw new APIError("FORBIDDEN", { message: "Account is deactivated" });
+					}
+					return { data: session };
+				},
+			},
+		},
 	},
 	emailAndPassword: {
 		enabled: true,
@@ -53,8 +80,7 @@ export const auth = betterAuth({
 		expiresIn: 60 * 60 * 24 * 7,
 		updateAge: 60 * 60 * 24,
 		cookieCache: {
-			enabled: true,
-			maxAge: 5 * 60,
+			enabled: false,
 		},
 	},
 	trustedOrigins: (process.env.TRUSTED_ORIGINS || "").split(",").filter(Boolean),

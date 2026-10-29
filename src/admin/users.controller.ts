@@ -37,13 +37,13 @@ export class AdminUsersController {
 	}
 
 	@Post()
-	public async createUser(
-		@Body() createData: CreateUserDto
-	): Promise<{ success: boolean; user: { id: string; name: string; email: string } }> {
+	public async createUser(@Body() createData: CreateUserDto): Promise<{
+		success: boolean;
+		user: { id: string; name: string; email: string; role: string; isActive: boolean };
+	}> {
 		const user = await this.service.createUser(createData);
 		return { success: true, user };
 	}
-
 	@Patch(":id")
 	public async updateUser(
 		@Session() session: UserSession,

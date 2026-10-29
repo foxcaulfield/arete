@@ -6,6 +6,11 @@
 	import { router } from "$lib/routing/router.svelte";
 	import Unauthorized from "./Unauthorized.svelte";
 	import Forbidden from "./Forbidden.svelte";
+	import { Pen, Trash2, UserPlus } from "@lucide/svelte";
+	import CreateUserDialog from "$lib/components/admin/CreateUserDialog.svelte";
+	import EditUserDialog from "$lib/components/admin/EditUserDialog.svelte";
+	import DeleteUserDialog from "$lib/components/admin/DeleteUserDialog.svelte";
+	import { toastSuccess } from "$lib/toast";
 
 	let users = $state<Admin.UserListItem[]>([]);
 	let pagination = $state<PaginatedResponse<unknown>["pagination"] | null>(null);
@@ -14,6 +19,12 @@
 	let pageStatus = $state<number | null>(null);
 
 	let searchInput = $state("");
+	let createOpen = $state(false);
+	let editOpen = $state(false);
+	let deleteOpen = $state(false);
+	let editingUser = $state<Admin.UserListItem | null>(null);
+	let deletingUser = $state<Admin.UserListItem | null>(null);
+	let refetchKey = $state(0);
 
 	let selectedUser = $state<Admin.UserListItem | null>(null);
 	let userAccess = $state<Admin.UserAccess | null>(null);
@@ -39,10 +50,12 @@
 		}
 		const p = currentPage,
 			l = limit,
-			s = search;
+			s = search,
+			r = refetchKey;
 		void p;
 		void l;
 		void s;
+		void r;
 		void (async () => {
 			loading = true;
 			errorMessage = null;
@@ -104,6 +117,36 @@
 		params.set("page", "1");
 		router.navigate(`/admin/users?${params.toString()}`);
 	}
+
+	function handleCreateSuccess(): void {
+		createOpen = false;
+		toastSuccess("User created.");
+		refetchKey += 1;
+	}
+
+	function handleEditSuccess(): void {
+		editOpen = false;
+		editingUser = null;
+		toastSuccess("User updated.");
+		refetchKey += 1;
+	}
+
+	function handleDeleteSuccess(): void {
+		deleteOpen = false;
+		deletingUser = null;
+		toastSuccess("User deleted.");
+		refetchKey += 1;
+	}
+
+	function openEdit(u: Admin.UserListItem): void {
+		editingUser = u;
+		editOpen = true;
+	}
+
+	function openDelete(u: Admin.UserListItem): void {
+		deletingUser = u;
+		deleteOpen = true;
+	}
 </script>
 
 {#if session.loading || (loading && !pagination)}
@@ -121,26 +164,38 @@
 				<h1 class="h3 mb-1">Users</h1>
 				<p class="text-xs opacity-60">{totalItems} user{totalItems !== 1 ? "s" : ""}</p>
 			</div>
-			<form onsubmit={applySearch} class="flex gap-2">
-				<input
-					type="text"
-					bind:value={searchInput}
-					placeholder="Search by name or email…"
-					autocomplete="off"
-					class="w-full rounded border border-surface-600 bg-surface-800 px-3 py-1.5 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none md:w-64"
-				/>
-				<Button text="Search" type="submit" size="sm" preset="filled" color="primary" />
-				{#if search}
-					<Button
-						text="Clear"
-						type="button"
-						size="sm"
-						preset="outlined"
-						color="surface"
-						onclick={clearSearch}
+			<div class="flex flex-wrap items-center gap-2">
+				<form onsubmit={applySearch} class="flex gap-2">
+					<input
+						type="text"
+						bind:value={searchInput}
+						placeholder="Search by name or email…"
+						autocomplete="off"
+						class="w-full rounded border border-surface-600 bg-surface-800 px-3 py-1.5 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none md:w-64"
 					/>
-				{/if}
-			</form>
+					<Button text="Search" type="submit" size="sm" preset="filled" color="primary" />
+					{#if search}
+						<Button
+							text="Clear"
+							type="button"
+							size="sm"
+							preset="outlined"
+							color="surface"
+							onclick={clearSearch}
+						/>
+					{/if}
+				</form>
+				<Button
+					text="New User"
+					type="button"
+					useIcon={true}
+					IconComponent={UserPlus}
+					size="sm"
+					preset="filled"
+					color="success"
+					onclick={() => (createOpen = true)}
+				/>
+			</div>
 		</div>
 
 		<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -177,16 +232,37 @@
 											<td>{u.email}</td>
 											<td>{u.role}</td>
 											<td class="text-right">{u.isActive ? "✓" : "✗"}</td>
-											<td>
+											<td
+												class="whitespace-nowrap text-right"
+												onclick={(e) => e.stopPropagation()}
+											>
 												<Button
 													text="View"
 													size="sm"
 													preset="ghost"
 													color="surface"
-													onclick={(e) => {
-														e.stopPropagation();
-														selectedUser = u;
-													}}
+													onclick={() => (selectedUser = u)}
+												/>
+												<Button
+													icon={true}
+													useIcon={true}
+													IconComponent={Pen}
+													size="sm"
+													preset="ghost"
+													color="primary"
+													title="Edit"
+													onclick={() => openEdit(u)}
+												/>
+												<Button
+													icon={true}
+													useIcon={true}
+													IconComponent={Trash2}
+													size="sm"
+													preset="ghost"
+													color="error"
+													title="Delete"
+													disabled={u.id === session.user?.id}
+													onclick={() => openDelete(u)}
 												/>
 											</td>
 										</tr>
@@ -280,3 +356,23 @@
 		</div>
 	</div>
 {/if}
+
+<CreateUserDialog open={createOpen} onClose={() => (createOpen = false)} onSuccess={handleCreateSuccess} />
+<EditUserDialog
+	open={editOpen}
+	user={editingUser}
+	onClose={() => {
+		editOpen = false;
+		editingUser = null;
+	}}
+	onSuccess={handleEditSuccess}
+/>
+<DeleteUserDialog
+	open={deleteOpen}
+	user={deletingUser}
+	onClose={() => {
+		deleteOpen = false;
+		deletingUser = null;
+	}}
+	onSuccess={handleDeleteSuccess}
+/>
