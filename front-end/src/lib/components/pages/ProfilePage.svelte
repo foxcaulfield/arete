@@ -57,6 +57,9 @@
 		if (acc >= 0.4) return "text-warning-400";
 		return "text-error-400";
 	}
+
+	const srsTotal = $derived(stats ? stats.srsNew + stats.srsLearning + stats.srsMature : 0);
+	const srsHasData = $derived(stats !== null && srsTotal > 0);
 </script>
 
 {#if session.loading || statsLoading}
@@ -155,6 +158,55 @@
 					</div>
 				{/if}
 			</div>
+
+			<!-- SRS -->
+			{#if srsHasData}
+				<div class="card space-y-3 p-4">
+					<h2 class="text-xs font-semibold tracking-wide text-surface-300 uppercase">Spaced repetition</h2>
+					<div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+						<div>
+							<div class="text-2xl font-bold text-primary-400">{stats.srsNew}</div>
+							<div class="text-xs opacity-60">New</div>
+							<div class="text-[10px] opacity-40">never seen</div>
+						</div>
+						<div>
+							<div class="text-2xl font-bold text-warning-400">{stats.srsLearning}</div>
+							<div class="text-xs opacity-60">Learning</div>
+							<div class="text-[10px] opacity-40">&lt; 3 reviews</div>
+						</div>
+						<div>
+							<div class="text-2xl font-bold text-success-400">{stats.srsMature}</div>
+							<div class="text-xs opacity-60">Mature</div>
+							<div class="text-[10px] opacity-40">≥ 3 reviews</div>
+						</div>
+						<div>
+							<div
+								class="text-2xl font-bold {stats.srsDueForReview > 0
+									? 'text-error-400'
+									: 'text-surface-400'}"
+							>
+								{stats.srsDueForReview}
+							</div>
+							<div class="text-xs opacity-60">Due now</div>
+							<div class="text-[10px] opacity-40">ready to review</div>
+						</div>
+					</div>
+
+					{#if stats.srsDueForReview > 0}
+						<div class="border-t pt-3 text-xs border-opacity-20">
+							<Button
+								text="Practice due cards"
+								type="button"
+								preset="filled"
+								color="warning"
+								size="sm"
+								onclick={() => router.navigate("/collections")}
+							/>
+							<span class="ml-2 opacity-60">or pick a specific collection</span>
+						</div>
+					{/if}
+				</div>
+			{/if}
 		{/if}
 
 		<div class="flex justify-end">

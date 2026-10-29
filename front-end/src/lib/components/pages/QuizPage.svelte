@@ -36,6 +36,18 @@
 	let lastUserAnswer = $state("");
 	let dueComplete = $state(false);
 
+	function formatNextReview(iso: string | null | undefined): string {
+		if (!iso) return "";
+		const ms = new Date(iso).getTime() - Date.now();
+		const days = Math.round(ms / 86_400_000);
+		if (days <= 0) return "today";
+		if (days === 1) return "tomorrow";
+		if (days < 7) return `in ${days} days`;
+		if (days < 30) return `in ${Math.round(days / 7)} week${Math.round(days / 7) === 1 ? "" : "s"}`;
+		if (days < 365) return `in ${Math.round(days / 30)} month${Math.round(days / 30) === 1 ? "" : "s"}`;
+		return `in ${Math.round(days / 365)} year${Math.round(days / 365) === 1 ? "" : "s"}`;
+	}
+
 	const mode = $derived(
 		(router.page.url.searchParams.get("mode") ?? "random") as "random" | "due" | "least-attempted"
 	);
@@ -370,6 +382,11 @@
 											>
 												{lastResult.isCorrect ? "Correct!" : "Not quite right"}
 											</div>
+											{#if lastResult.nextReviewAt}
+												<div class="mt-1 text-xs text-surface-400">
+													Next review: {formatNextReview(lastResult.nextReviewAt)}
+												</div>
+											{/if}
 											{#if !lastResult.isCorrect}
 												<div class="mt-3 space-y-2 text-sm">
 													<p class="text-surface-300">

@@ -177,29 +177,29 @@ export class SrsService {
 		return allIds.map((id): Exercise | undefined => byId.get(id)).filter((e): e is Exercise => e !== undefined);
 	}
 
+	/** Collection IDs the user can access (owned + shared). */
+	private async getAccessibleCollectionIds(userId: string): Promise<string[]> {
+		const [owned, shared] = await Promise.all([
+			this.prisma.collection.findMany({
+				where: { userId },
+				select: { id: true },
+			}),
+			this.prisma.collectionShare.findMany({
+				where: { userId },
+				select: { collectionId: true },
+			}),
+		]);
+		return [...owned.map((c): string => c.id), ...shared.map((s): string => s.collectionId)];
+	}
+
 	public async getDueCount(userId: string, collectionId?: string): Promise<number> {
 		const now = new Date();
 
-		// When no specific collection is given, scope to collections the user
-		// can access (owned + shared). Without this, the global count would
-		// include every exercise in the system where the user has no CardState,
-		// including collections they can't see — a meaningless number that
-		// never decreases because other users' collections keep growing.
 		let exerciseWhere: Prisma.ExerciseWhereInput;
 		if (collectionId) {
 			exerciseWhere = { collectionId, isActive: true };
 		} else {
-			const [owned, shared] = await Promise.all([
-				this.prisma.collection.findMany({
-					where: { userId },
-					select: { id: true },
-				}),
-				this.prisma.collectionShare.findMany({
-					where: { userId },
-					select: { collectionId: true },
-				}),
-			]);
-			const accessibleIds = [...owned.map((c): string => c.id), ...shared.map((s): string => s.collectionId)];
+			const accessibleIds = await this.getAccessibleCollectionIds(userId);
 			if (accessibleIds.length === 0) return 0;
 			exerciseWhere = { collectionId: { in: accessibleIds }, isActive: true };
 		}
@@ -213,6 +213,66 @@ export class SrsService {
 			}),
 		]);
 		return dueCount + newCount;
+	}
+
+	/**
+	 * SRS bucket breakdown for the profile stats card.
+	 *
+	 * - new:            exercises with no CardState yet (never seen)
+	 * - learning:       CardState exists, repetitions < 3 (interval < 21d typically)
+	 * - mature:         CardState exists, repetitions >= 3 (interval >= 21d at ease 2.5)
+	 * - dueForReview:   CardState with nextReviewAt <= now (reviews only — new
+	 *                   cards are their own bucket, not double-counted here)
+	 *
+	 * Scoped to accessible collections (owned + shared), same as getDueCount.
+	 * Note: new + learning + mature = total accessible exercises; dueForReview
+	 * is a subset of learning + mature (overlap is intentional — the badge in
+	 * nav uses new + dueForReview for "what to do now", while the profile card
+	 * breaks down by card maturity for "where am I in my learning").
+	 */
+	public async getSrsBreakdown(userId: string): Promise<{
+		new: number;
+		learning: number;
+		mature: number;
+		dueForReview: number;
+	}> {
+		const accessibleIds = await this.getAccessibleCollectionIds(userId);
+		if (accessibleIds.length === 0) {
+			return { new: 0, learning: 0, mature: 0, dueForReview: 0 };
+		}
+		const now = new Date();
+		const exerciseWhere: Prisma.ExerciseWhereInput = {
+			collectionId: { in: accessibleIds },
+			isActive: true,
+		};
+
+		const [newCount, learning, mature, dueForReview] = await Promise.all([
+			this.prisma.exercise.count({
+				where: { ...exerciseWhere, cardStates: { none: { userId } } },
+			}),
+			this.prisma.cardState.count({
+				where: {
+					userId,
+					repetitions: { lt: 3 },
+					exercise: exerciseWhere,
+				},
+			}),
+			this.prisma.cardState.count({
+				where: {
+					userId,
+					repetitions: { gte: 3 },
+					exercise: exerciseWhere,
+				},
+			}),
+			this.prisma.cardState.count({
+				where: {
+					userId,
+					nextReviewAt: { lte: now },
+					exercise: exerciseWhere,
+				},
+			}),
+		]);
+		return { new: newCount, learning, mature, dueForReview };
 	}
 
 	/**

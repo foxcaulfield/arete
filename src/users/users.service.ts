@@ -3,6 +3,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { BaseService } from "src/base/base.service";
 import { Prisma } from "@prisma/client";
 import { UserStatsDto } from "./dto/user-stats.dto";
+import { SrsService } from "src/srs/srs.service";
 
 type UserWithPermissions = Prisma.UserGetPayload<{
 	include: { permissions: true };
@@ -10,7 +11,10 @@ type UserWithPermissions = Prisma.UserGetPayload<{
 
 @Injectable()
 export class UsersService extends BaseService {
-	public constructor(private readonly prismaService: PrismaService) {
+	public constructor(
+		private readonly prismaService: PrismaService,
+		private readonly srsService: SrsService
+	) {
 		super();
 	}
 
@@ -40,16 +44,19 @@ export class UsersService extends BaseService {
 	 * function and aggregate counts via GROUP BY / COUNT FILTER.
 	 */
 	public async getStats(userId: string): Promise<UserStatsDto> {
-		const [collectionsOwned, collectionsSharedWithMe, exercisesCreated, attempts] = await Promise.all([
-			this.prismaService.collection.count({ where: { userId } }),
-			this.prismaService.collectionShare.count({ where: { userId } }),
-			this.prismaService.exercise.count({ where: { collection: { userId } } }),
-			this.prismaService.attempt.findMany({
-				where: { userId },
-				select: { isCorrect: true, createdAt: true },
-				orderBy: { createdAt: "asc" },
-			}),
-		]);
+		const [collectionsOwned, collectionsSharedWithMe, exercisesCreated, attempts, srsBreakdown] = await Promise.all(
+			[
+				this.prismaService.collection.count({ where: { userId } }),
+				this.prismaService.collectionShare.count({ where: { userId } }),
+				this.prismaService.exercise.count({ where: { collection: { userId } } }),
+				this.prismaService.attempt.findMany({
+					where: { userId },
+					select: { isCorrect: true, createdAt: true },
+					orderBy: { createdAt: "asc" },
+				}),
+				this.srsService.getSrsBreakdown(userId),
+			]
+		);
 
 		const totalAttempts = attempts.length;
 		const correctAttempts = attempts.filter((a): boolean => a.isCorrect).length;
@@ -78,6 +85,10 @@ export class UsersService extends BaseService {
 			currentStreak: current,
 			longestStreak: longest,
 			lastActiveAt,
+			srsNew: srsBreakdown.new,
+			srsLearning: srsBreakdown.learning,
+			srsMature: srsBreakdown.mature,
+			srsDueForReview: srsBreakdown.dueForReview,
 		});
 	}
 

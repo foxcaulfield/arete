@@ -153,6 +153,12 @@ declare global {
 		currentStreak: number;
 		longestStreak: number;
 		lastActiveAt: string | null; // ISO timestamp
+
+		// SRS breakdown
+		srsNew: number;
+		srsLearning: number;
+		srsMature: number;
+		srsDueForReview: number;
 	}
 
 	namespace StyleProps {
