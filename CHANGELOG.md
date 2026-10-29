@@ -1,3 +1,10 @@
+# [2.2.0-rc.6](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.5...v2.2.0-rc.6) (2026-10-29)
+
+
+### Bug Fixes
+
+* remove stray MODERATOR option from edit user dialog ([#84](https://github.com/foxcaulfield/arete/issues/84)) ([4066622](https://github.com/foxcaulfield/arete/commit/4066622b3f91d6da8cadc2b30fa3c80706ecc801)), closes [#83](https://github.com/foxcaulfield/arete/issues/83)
+
 # [2.2.0-rc.5](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.4...v2.2.0-rc.5) (2026-10-29)
 
 
