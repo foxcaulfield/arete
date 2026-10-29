@@ -122,17 +122,49 @@ export class QuizService extends BaseService {
 			exercisesWithAttempts,
 		});
 	}
-	public async submitDrillAnswer(
-		currentUserId: string,
-		collectionId: string,
-		dto: UserAnswerDto
-	): Promise<UserAnswerFeedbackDto> {
-		await this.collectionAccessService.validateCollectionStudyAccess(currentUserId, collectionId);
 
+	/**
+	 * Pick the next due exercise across all STUDY+ collections.
+	 * Returns the exercise plus its collection info so the UI can show
+	 * "From: <collectionName>" — global drill spans many collections.
+	 */
+	public async getGlobalDrillExercise(currentUserId: string): Promise<QuizQuestionDto> {
+		const due = await this.srsService.getDueExercises(currentUserId, undefined, 1, 0);
+		if (due.length === 0) {
+			throw new NotFoundException("No exercises due for review");
+		}
+		const exercise = due[0]!;
+
+		const collection = await this.prismaService.collection.findUnique({
+			where: { id: exercise.collectionId },
+			select: { id: true, name: true },
+		});
+
+		const updatedDistractors =
+			exercise.type === ExerciseType.CHOICE_SINGLE
+				? this.getRandomDistractors(exercise.correctAnswer, parseJsonArray(exercise.distractors))
+				: [];
+
+		return this.toResponseDto(QuizQuestionDto, {
+			...exercise,
+			distractors: updatedDistractors,
+			collectionId: exercise.collectionId,
+			collectionName: collection?.name ?? null,
+		});
+	}
+
+	/**
+	 * Submit an answer to a global-drill exercise. Derives the collection
+	 * from the exercise itself, then validates STUDY+ access (defense in
+	 * depth — getDueExercises already scoped the pick). Records Attempt,
+	 * schedules SM-2 review, updates session stats under "__global__" key.
+	 */
+	public async submitGlobalDrillAnswer(currentUserId: string, dto: UserAnswerDto): Promise<UserAnswerFeedbackDto> {
 		const exercise = await this.exercisesService.findExerciseOrFail(dto.exerciseId);
-		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
+		await this.collectionAccessService.validateCollectionStudyAccess(currentUserId, exercise.collectionId);
 
-		const sessionStats = this.sessionStore.recordAnswer(currentUserId, collectionId, exercise.id, isCorrect);
+		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
+		const sessionStats = this.sessionStore.recordAnswer(currentUserId, "__global__", exercise.id, isCorrect);
 		await this.recordAttempt(currentUserId, exercise.id, dto.userAnswer, isCorrect);
 		const cardState = await this.srsService.scheduleReview(currentUserId, exercise.id, isCorrect);
 
@@ -145,6 +177,42 @@ export class QuizService extends BaseService {
 			sessionCorrect: sessionStats.correct,
 			sessionTotal: sessionStats.total,
 			nextReviewAt: cardState.nextReviewAt,
+		};
+	}
+
+	public async submitDrillAnswer(
+		currentUserId: string,
+		collectionId: string,
+		dto: UserAnswerDto,
+		mode: string = "random"
+	): Promise<UserAnswerFeedbackDto> {
+		await this.collectionAccessService.validateCollectionStudyAccess(currentUserId, collectionId);
+
+		const exercise = await this.exercisesService.findExerciseOrFail(dto.exerciseId);
+		const isCorrect = this.checkAnswer(dto.userAnswer, exercise);
+
+		const sessionStats = this.sessionStore.recordAnswer(currentUserId, collectionId, exercise.id, isCorrect);
+		await this.recordAttempt(currentUserId, exercise.id, dto.userAnswer, isCorrect);
+
+		// Only scheduled reviews (mode=due) update the SRS schedule.
+		// Random / least-attempted quiz records the attempt for stats but does
+		// not touch CardState — otherwise lucky guesses on new cards inflate the
+		// interval and the card disappears from the due list without being learned.
+		let nextReviewAt: Date | undefined;
+		if (mode === "due") {
+			const cardState = await this.srsService.scheduleReview(currentUserId, exercise.id, isCorrect);
+			nextReviewAt = cardState.nextReviewAt;
+		}
+
+		return {
+			isCorrect,
+			correctAnswer: exercise.correctAnswer,
+			explanation: exercise.explanation ?? undefined,
+			additionalCorrectAnswers: parseJsonArray(exercise.additionalCorrectAnswers),
+			streak: sessionStats.streak,
+			sessionCorrect: sessionStats.correct,
+			sessionTotal: sessionStats.total,
+			nextReviewAt,
 		};
 	}
 

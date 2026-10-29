@@ -138,12 +138,28 @@ class BackendClient {
 				const r = await this.request("GET", `/exercises/drill/${collectionId}${qs}`);
 				return (await r.json()) as Quiz.QuestionDto;
 			},
-			submitDrillAnswer: async (
-				collectionId: string,
+			getGlobalDrillQuestion: async (): Promise<Quiz.QuestionDto> => {
+				const r = await this.request("GET", "/exercises/drill/global");
+				return (await r.json()) as Quiz.QuestionDto;
+			},
+			submitGlobalDrillAnswer: async (
 				exerciseId: string,
 				userAnswer: string
 			): Promise<Quiz.UserAnswerFeedbackDto> => {
-				const r = await this.request("POST", `/exercises/drill/${collectionId}/submit`, {
+				const r = await this.request("POST", "/exercises/drill/global/submit", {
+					exerciseId,
+					userAnswer,
+				});
+				return (await r.json()) as Quiz.UserAnswerFeedbackDto;
+			},
+			submitDrillAnswer: async (
+				collectionId: string,
+				exerciseId: string,
+				userAnswer: string,
+				mode?: "random" | "due" | "least-attempted"
+			): Promise<Quiz.UserAnswerFeedbackDto> => {
+				const qs = mode ? `?mode=${mode}` : "";
+				const r = await this.request("POST", `/exercises/drill/${collectionId}/submit${qs}`, {
 					exerciseId,
 					userAnswer,
 				});

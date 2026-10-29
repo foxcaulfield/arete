@@ -200,7 +200,7 @@
 								preset="filled"
 								color="warning"
 								size="sm"
-								onclick={() => router.navigate("/collections")}
+								onclick={() => router.navigate("/practice")}
 							/>
 							<span class="ml-2 opacity-60">or pick a specific collection</span>
 						</div>

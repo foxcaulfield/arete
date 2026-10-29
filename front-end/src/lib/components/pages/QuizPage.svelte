@@ -15,6 +15,7 @@
 	import ExplanationText from "$lib/components/quiz/QuestionExplanation.svelte";
 	import ControlButtons from "$lib/components/quiz/ControlButtons.svelte";
 	import Unauthorized from "./Unauthorized.svelte";
+	import { formatNextReview } from "$lib/srs/format";
 
 	let { slug }: { slug: string } = $props();
 
@@ -35,18 +36,6 @@
 	let lastResult = $state<Quiz.UserAnswerFeedbackDto | null>(null);
 	let lastUserAnswer = $state("");
 	let dueComplete = $state(false);
-
-	function formatNextReview(iso: string | null | undefined): string {
-		if (!iso) return "";
-		const ms = new Date(iso).getTime() - Date.now();
-		const days = Math.round(ms / 86_400_000);
-		if (days <= 0) return "today";
-		if (days === 1) return "tomorrow";
-		if (days < 7) return `in ${days} days`;
-		if (days < 30) return `in ${Math.round(days / 7)} week${Math.round(days / 7) === 1 ? "" : "s"}`;
-		if (days < 365) return `in ${Math.round(days / 30)} month${Math.round(days / 30) === 1 ? "" : "s"}`;
-		return `in ${Math.round(days / 365)} year${Math.round(days / 365) === 1 ? "" : "s"}`;
-	}
 
 	const mode = $derived(
 		(router.page.url.searchParams.get("mode") ?? "random") as "random" | "due" | "least-attempted"
@@ -123,7 +112,7 @@
 		submitting = true;
 		error = null;
 		try {
-			const result = await backend.api.exercises.submitDrillAnswer(slug, currentQuestion.id, answer);
+			const result = await backend.api.exercises.submitDrillAnswer(slug, currentQuestion.id, answer, mode);
 			lastResult = result;
 			lastUserAnswer = answer;
 			showResult = true;
