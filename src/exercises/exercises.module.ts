@@ -4,12 +4,14 @@ import { ExercisesService } from "./exercises.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CollectionsModule } from "src/collections/collections.module";
 import { CommonModule } from "src/common/common.module";
+import { UsersModule } from "src/users/users.module";
 import { QuizService } from "./quiz.service";
 import { ExerciseQueryService } from "./exercise-query.service";
 import { ExerciseValidationService } from "./exercise-validation.service";
 import { EXERCISE_RULES_SYMBOL, ExerciseRulesConfig } from "src/exercises/exercise-rules.config";
 import { QUIZ_SESSION_STORE, InMemoryQuizSessionStore } from "./quiz-session.store";
 import { SrsModule } from "src/srs/srs.module";
+import { RolesGuard } from "src/guards/roles.guard";
 
 export const exerciseRulesSettings: ExerciseRulesConfig = {
 	DISTRACTORS_PER_QUESTION: 3,
@@ -19,7 +21,7 @@ export const exerciseRulesSettings: ExerciseRulesConfig = {
 };
 
 @Module({
-	imports: [CommonModule, CollectionsModule, SrsModule],
+	imports: [CommonModule, CollectionsModule, SrsModule, UsersModule],
 	controllers: [ExercisesController],
 	providers: [
 		{ provide: EXERCISE_RULES_SYMBOL, useValue: exerciseRulesSettings },
@@ -29,6 +31,7 @@ export const exerciseRulesSettings: ExerciseRulesConfig = {
 		QuizService,
 		ExerciseQueryService,
 		ExerciseValidationService,
+		RolesGuard,
 	],
 	exports: [ExercisesService, QuizService, QUIZ_SESSION_STORE],
 })

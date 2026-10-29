@@ -1,7 +1,8 @@
-import { Controller, Get, Redirect } from "@nestjs/common";
+import { Controller, Get, Redirect, UseGuards } from "@nestjs/common";
 import { AppService } from "./app.service";
 import { UsersService } from "./users/users.service";
 import { UserStatsDto } from "./users/dto/user-stats.dto";
+import { RolesGuard } from "./guards/roles.guard";
 import { AllowAnonymous, Session, type UserSession } from "@thallesp/nestjs-better-auth";
 
 type UserToReturn = {
@@ -29,6 +30,7 @@ export class AppController {
 	}
 
 	@Get("me")
+	@UseGuards(RolesGuard)
 	public me(@Session() session: UserSession): UserToReturn {
 		return {
 			id: session.user.id,
@@ -38,6 +40,7 @@ export class AppController {
 	}
 
 	@Get("me/stats")
+	@UseGuards(RolesGuard)
 	public getMyStats(@Session() session: UserSession): Promise<UserStatsDto> {
 		return this.usersService.getStats(session.user.id);
 	}

@@ -65,7 +65,9 @@ export class AdminUsersService {
 		return this.paginationService.buildPaginatedResponse(users, total, page, limit);
 	}
 
-	public async createUser(dto: CreateUserDto): Promise<{ id: string; name: string; email: string }> {
+	public async createUser(
+		dto: CreateUserDto
+	): Promise<{ id: string; name: string; email: string; role: UserRole; isActive: boolean }> {
 		if (!dto.name || !dto.email || !dto.password) {
 			throw new BadRequestException("Name, email, and password are required");
 		}
@@ -76,10 +78,24 @@ export class AdminUsersService {
 		const signUpResult = await this.authService.api.signUpEmail({
 			body: { email: dto.email, password: dto.password, name: dto.name },
 		});
+
+		// better-auth's signUpEmail creates with role=USER (enforced by the
+		// Prisma $extends hook in better-auth.config.ts). To grant a non-default
+		// role at creation time, update immediately after.
+		const desiredRole = dto.role ?? UserRole.USER;
+		if (desiredRole !== UserRole.USER) {
+			await this.prisma.user.update({
+				where: { id: signUpResult.user.id },
+				data: { role: desiredRole },
+			});
+		}
+
 		return {
 			id: signUpResult.user.id,
 			name: signUpResult.user.name,
 			email: signUpResult.user.email,
+			role: desiredRole,
+			isActive: true,
 		};
 	}
 
@@ -91,8 +107,13 @@ export class AdminUsersService {
 		const existing = await this.prisma.user.findUnique({ where: { id: userId } });
 		if (!existing) throw new NotFoundException("User not found");
 
-		if (userId === session.user.id && updateData.role && updateData.role !== UserRole.ADMIN) {
+		const isSelf = userId === session.user.id;
+
+		if (isSelf && updateData.role && updateData.role !== UserRole.ADMIN) {
 			throw new ForbiddenException("Cannot change your own admin role");
+		}
+		if (isSelf && updateData.isActive === false) {
+			throw new ForbiddenException("Cannot deactivate your own account");
 		}
 
 		const updated = await this.prisma.user.update({
@@ -105,6 +126,11 @@ export class AdminUsersService {
 			},
 			select: { id: true, name: true, email: true, role: true, isActive: true },
 		});
+
+		// Hard-kill sessions on deactivation — no 5-minute cookie-cache grace.
+		if (updateData.isActive === false) {
+			await this.prisma.session.deleteMany({ where: { userId } });
+		}
 
 		return updated;
 	}

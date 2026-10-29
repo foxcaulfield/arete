@@ -1,3 +1,7 @@
+import { unauthorizedEvents } from "$lib/api/unauthorized";
+import { backend } from "$lib/api/client";
+import { ApiError } from "$lib/api/errors";
+
 class SessionStore {
 	public user = $state<User | null>(null);
 	public loading = $state(true);
@@ -30,7 +34,11 @@ class SessionStore {
 	}
 }
 
-import { backend } from "$lib/api/client";
-import { ApiError } from "$lib/api/errors";
-
 export const session = new SessionStore();
+
+if (typeof window !== "undefined") {
+	unauthorizedEvents.addEventListener("unauthorized", () => {
+		session.user = null;
+		session.error = null;
+	});
+}

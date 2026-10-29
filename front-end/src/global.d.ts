@@ -183,6 +183,22 @@ declare global {
 			createdAt: string;
 		}
 
+		type UserRole = "USER" | "ADMIN" | "MODERATOR";
+
+		interface CreateUserPayload {
+			name: string;
+			email: string;
+			password: string;
+			role?: UserRole;
+		}
+
+		interface UpdateUserPayload {
+			name?: string;
+			email?: string;
+			role?: UserRole;
+			isActive?: boolean;
+		}
+
 		interface CollectionGrant {
 			userId: string;
 			name: string | null;

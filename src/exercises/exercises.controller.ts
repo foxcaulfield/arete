@@ -28,11 +28,14 @@ import { ExerciseFileType } from "../common/enums/exercise-file-type.enum";
 import { QuizService } from "./quiz.service";
 import { SrsService } from "src/srs/srs.service";
 import { CollectionAccessService } from "src/collections/collection-access.service";
+import { UseGuards } from "@nestjs/common";
+import { RolesGuard } from "src/guards/roles.guard";
 
 type MulterFiles = Express.Multer.File[];
 type UploadedExerciseFiles = { audio?: MulterFiles; image?: MulterFiles };
 
 @Controller("exercises")
+@UseGuards(RolesGuard)
 export class ExercisesController {
 	public constructor(
 		private readonly exercisesService: ExercisesService,

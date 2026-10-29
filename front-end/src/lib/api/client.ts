@@ -1,4 +1,5 @@
 import { ApiError, ValidationError } from "./errors";
+import { emitUnauthorized } from "./unauthorized";
 
 type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
@@ -24,6 +25,13 @@ class BackendClient {
 	}
 
 	private async handleErrorResponse(res: Response): Promise<never> {
+		if (res.status === 401) {
+			// Session expired or account deactivated — signal the session store
+			// so the UI re-renders as <Unauthorized /> without waiting for a
+			// page reload.
+			emitUnauthorized();
+		}
+
 		let errorData: {
 			statusCode?: number;
 			error?: string;
@@ -213,6 +221,23 @@ class BackendClient {
 				access: async (userId: string): Promise<Admin.UserAccess> => {
 					const r = await this.request("GET", `/admin/users/${userId}/access`);
 					return (await r.json()) as Admin.UserAccess;
+				},
+				create: async (
+					payload: Admin.CreateUserPayload
+				): Promise<{ success: boolean; user: Admin.UserListItem }> => {
+					const r = await this.request("POST", "/admin/users", payload);
+					return (await r.json()) as { success: boolean; user: Admin.UserListItem };
+				},
+				update: async (
+					userId: string,
+					payload: Admin.UpdateUserPayload
+				): Promise<{ success: boolean; user: Admin.UserListItem }> => {
+					const r = await this.request("PATCH", `/admin/users/${userId}`, payload);
+					return (await r.json()) as { success: boolean; user: Admin.UserListItem };
+				},
+				delete: async (userId: string): Promise<{ success: boolean; message: string }> => {
+					const r = await this.request("DELETE", `/admin/users/${userId}`);
+					return (await r.json()) as { success: boolean; message: string };
 				},
 			},
 			collections: {
