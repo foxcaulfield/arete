@@ -1,3 +1,10 @@
+# [2.2.0-rc.2](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.1...v2.2.0-rc.2) (2026-10-29)
+
+
+### Features
+
+* add SRS UI — due count across the app ([#79](https://github.com/foxcaulfield/arete/issues/79)) ([1010ab6](https://github.com/foxcaulfield/arete/commit/1010ab615bff36d047fd6bdd4d135c81b6a6bae7))
+
 # [2.2.0-rc.1](https://github.com/foxcaulfield/arete/compare/v2.1.0...v2.2.0-rc.1) (2026-10-28)
 
 
