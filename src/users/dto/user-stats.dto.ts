@@ -10,4 +10,10 @@ export class UserStatsDto {
 	@Expose() public currentStreak!: number;
 	@Expose() public longestStreak!: number;
 	@Expose() public lastActiveAt!: Date | null;
+
+	// SRS breakdown
+	@Expose() public srsNew!: number;
+	@Expose() public srsLearning!: number;
+	@Expose() public srsMature!: number;
+	@Expose() public srsDueForReview!: number;
 }
