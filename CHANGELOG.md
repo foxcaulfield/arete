@@ -1,3 +1,10 @@
+# [2.2.0-rc.5](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.4...v2.2.0-rc.5) (2026-10-29)
+
+
+### Features
+
+* add admin user CRUD UI ([#82](https://github.com/foxcaulfield/arete/issues/82)) ([dea4d7c](https://github.com/foxcaulfield/arete/commit/dea4d7cf334ce9d84c87fa3f6d26785fd3958599)), closes [#snippet](https://github.com/foxcaulfield/arete/issues/snippet) [#snippet](https://github.com/foxcaulfield/arete/issues/snippet)
+
 # [2.2.0-rc.4](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.3...v2.2.0-rc.4) (2026-10-29)
 
 
