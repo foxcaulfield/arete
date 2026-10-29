@@ -8,9 +8,10 @@ import { CollectionAnalyticsService } from "./collection-analytics.service";
 import { CollectionAccessService } from "./collection-access.service";
 import { CollectionSharingService } from "./collection-sharing.service";
 import { RolesGuard } from "src/guards/roles.guard";
+import { SrsModule } from "src/srs/srs.module";
 
 @Module({
-	imports: [UsersModule, CommonModule],
+	imports: [UsersModule, CommonModule, SrsModule],
 	providers: [
 		CollectionsService,
 		PrismaService,

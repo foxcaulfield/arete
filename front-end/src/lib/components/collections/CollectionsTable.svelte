@@ -18,8 +18,9 @@
 				<th>User name</th>
 				<th>Created At</th>
 				<th>Updated At</th>
-				<th>Exercise count</th>
-				<th>Attempt count</th>
+				<th class="text-right">Exercises</th>
+				<th class="text-right">Attempts</th>
+				<th class="text-right">Due</th>
 			</tr>
 		</thead>
 		<tbody class="[&>tr]:hover:preset-tonal-primary">
@@ -39,6 +40,18 @@
 					<td>{collection.updatedAt}</td>
 					<td class="text-right">{collection.exerciseCount}</td>
 					<td class="text-right">{collection.attemptCount}</td>
+					<td class="text-right">
+						{#if collection.dueCount !== undefined && collection.dueCount > 0}
+							<span
+								class="inline-flex min-w-5 items-center justify-center rounded-full bg-error-500/20 px-1.5 py-0.5 text-xs font-semibold text-error-400"
+								title="{collection.dueCount} due for review"
+							>
+								{collection.dueCount}
+							</span>
+						{:else}
+							<span class="text-xs text-surface-500">—</span>
+						{/if}
+					</td>
 				</tr>
 			{/each}
 		</tbody>

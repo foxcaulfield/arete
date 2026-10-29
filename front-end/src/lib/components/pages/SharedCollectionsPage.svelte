@@ -234,6 +234,7 @@
 								<th>Description</th>
 								<th class="text-right">Exercises</th>
 								<th class="text-right">Your attempts</th>
+								<th class="text-right">Due</th>
 							</tr>
 						</thead>
 						<tbody class="[&>tr]:hover:preset-tonal-primary">
@@ -260,6 +261,18 @@
 									<td class="truncate text-xs opacity-70" title={c.description}>{c.description}</td>
 									<td class="text-right">{c.exerciseCount ?? 0}</td>
 									<td class="text-right">{c.attemptCount ?? 0}</td>
+									<td class="text-right">
+										{#if c.dueCount !== undefined && c.dueCount > 0}
+											<span
+												class="inline-flex min-w-5 items-center justify-center rounded-full bg-error-500/20 px-1.5 py-0.5 text-xs font-semibold text-error-400"
+												title="{c.dueCount} due for review"
+											>
+												{c.dueCount}
+											</span>
+										{:else}
+											<span class="text-xs text-surface-500">—</span>
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</tbody>

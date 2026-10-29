@@ -85,6 +85,8 @@
 	);
 	const ownerName = $derived(collection?.user?.name ?? "someone else");
 
+	const dueCount = $derived(collection?.dueCount ?? 0);
+
 	// ── Filter updates ───────────────────────────────────────────────
 	function updateParam(key: string, value: string): void {
 		const params = new URLSearchParams(router.page.url.search);
@@ -345,6 +347,16 @@
 							size="sm"
 							fullWidth
 							onclick={() => router.navigate(`/collections/view/${c.id}/exercises/quiz`)}
+						/>
+						<Button
+							text={dueCount > 0 ? `Practice due (${dueCount})` : "Practice due"}
+							type="button"
+							preset="filled"
+							color="warning"
+							size="sm"
+							fullWidth
+							disabled={dueCount === 0}
+							onclick={() => router.navigate(`/collections/view/${c.id}/exercises/quiz?mode=due`)}
 						/>
 					{/if}
 					<div class="flex gap-2">

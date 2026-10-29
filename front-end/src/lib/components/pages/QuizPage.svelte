@@ -4,6 +4,7 @@
 	import { session } from "$lib/auth/session.svelte";
 	import { router } from "$lib/routing/router.svelte";
 	import { toastSuccess, toastError } from "$lib/toast";
+	import { dueCount } from "$lib/srs/due-count.svelte";
 	import { tick } from "svelte";
 
 	import Button from "$lib/components/common/Button.svelte";
@@ -33,6 +34,11 @@
 	let isForceTextInput = $state(false);
 	let lastResult = $state<Quiz.UserAnswerFeedbackDto | null>(null);
 	let lastUserAnswer = $state("");
+	let dueComplete = $state(false);
+
+	const mode = $derived(
+		(router.page.url.searchParams.get("mode") ?? "random") as "random" | "due" | "least-attempted"
+	);
 
 	let stats = $state<Quiz.CollectionStatsDto | null>(null);
 
@@ -66,12 +72,20 @@
 	async function fetchQuestion(): Promise<void> {
 		loading = true;
 		error = null;
+		dueComplete = false;
 		try {
-			currentQuestion = await backend.api.exercises.getDrillQuestion(slug);
+			currentQuestion = await backend.api.exercises.getDrillQuestion(slug, mode);
 		} catch (e) {
 			const err = interpretActionError(e);
-			error = err.message;
-			currentQuestion = null;
+			if (err.status === 404 && mode === "due") {
+				// Graceful "done" state when due list is exhausted
+				dueComplete = true;
+				error = null;
+				currentQuestion = null;
+			} else {
+				error = err.message;
+				currentQuestion = null;
+			}
 		} finally {
 			loading = false;
 		}
@@ -108,6 +122,7 @@
 			await tick();
 			nextButtonElement?.focus?.();
 			void loadStats();
+			void dueCount.refresh(); // update nav badge immediately after each answer
 		} catch (e) {
 			error = interpretActionError(e).message;
 		} finally {
@@ -418,6 +433,21 @@
 							/>
 						</div>
 					{/if}
+				</div>
+			{:else if dueComplete}
+				<div class="rounded-lg border border-success-800 bg-success-900/20 p-8 text-center">
+					<div class="mb-2 text-4xl">🎉</div>
+					<h2 class="text-lg font-semibold text-success-400">All caught up!</h2>
+					<p class="mt-1 text-sm text-surface-400">No exercises due for review in this collection.</p>
+					<Button
+						text="Back to collection"
+						type="button"
+						preset="outlined"
+						color="surface"
+						size="sm"
+						class="mt-4"
+						onclick={exitDrill}
+					/>
 				</div>
 			{:else}
 				<div
