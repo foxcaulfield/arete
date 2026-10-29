@@ -105,7 +105,6 @@
 				>
 					<option value="USER">User</option>
 					<option value="ADMIN">Admin</option>
-					<option value="MODERATOR">Moderator</option>
 				</select>
 				{#if isSelf}
 					<span class="mt-1 block text-xs opacity-50">Cannot change your own role.</span>
