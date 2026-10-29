@@ -130,8 +130,12 @@ class BackendClient {
 				const r = await this.request("DELETE", `/exercises/delete/${id}`);
 				return (await r.json()) as Exercise.ResponseDto;
 			},
-			getDrillQuestion: async (collectionId: string): Promise<Quiz.QuestionDto> => {
-				const r = await this.request("GET", `/exercises/drill/${collectionId}`);
+			getDrillQuestion: async (
+				collectionId: string,
+				mode?: "random" | "due" | "least-attempted"
+			): Promise<Quiz.QuestionDto> => {
+				const qs = mode ? `?mode=${mode}` : "";
+				const r = await this.request("GET", `/exercises/drill/${collectionId}${qs}`);
 				return (await r.json()) as Quiz.QuestionDto;
 			},
 			submitDrillAnswer: async (
@@ -148,6 +152,10 @@ class BackendClient {
 			getDrillStats: async (collectionId: string): Promise<Quiz.CollectionStatsDto> => {
 				const r = await this.request("GET", `/exercises/drill/${collectionId}/stats`);
 				return (await r.json()) as Quiz.CollectionStatsDto;
+			},
+			getGlobalDueCount: async (): Promise<{ count: number }> => {
+				const r = await this.request("GET", "/exercises/due-count");
+				return (await r.json()) as { count: number };
 			},
 			getListByCollectionId: async (
 				collectionId: string,

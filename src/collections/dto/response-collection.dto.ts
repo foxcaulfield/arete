@@ -1,14 +1,9 @@
 import { Expose, Type } from "class-transformer";
 
 class ResponseUserDto {
-	@Expose()
-	public id!: string;
-
-	@Expose()
-	public email!: string;
-
-	@Expose()
-	public name?: string | null;
+	@Expose() public id!: string;
+	@Expose() public email!: string;
+	@Expose() public name?: string | null;
 }
 
 export type MyAccessLevel = "OWNER" | "ADMIN" | "EDIT" | "STUDY" | "VIEW";
@@ -26,4 +21,5 @@ export class ResponseCollectionDto {
 	@Expose() public coverage?: string;
 	@Expose() public myAccessLevel?: MyAccessLevel;
 	@Expose() public canManageSharing?: boolean;
+	@Expose() public dueCount?: number;
 }

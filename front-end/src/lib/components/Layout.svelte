@@ -4,8 +4,22 @@
 	import { BookIcon, HouseIcon, KeyIcon, Share2Icon, TreePalmIcon, UsersIcon } from "@lucide/svelte";
 	import { Navigation } from "@skeletonlabs/skeleton-svelte";
 	import { router } from "$lib/routing/router.svelte";
+	import { session } from "$lib/auth/session.svelte";
+	import { dueCount } from "$lib/srs/due-count.svelte";
 
 	let { children }: { children: Snippet } = $props();
+
+	$effect(() => {
+		if (session.loading) return;
+		if (!session.user) {
+			dueCount.reset();
+			return;
+		}
+		// Refetch on every route change (endpoint is cheap)
+		const _path = router.page.url.pathname;
+		void _path;
+		void dueCount.refresh();
+	});
 
 	const links = [
 		{ href: "/", text: "Home", icon: HouseIcon },
@@ -19,7 +33,6 @@
 	const anchorBar = "btn hover:preset-tonal flex-col items-center gap-1";
 
 	function handleNav(e: MouseEvent, href: string): void {
-		// Let modifier-clicks (Ctrl/Cmd, middle-click) open in new tab
 		if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
 		e.preventDefault();
 		router.navigate(href);
@@ -31,7 +44,16 @@
 		{#each links as link (link.href)}
 			{@const Icon = link.icon}
 			<a href={link.href} class={anchorBar} onclick={(e) => handleNav(e, link.href)}>
-				<Icon class="size-5" />
+				<span class="relative">
+					<Icon class="size-5" />
+					{#if link.href === "/collections" && dueCount.value > 0}
+						<span
+							class="absolute -top-1.5 -right-2 inline-flex min-w-3.5 items-center justify-center rounded-full bg-error-500 px-1 text-[8px] leading-tight font-bold text-white"
+						>
+							{dueCount.value > 99 ? "99+" : dueCount.value}
+						</span>
+					{/if}
+				</span>
 				<span class="text-[10px]">{link.text}</span>
 			</a>
 		{/each}

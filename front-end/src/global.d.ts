@@ -42,6 +42,7 @@ declare global {
 			exerciseCount: number;
 			myAccessLevel?: MyAccessLevel;
 			canManageSharing?: boolean;
+			dueCount?: number;
 		}
 	}
 
@@ -102,6 +103,7 @@ declare global {
 			correctAnswer: string;
 			explanation?: string;
 			nextExerciseId?: string;
+			nextReviewAt?: string | null;
 		}
 
 		interface UserAnswerDto {

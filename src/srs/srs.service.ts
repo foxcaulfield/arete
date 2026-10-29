@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { CardState, Exercise } from "@prisma/client";
+import { CardState, Exercise, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 
 export interface Sm2State {
@@ -179,15 +179,85 @@ export class SrsService {
 
 	public async getDueCount(userId: string, collectionId?: string): Promise<number> {
 		const now = new Date();
-		const baseWhere = { isActive: true, ...(collectionId ? { collectionId } : {}) };
+
+		// When no specific collection is given, scope to collections the user
+		// can access (owned + shared). Without this, the global count would
+		// include every exercise in the system where the user has no CardState,
+		// including collections they can't see — a meaningless number that
+		// never decreases because other users' collections keep growing.
+		let exerciseWhere: Prisma.ExerciseWhereInput;
+		if (collectionId) {
+			exerciseWhere = { collectionId, isActive: true };
+		} else {
+			const [owned, shared] = await Promise.all([
+				this.prisma.collection.findMany({
+					where: { userId },
+					select: { id: true },
+				}),
+				this.prisma.collectionShare.findMany({
+					where: { userId },
+					select: { collectionId: true },
+				}),
+			]);
+			const accessibleIds = [...owned.map((c): string => c.id), ...shared.map((s): string => s.collectionId)];
+			if (accessibleIds.length === 0) return 0;
+			exerciseWhere = { collectionId: { in: accessibleIds }, isActive: true };
+		}
+
 		const [dueCount, newCount] = await Promise.all([
 			this.prisma.cardState.count({
-				where: { userId, nextReviewAt: { lte: now }, exercise: baseWhere },
+				where: { userId, nextReviewAt: { lte: now }, exercise: exerciseWhere },
 			}),
 			this.prisma.exercise.count({
-				where: { ...baseWhere, cardStates: { none: { userId } } },
+				where: { ...exerciseWhere, cardStates: { none: { userId } } },
 			}),
 		]);
 		return dueCount + newCount;
+	}
+
+	/**
+	 * Batch variant of getDueCount for a set of collections.
+	 * Returns Map<collectionId, dueCount> where dueCount = dueReviews + newCards.
+	 * Collections with no due/new exercises map to 0.
+	 *
+	 * Two queries total for N collections:
+	 *   1. findMany CardStates due now, selecting only exercise.collectionId
+	 *   2. findMany exercises with no CardState for this user, selecting collectionId
+	 *
+	 * Both filter isActive:true (matching getDueCount semantics).
+	 */
+	public async getDueCountsForCollections(userId: string, collectionIds: string[]): Promise<Map<string, number>> {
+		const counts = new Map<string, number>();
+		if (collectionIds.length === 0) return counts;
+		for (const cid of collectionIds) counts.set(cid, 0);
+
+		const now = new Date();
+		const [dueStates, newExercises] = await Promise.all([
+			this.prisma.cardState.findMany({
+				where: {
+					userId,
+					nextReviewAt: { lte: now },
+					exercise: { collectionId: { in: collectionIds }, isActive: true },
+				},
+				select: { exercise: { select: { collectionId: true } } },
+			}),
+			this.prisma.exercise.findMany({
+				where: {
+					collectionId: { in: collectionIds },
+					isActive: true,
+					cardStates: { none: { userId } },
+				},
+				select: { collectionId: true },
+			}),
+		]);
+
+		for (const s of dueStates) {
+			const cid = s.exercise.collectionId;
+			counts.set(cid, (counts.get(cid) ?? 0) + 1);
+		}
+		for (const e of newExercises) {
+			counts.set(e.collectionId, (counts.get(e.collectionId) ?? 0) + 1);
+		}
+		return counts;
 	}
 }

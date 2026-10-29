@@ -20,6 +20,7 @@ import { CollectionSortBy, FilterCollectionDto, SortOrder } from "./dto/filter-c
 import { APP_LIMITS_SYMBOL } from "src/configs/app-limits.config";
 import type { AppLimitsConfig } from "src/configs/app-limits.config";
 import { caseInsensitiveEquals, caseInsensitiveContains } from "src/common/prisma-filters";
+import { SrsService } from "src/srs/srs.service";
 
 type CollectionWithUser = Collection & { user?: Pick<User, "id" | "name"> };
 
@@ -55,6 +56,7 @@ export class CollectionsService extends BaseService {
 		private readonly usersService: UsersService,
 		private readonly paginationService: PaginationService,
 		private readonly collectionAnalyticsService: CollectionAnalyticsService,
+		private readonly srsService: SrsService,
 		@Inject(APP_LIMITS_SYMBOL) private readonly appLimits: AppLimitsConfig
 	) {
 		super();
@@ -153,6 +155,7 @@ export class CollectionsService extends BaseService {
 		const dto = this.toResponseDto(ResponseCollectionDto, enriched);
 		dto.myAccessLevel = accessLevel;
 		dto.canManageSharing = user.role === UserRole.ADMIN;
+		dto.dueCount = await this.srsService.getDueCount(currentUserId, id);
 		return dto;
 	}
 
@@ -286,9 +289,15 @@ export class CollectionsService extends BaseService {
 			targetUserId
 		);
 
+		const dueCounts = await this.srsService.getDueCountsForCollections(
+			targetUserId,
+			collections.map((c): string => c.id)
+		);
 		const dtos = this.toResponseDto(ResponseCollectionDto, collectionsWithAttempts);
-		// Endpoint is scoped to the caller's own collections (where: { userId: targetUserId })
-		for (const dto of dtos) dto.myAccessLevel = "OWNER";
+		for (const dto of dtos) {
+			dto.myAccessLevel = "OWNER";
+			dto.dueCount = dueCounts.get(dto.id) ?? 0;
+		}
 		return this.paginationService.buildPaginatedResponse(dtos, total, page, limit);
 	}
 
@@ -341,11 +350,16 @@ export class CollectionsService extends BaseService {
 		const collections = shares.map((s): typeof s.collection => s.collection);
 		const enriched = await this.collectionAnalyticsService.enrichCollectionsForUser(collections, userId);
 
+		const dueCounts = await this.srsService.getDueCountsForCollections(
+			userId,
+			collections.map((c): string => c.id)
+		);
 		const dtos = this.toResponseDto(ResponseCollectionDto, enriched);
 		for (let i = 0; i < dtos.length; i++) {
 			const lvl = shares[i]!.accessLevel;
 			dtos[i]!.myAccessLevel =
 				lvl === CollectionAccessLevel.EDIT ? "EDIT" : lvl === CollectionAccessLevel.STUDY ? "STUDY" : "VIEW";
+			dtos[i]!.dueCount = dueCounts.get(dtos[i]!.id) ?? 0;
 		}
 		return this.paginationService.buildPaginatedResponse(dtos, total, page, limit);
 	}

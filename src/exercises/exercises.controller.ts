@@ -27,6 +27,7 @@ import { multerConfig, multerField as field } from "src/configs/multer.config";
 import { ExerciseFileType } from "../common/enums/exercise-file-type.enum";
 import { QuizService } from "./quiz.service";
 import { SrsService } from "src/srs/srs.service";
+import { CollectionAccessService } from "src/collections/collection-access.service";
 
 type MulterFiles = Express.Multer.File[];
 type UploadedExerciseFiles = { audio?: MulterFiles; image?: MulterFiles };
@@ -36,7 +37,8 @@ export class ExercisesController {
 	public constructor(
 		private readonly exercisesService: ExercisesService,
 		private readonly quizService: QuizService,
-		private readonly srsService: SrsService
+		private readonly srsService: SrsService,
+		private readonly collectionAccessService: CollectionAccessService
 	) {}
 
 	@Post("create")
@@ -119,6 +121,9 @@ export class ExercisesController {
 		@Query("collectionId") collectionId: string | undefined,
 		@Session() session: UserSession
 	): Promise<{ count: number }> {
+		if (collectionId) {
+			await this.collectionAccessService.validateCollectionReadAccess(session.user.id, collectionId);
+		}
 		const count = await this.srsService.getDueCount(session.user.id, collectionId || undefined);
 		return { count };
 	}
@@ -130,6 +135,7 @@ export class ExercisesController {
 		@Query("offset") offsetStr: string | undefined,
 		@Session() session: UserSession
 	): Promise<{ data: ResponseExerciseDto[]; total: number }> {
+		await this.collectionAccessService.validateCollectionReadAccess(session.user.id, collectionId);
 		const limit = Math.min(parseInt(limitStr ?? "20", 10) || 20, 100);
 		const offset = parseInt(offsetStr ?? "0", 10) || 0;
 		const [exercises, total] = await Promise.all([
