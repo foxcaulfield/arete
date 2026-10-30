@@ -391,7 +391,7 @@
 									placeholder="translation"
 									maxlength={translationMaxLength}
 									rows="2"
-									class="w-full resize-none rounded border border-surface-600 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
+									class="w-full resize-none rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 								></textarea>
 								{#if translationText || (mode === "edit" && exercise?.translation)}
 									<Button
@@ -496,7 +496,7 @@
 								<TagsInput.Input
 									id="alternatives-input"
 									placeholder="paris, PARIS, Île de France..."
-									class="w-full rounded border border-surface-600 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
+									class="w-full rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 								/>
 							</TagsInput.Control>
 							<TagsInput.HiddenInput />
@@ -562,7 +562,7 @@
 								<TagsInput.Input
 									id="distractors-input"
 									placeholder="london, berlin, madrid..."
-									class="w-full rounded border border-surface-600 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
+									class="w-full rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 								/>
 							</TagsInput.Control>
 							<TagsInput.HiddenInput />
@@ -600,7 +600,7 @@
 							bind:value={explanationText}
 							placeholder="Why is this the correct answer?"
 							rows="3"
-							class="w-full resize-none rounded border border-surface-600 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
+							class="w-full resize-none rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 						></textarea>
 						{#if explanationText || (mode === "edit" && exercise?.explanation)}
 							<Button

@@ -216,7 +216,7 @@
 						bind:value={searchInput}
 						placeholder="Search by name or description…"
 						autocomplete="off"
-						class="w-full rounded border border-surface-600 bg-surface-800 px-3 py-1.5 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
+						class="w-full rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-1.5 text-sm text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 					/>
 					{#if searchInput}
 						<button
@@ -254,7 +254,7 @@
 				{:else}
 					{#each saved.items as sf (sf.id)}
 						<span
-							class="inline-flex items-center gap-1 rounded border border-surface-600 bg-surface-800 px-1.5 py-0.5 text-xs"
+							class="inline-flex items-center gap-1 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-1.5 py-0.5 text-xs"
 						>
 							<button
 								type="button"
@@ -289,7 +289,7 @@
 							bind:this={savingNameInput}
 							bind:value={savingName}
 							placeholder="Filter name"
-							class="rounded border border-surface-600 bg-surface-800 px-2 py-0.5 text-xs text-surface-100"
+							class="rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-2 py-0.5 text-xs text-surface-900 dark:text-surface-100"
 							onkeydown={(e) => {
 								if (e.key === "Enter") {
 									e.preventDefault();

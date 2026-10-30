@@ -171,7 +171,7 @@
 						bind:value={searchInput}
 						placeholder="Search by name or email…"
 						autocomplete="off"
-						class="w-full rounded border border-surface-600 bg-surface-800 px-3 py-1.5 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none md:w-64"
+						class="w-full rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-1.5 text-sm text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none md:w-64"
 					/>
 					<Button text="Search" type="submit" size="sm" preset="filled" color="primary" />
 					{#if search}

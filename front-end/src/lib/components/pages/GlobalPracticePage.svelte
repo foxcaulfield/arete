@@ -189,7 +189,7 @@
 				<Button text="Exit" onclick={exitDrill} color="secondary" preset="outlined" size="sm" />
 				<div class="flex items-center gap-3">
 					{#if currentQuestion?.collectionName}
-						<span class="text-xs text-surface-400">
+						<span class="text-xs text-surface-600 dark:text-surface-400">
 							From: <strong class="text-surface-200">{currentQuestion.collectionName}</strong>
 						</span>
 					{/if}
@@ -218,7 +218,7 @@
 						></audio>
 					{/if}
 
-					<div class="rounded-lg border border-surface-700 bg-surface-900 p-4 md:p-6">
+					<div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-900 p-4 md:p-6">
 						<div class="flex justify-end">
 							<ControlButtons
 								{currentQuestion}
@@ -237,7 +237,7 @@
 						<div
 							class="mb-6 flex flex-col gap-4 border-b border-surface-700 pb-4 md:flex-row md:items-center md:justify-between"
 						>
-							<div class="text-xl leading-relaxed font-semibold text-surface-100 md:text-2xl">
+							<div class="text-xl leading-relaxed font-semibold text-surface-900 dark:text-surface-100 md:text-2xl">
 								{#each questionParts as part, i (i)}
 									{@const shouldReveal = part.isAnswer && showResult}
 									{@const shouldHide = part.isAnswer && !showResult}
@@ -257,8 +257,8 @@
 						</div>
 
 						{#if currentQuestion.translation}
-							<div class="mb-4 text-sm text-surface-400">
-								<span class="font-medium text-surface-300">Translation:</span>
+							<div class="mb-4 text-sm text-surface-600 dark:text-surface-400">
+								<span class="font-medium text-surface-700 dark:text-surface-300">Translation:</span>
 								{currentQuestion.translation}
 							</div>
 						{/if}
@@ -296,21 +296,21 @@
 												{lastResult.isCorrect ? "Correct!" : "Not quite right"}
 											</div>
 											{#if lastResult.nextReviewAt}
-												<div class="mt-1 text-xs text-surface-400">
+												<div class="mt-1 text-xs text-surface-600 dark:text-surface-400">
 													Next review: {formatNextReview(lastResult.nextReviewAt)}
 												</div>
 											{/if}
 											{#if !lastResult.isCorrect}
 												<div class="mt-3 space-y-2 text-sm">
-													<p class="text-surface-300">
-														<span class="text-surface-400">Your answer:</span>
-														<span class="font-medium text-error-300"
+													<p class="text-surface-700 dark:text-surface-300">
+														<span class="text-surface-600 dark:text-surface-400">Your answer:</span>
+														<span class="font-medium text-error-700 dark:text-error-300"
 															>{lastUserAnswer || "(empty)"}</span
 														>
 													</p>
-													<p class="text-surface-300">
-														<span class="text-surface-400">Correct answer:</span>
-														<span class="font-semibold text-success-300"
+													<p class="text-surface-700 dark:text-surface-300">
+														<span class="text-surface-600 dark:text-surface-400">Correct answer:</span>
+														<span class="font-semibold text-success-700 dark:text-success-300"
 															>{lastResult.correctAnswer}</span
 														>
 													</p>
@@ -341,13 +341,13 @@
 					</div>
 
 					{#if isImageShown && currentQuestion.imageUrl}
-						<div class="rounded-lg border border-surface-700 bg-surface-900 p-4 md:p-6">
+						<div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-900 p-4 md:p-6">
 							<ExerciseImage bind:imageElement imageUrl={currentQuestion.imageUrl} />
 						</div>
 					{/if}
 
 					{#if isExplanationShown && currentQuestion.explanation}
-						<div class="rounded-lg border border-surface-700 bg-surface-900 p-4 md:p-6">
+						<div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-900 p-4 md:p-6">
 							<ExplanationText
 								bind:explanationEl={explanationElement}
 								text={currentQuestion.explanation}
@@ -359,7 +359,7 @@
 				<div class="rounded-lg border border-success-800 bg-success-900/20 p-8 text-center">
 					<div class="mb-2 text-4xl">🎉</div>
 					<h2 class="text-lg font-semibold text-success-400">All caught up!</h2>
-					<p class="mt-1 text-sm text-surface-400">No exercises due for review across your collections.</p>
+					<p class="mt-1 text-sm text-surface-600 dark:text-surface-400">No exercises due for review across your collections.</p>
 					<Button
 						text="Back to collections"
 						type="button"
@@ -372,7 +372,7 @@
 				</div>
 			{:else}
 				<div
-					class="rounded-lg border border-surface-700 bg-surface-900 p-4 text-center text-sm text-surface-400 md:p-6"
+					class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-100 dark:bg-surface-900 p-4 text-center text-sm text-surface-400 md:p-6"
 				>
 					No due exercises available.
 				</div>

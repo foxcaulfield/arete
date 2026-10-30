@@ -1,13 +1,26 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 	import { SvelteToast } from "@zerodevx/svelte-toast";
-	import { BookIcon, HouseIcon, KeyIcon, Share2Icon, SparklesIcon, TreePalmIcon, UsersIcon } from "@lucide/svelte";
+	import {
+		BookIcon,
+		HouseIcon,
+		KeyIcon,
+		PaletteIcon,
+		Share2Icon,
+		SparklesIcon,
+		TreePalmIcon,
+		UsersIcon,
+	} from "@lucide/svelte";
 	import { Navigation } from "@skeletonlabs/skeleton-svelte";
 	import { router } from "$lib/routing/router.svelte";
 	import { session } from "$lib/auth/session.svelte";
 	import { dueCount } from "$lib/srs/due-count.svelte";
+	import Modal from "$lib/components/common/Modal.svelte";
+	import ThemePicker from "$lib/components/common/ThemePicker.svelte";
 
 	let { children }: { children: Snippet } = $props();
+
+	let themeOpen = $state(false);
 
 	$effect(() => {
 		if (session.loading) return;
@@ -41,7 +54,7 @@
 </script>
 
 <Navigation layout="bar">
-	<Navigation.Menu class="grid grid-cols-7 gap-2">
+	<Navigation.Menu class="grid grid-cols-8 gap-2">
 		{#each links as link (link.href)}
 			{@const Icon = link.icon}
 			<a href={link.href} class={anchorBar} onclick={(e) => handleNav(e, link.href)}>
@@ -58,6 +71,10 @@
 				<span class="text-[10px]">{link.text}</span>
 			</a>
 		{/each}
+		<button type="button" class={anchorBar} onclick={() => (themeOpen = true)} title="Change theme">
+			<PaletteIcon class="size-5" />
+			<span class="text-[10px]">Theme</span>
+		</button>
 	</Navigation.Menu>
 </Navigation>
 
@@ -65,3 +82,14 @@
 	<SvelteToast />
 	{@render children()}
 </main>
+
+<Modal
+	open={themeOpen}
+	onClose={() => (themeOpen = false)}
+	title="Theme"
+	description="Pick a color theme. Saved on this device."
+>
+	<div class="max-h-[65vh] overflow-y-auto pr-2">
+		<ThemePicker />
+	</div>
+</Modal>
