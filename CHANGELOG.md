@@ -1,3 +1,10 @@
+# [2.2.0-rc.7](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.6...v2.2.0-rc.7) (2026-10-30)
+
+
+### Bug Fixes
+
+* gate due/skip endpoints by drill access (STUDY+) ([#85](https://github.com/foxcaulfield/arete/issues/85)) ([41c6215](https://github.com/foxcaulfield/arete/commit/41c621580bc164e90f98554a13186cd23d1106ca))
+
 # [2.2.0-rc.6](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.5...v2.2.0-rc.6) (2026-10-29)
 
 
