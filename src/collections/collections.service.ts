@@ -155,7 +155,11 @@ export class CollectionsService extends BaseService {
 		const dto = this.toResponseDto(ResponseCollectionDto, enriched);
 		dto.myAccessLevel = accessLevel;
 		dto.canManageSharing = user.role === UserRole.ADMIN;
-		dto.dueCount = await this.srsService.getDueCount(currentUserId, id);
+		// VIEW-only callers can't drill (validateCollectionStudyAccess), so a
+		// nonzero due count would advertise an action they can't take. Admin-
+		// with-VIEW-share is fine — resolveAccessLevel returns "ADMIN" for
+		// them (admin override), so their count is real.
+		dto.dueCount = accessLevel === "VIEW" ? 0 : await this.srsService.getDueCount(currentUserId, id);
 		return dto;
 	}
 
@@ -350,16 +354,37 @@ export class CollectionsService extends BaseService {
 		const collections = shares.map((s): typeof s.collection => s.collection);
 		const enriched = await this.collectionAnalyticsService.enrichCollectionsForUser(collections, userId);
 
-		const dueCounts = await this.srsService.getDueCountsForCollections(
-			userId,
-			collections.map((c): string => c.id)
-		);
+		// Inline the same access-level ladder resolveAccessLevel uses, so
+		// listSharedWithMe and getCollectionById can't disagree for the same
+		// (caller, collection) pair. The previous version read share.accessLevel
+		// directly, so an admin-with-VIEW-share saw VIEW here but ADMIN on
+		// /collections/view/:id — with dueCount following the inconsistency.
+		const currentUser = await this.usersService.findUser(userId);
+		const isAdmin = currentUser.role === UserRole.ADMIN;
+		const levels: MyAccessLevel[] = shares.map((s): MyAccessLevel => {
+			const isAdminOverride = isAdmin && s.collection.user.id !== userId;
+			if (isAdminOverride) return "ADMIN";
+			return s.accessLevel === CollectionAccessLevel.EDIT
+				? "EDIT"
+				: s.accessLevel === CollectionAccessLevel.STUDY
+					? "STUDY"
+					: "VIEW";
+		});
+
+		// Admin can drill any shared collection via canAccessCollection
+		// (admin override), so admin's shares stay unfiltered. Non-admin
+		// callers lose VIEW shares from the query — those can't be drilled.
+		const studyableCollectionIds = isAdmin
+			? collections.map((c): string => c.id)
+			: shares
+					.filter((s): boolean => s.accessLevel !== CollectionAccessLevel.VIEW)
+					.map((s): string => s.collection.id);
+		const dueCounts = await this.srsService.getDueCountsForCollections(userId, studyableCollectionIds);
+
 		const dtos = this.toResponseDto(ResponseCollectionDto, enriched);
 		for (let i = 0; i < dtos.length; i++) {
-			const lvl = shares[i]!.accessLevel;
-			dtos[i]!.myAccessLevel =
-				lvl === CollectionAccessLevel.EDIT ? "EDIT" : lvl === CollectionAccessLevel.STUDY ? "STUDY" : "VIEW";
-			dtos[i]!.dueCount = dueCounts.get(dtos[i]!.id) ?? 0;
+			dtos[i]!.myAccessLevel = levels[i]!;
+			dtos[i]!.dueCount = levels[i] === "VIEW" ? 0 : (dueCounts.get(dtos[i]!.id) ?? 0);
 		}
 		return this.paginationService.buildPaginatedResponse(dtos, total, page, limit);
 	}
