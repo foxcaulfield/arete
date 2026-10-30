@@ -322,17 +322,12 @@
 							{/if}
 						</div>
 
-						<div class="flex items-center justify-between gap-4 border-t border-surface-700 pt-4">
-							<Button
-								disabled={showResult || submitting}
-								type="button"
-								onclick={handleNext}
-								color="surface"
-								preset="outlined"
-								size="sm"
-								text="Skip"
-								isBorderless={true}
-							/>
+						<!-- No Skip in /practice — this is a due drill across all studyable
+     collections, so selection is deterministic and skipping would
+     re-fetch the same exercise. Answer to advance. -->
+						<!-- /practice is always a due drill (getGlobalDrillQuestion), so Skip
+     would be a no-op. Omitted entirely. -->
+						<div class="flex items-center justify-end gap-4 border-t border-surface-700 pt-4">
 							<Button
 								disabled={!showResult || submitting}
 								type="button"

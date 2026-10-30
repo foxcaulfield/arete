@@ -143,7 +143,20 @@ export class ExercisesController {
 		@Session() session: UserSession
 	): Promise<{ count: number }> {
 		if (collectionId) {
-			await this.collectionAccessService.validateCollectionReadAccess(session.user.id, collectionId);
+			const { collection, currentUser } = await this.collectionAccessService.validateCollectionReadAccess(
+				session.user.id,
+				collectionId
+			);
+			// "How many can I practice?" — for a VIEW caller the honest answer
+			// is 0, not the raw SRS count (they can't submit; validateCollection-
+			// StudyAccess rejects them). Matches the DTO-level fix in
+			// collections.service.ts so the two can't disagree.
+			const level = await this.collectionAccessService.resolveAccessLevel(
+				session.user.id,
+				collection,
+				currentUser
+			);
+			if (level === "VIEW") return { count: 0 };
 		}
 		const count = await this.srsService.getDueCount(session.user.id, collectionId || undefined);
 		return { count };
@@ -156,7 +169,12 @@ export class ExercisesController {
 		@Query("offset") offsetStr: string | undefined,
 		@Session() session: UserSession
 	): Promise<{ data: ResponseExerciseDto[]; total: number }> {
-		await this.collectionAccessService.validateCollectionReadAccess(session.user.id, collectionId);
+		// STUDY+ only — this endpoint returns full exercise DTOs including
+		// correctAnswer via toPublicExerciseDto. validateCollectionReadAccess
+		// previously let VIEW shares fetch the answer for every due exercise.
+		// Same rule as drill / submit.
+		await this.collectionAccessService.validateCollectionStudyAccess(session.user.id, collectionId);
+		// await this.collectionAccessService.validateCollectionReadAccess(session.user.id, collectionId);
 		const limit = Math.min(parseInt(limitStr ?? "20", 10) || 20, 100);
 		const offset = parseInt(offsetStr ?? "0", 10) || 0;
 		const [exercises, total] = await Promise.all([

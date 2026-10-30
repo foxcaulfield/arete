@@ -398,20 +398,26 @@
 							{/if}
 						</div>
 
-						<div class="flex items-center justify-between gap-4 border-t border-surface-700 pt-4">
-							<div>
-								<Button
-									disabled={showResult || submitting}
-									type="button"
-									onclick={handleNext}
-									color="surface"
-									preset="outlined"
-									size="sm"
-									text="Skip"
-									isBorderless={true}
-								/>
-							</div>
-							<div>
+						<div class="flex items-center gap-4 border-t border-surface-700 pt-4">
+							{#if mode !== "due"}
+								<!-- Skip only makes sense when selection is random (random /
+             least-attempted). Due drill picks deterministically by
+             nextReviewAt / createdAt ASC — skipping re-fetches the same
+             exercise. SM-2 also needs a grade to advance the schedule. -->
+								<div>
+									<Button
+										disabled={showResult || submitting}
+										type="button"
+										onclick={handleNext}
+										color="surface"
+										preset="outlined"
+										size="sm"
+										text="Skip"
+										isBorderless={true}
+									/>
+								</div>
+							{/if}
+							<div class="ml-auto">
 								<Button
 									disabled={!showResult || submitting}
 									type="button"
