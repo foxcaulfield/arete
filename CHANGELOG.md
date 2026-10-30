@@ -1,3 +1,10 @@
+# [2.2.0-rc.8](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.7...v2.2.0-rc.8) (2026-10-30)
+
+
+### Features
+
+* add theme switcher, dark/light mode, and mode-adaptive surfaces ([#86](https://github.com/foxcaulfield/arete/issues/86)) ([9ba521e](https://github.com/foxcaulfield/arete/commit/9ba521e1c884ad513fd166415822ea8a050d2de2))
+
 # [2.2.0-rc.7](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.6...v2.2.0-rc.7) (2026-10-30)
 
 
