@@ -6,6 +6,7 @@
 	import { router } from "$lib/routing/router.svelte";
 	import Unauthorized from "./Unauthorized.svelte";
 	import { formatDistanceToNow } from "date-fns";
+	import ThemePicker from "../common/ThemePicker.svelte";
 
 	let loggingOut = $state(false);
 	let stats = $state<MeStats | null>(null);
@@ -208,6 +209,15 @@
 				</div>
 			{/if}
 		{/if}
+
+		<!-- Appearance -->
+		<div class="card space-y-3 p-4">
+			<div>
+				<h2 class="text-xs font-semibold tracking-wide text-surface-300 uppercase">Appearance</h2>
+				<p class="mt-1 text-xs opacity-60">Color theme. Saved on this device.</p>
+			</div>
+			<ThemePicker columns={3} />
+		</div>
 
 		<div class="flex justify-end">
 			<Button

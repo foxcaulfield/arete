@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Button from "$lib/components/common/Button.svelte";
+	import { mode } from "$lib/theme.svelte";
 
 	interface Props {
 		distractors: string[];
@@ -30,6 +31,8 @@
 			choiceButtons[buttonIndex]?.click();
 		}
 	}
+
+	const isDark = $derived(mode.current === "dark");
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
@@ -51,8 +54,13 @@
 						: distractor === lastResult?.correctAnswer
 							? "success"
 							: "secondary"
-				: "secondary"}
+				: "surface"}
 			preset={showResult && distractor === lastResult?.correctAnswer ? "filled" : "outlined"}
+			class="!border-2 {showResult
+				? ''
+				: isDark
+					? '!border-surface-400 !bg-surface-700 !text-surface-100 hover:!bg-surface-600 hover:!border-surface-300'
+					: '!border-surface-500 !bg-surface-200 !text-surface-900 hover:!bg-surface-300 hover:!border-surface-400'}"
 			text={distractor.toLowerCase()}
 			fullWidth={true}
 			title={`Press '${Object.entries(KEYBOARD_MAP).find(([_, i]) => i === index)?.[0] || ""}' to select`}

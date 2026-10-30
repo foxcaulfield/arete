@@ -415,7 +415,7 @@
 								bind:value={searchInput}
 								placeholder="Search question, answer, translation…"
 								autocomplete="off"
-								class="w-full rounded border border-surface-600 bg-surface-800 px-3 py-1.5 text-sm text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
+								class="w-full rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-1.5 text-sm text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 							/>
 							{#if searchInput}
 								<button
@@ -487,8 +487,8 @@
 							<button
 								type="button"
 								class="rounded border px-2 py-0.5 text-xs transition-colors {currentPresetId === p.id
-									? 'border-primary-500 bg-primary-500/20 text-primary-300'
-									: 'border-surface-600 bg-surface-800 text-surface-300 hover:border-surface-500'}"
+									? 'border-primary-500 bg-primary-500/20 text-primary-700-300'
+									: 'border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-surface-700 dark:text-surface-300 hover:border-surface-400'}"
 								onclick={() => applyPreset(p.params)}
 							>
 								{p.label}
@@ -504,7 +504,7 @@
 						{:else}
 							{#each saved.items as sf (sf.id)}
 								<span
-									class="inline-flex items-center gap-1 rounded border border-surface-600 bg-surface-800 px-1.5 py-0.5 text-xs"
+									class="inline-flex items-center gap-1 rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-1.5 py-0.5 text-xs"
 								>
 									<button
 										type="button"
@@ -539,7 +539,7 @@
 									bind:this={savingNameInput}
 									bind:value={savingName}
 									placeholder="Filter name"
-									class="rounded border border-surface-600 bg-surface-800 px-2 py-0.5 text-xs text-surface-100"
+									class="rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-2 py-0.5 text-xs text-surface-900 dark:text-surface-100"
 									onkeydown={(e) => {
 										if (e.key === "Enter") {
 											e.preventDefault();

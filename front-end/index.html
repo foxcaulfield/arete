@@ -1,12 +1,33 @@
 <!doctype html>
 <html lang="en" data-theme="crimson">
-	<!-- <html lang="en" data-theme="ocean-breeze"> -->
-	<!-- <html lang="en" data-theme="obsidian-focus"> -->
-	<!-- <html lang="en" data-theme="serene-sanctuary"> -->
 	<head>
-		<meta charset="UTF-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta charset="UTF-8"/>
+		<!-- Apply stored theme + mode before first paint to avoid a flash. -->
+		<script>
+			(function () {
+				try {
+					var t = localStorage.getItem("arete:theme");
+					if (t) 
+						document
+							.documentElement
+							.setAttribute("data-theme", t);
+					var m = localStorage.getItem("arete:mode") || "dark";
+					document
+						.documentElement
+						.setAttribute("data-mode", m);
+					if (m === "dark") 
+						document
+							.documentElement
+							.classList
+							.add("dark");
+					}
+				catch (e) {
+					/* localStorage blocked — theme/mode stay at defaults */
+				}
+			})();
+		</script>
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<title>Arete</title>
 	</head>
 	<body>

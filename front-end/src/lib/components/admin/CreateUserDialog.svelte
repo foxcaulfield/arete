@@ -71,7 +71,7 @@
 				bind:value={name}
 				required
 				autocomplete="off"
-				class="w-full rounded border border-surface-600 bg-surface-800 px-3 py-2 text-sm text-surface-100 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
+				class="w-full rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 			/>
 			{#if fieldErrors.name?.[0]}
 				<span class="mt-1 block text-xs text-error-500">{fieldErrors.name[0]}</span>
@@ -85,7 +85,7 @@
 				bind:value={email}
 				required
 				autocomplete="off"
-				class="w-full rounded border border-surface-600 bg-surface-800 px-3 py-2 text-sm text-surface-100 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
+				class="w-full rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 			/>
 			{#if fieldErrors.email?.[0]}
 				<span class="mt-1 block text-xs text-error-500">{fieldErrors.email[0]}</span>
@@ -100,7 +100,7 @@
 				required
 				minlength="8"
 				autocomplete="new-password"
-				class="w-full rounded border border-surface-600 bg-surface-800 px-3 py-2 text-sm text-surface-100 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
+				class="w-full rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 			/>
 			{#if fieldErrors.password?.[0]}
 				<span class="mt-1 block text-xs text-error-500">{fieldErrors.password[0]}</span>
