@@ -1,3 +1,10 @@
+# [2.2.0-rc.11](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.10...v2.2.0-rc.11) (2026-10-31)
+
+
+### Features
+
+* live markdown editor with preview for explanation ([#89](https://github.com/foxcaulfield/arete/issues/89)) ([59ca413](https://github.com/foxcaulfield/arete/commit/59ca41359578f41d0f3670226e6cf9286c861b8d))
+
 # [2.2.0-rc.10](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.9...v2.2.0-rc.10) (2026-10-31)
 
 
