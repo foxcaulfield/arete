@@ -57,6 +57,13 @@
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 	$effect(() => {
 		const value = searchInput;
+		const currentInUrl = router.page.url.searchParams.get("search") ?? "";
+		// Skip on mount and on redundant refires: only navigate when the user
+		// has actually changed the input away from what's currently in the URL.
+		// Without this guard, every visit to the page schedules a 300ms
+		// navigation that writes ?page=1 and pushes a history entry, so
+		// browser Back requires two clicks to leave the page.
+		if (value === currentInUrl) return;
 		clearTimeout(debounceTimer);
 		debounceTimer = setTimeout(() => {
 			const params = new URLSearchParams(router.page.url.search);
