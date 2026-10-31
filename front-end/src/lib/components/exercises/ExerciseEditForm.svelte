@@ -90,11 +90,13 @@
 
 	const questionLength = $derived(questionText.length);
 	const translationLength = $derived(translationText.length);
+	const explanationLength = $derived(explanationText.length);
 
 	const questionMinLength = 5;
 	const questionMaxLength = 300;
 	const answerMaxLength = 50;
 	const translationMaxLength = 300;
+	const explanationMaxLength = 1000;
 
 	const hasQuestionError = $derived(Boolean(fieldErrors.question?.length));
 	const hasAnswerError = $derived(Boolean(fieldErrors.correctAnswer?.length));
@@ -588,9 +590,17 @@
 				open={Boolean(explanationText || clearExplanation || (mode === "edit" && exercise?.explanation))}
 			>
 				<summary
-					class="cursor-pointer text-xs font-semibold tracking-wide text-surface-300 uppercase hover:text-surface-200"
-					>+ Explanation (Optional)</summary
+					class="flex cursor-pointer items-center justify-between text-xs font-semibold tracking-wide text-surface-300 uppercase hover:text-surface-200"
 				>
+					<span>+ Explanation (Optional)</span>
+					<span
+						class="text-xs font-normal {explanationLength > explanationMaxLength
+							? 'text-error-500'
+							: 'text-surface-500'}"
+					>
+						{explanationLength}/{explanationMaxLength}
+					</span>
+				</summary>
 				<div class="mt-3">
 					<div class="relative">
 						<textarea
@@ -599,6 +609,7 @@
 							name="explanation"
 							bind:value={explanationText}
 							placeholder="Why is this the correct answer?"
+							maxlength={explanationMaxLength}
 							rows="3"
 							class="w-full resize-none rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
 						></textarea>
