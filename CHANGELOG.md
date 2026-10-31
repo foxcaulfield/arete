@@ -1,3 +1,10 @@
+# [2.2.0-rc.10](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.9...v2.2.0-rc.10) (2026-10-31)
+
+
+### Bug Fixes
+
+* add maxlength and char counter to explanation textarea ([#88](https://github.com/foxcaulfield/arete/issues/88)) ([2df21ba](https://github.com/foxcaulfield/arete/commit/2df21baa961829c71e1a326bc65f75b1b7a4e899))
+
 # [2.2.0-rc.9](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.8...v2.2.0-rc.9) (2026-10-31)
 
 
