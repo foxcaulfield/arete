@@ -5,7 +5,8 @@
 	import type { Snippet } from "svelte";
 	import { TagsInput } from "@skeletonlabs/skeleton-svelte";
 	import { toastSuccess, toastWarning } from "$lib/toast";
-	import { X } from "@lucide/svelte";
+	import { X, Bold, Italic, Code, Link, Heading2, List, Quote } from "@lucide/svelte";
+	import markdownit from "markdown-it";
 
 	interface Props {
 		mode: "create" | "edit";
@@ -49,6 +50,7 @@
 
 	const exerciseTypes: Exercise.ExerciseType[] = ["FILL_IN_THE_BLANK", "CHOICE_SINGLE"];
 	const randomId = (): number => Math.floor(Math.random() * 1_000_000);
+	const md = markdownit({ html: true, linkify: true, typographer: true, breaks: true });
 
 	// ── Content state (snapshot once at mount, then user-controlled) ──────────
 	let selectedType = $state<Exercise.ExerciseType | undefined>(untrack(() => exercise?.type ?? "FILL_IN_THE_BLANK"));
@@ -56,6 +58,49 @@
 	let translationText = $state(untrack(() => exercise?.translation ?? ""));
 	let correctAnswerText = $state(untrack(() => exercise?.correctAnswer ?? ""));
 	let explanationText = $state(untrack(() => exercise?.explanation ?? ""));
+
+	let explanationTextareaEl: HTMLTextAreaElement | undefined = $state(undefined);
+	const explanationHtml = $derived(md.render(explanationText.trim()));
+
+	function wrapTextareaSelection(before: string, after: string = before, placeholder = "text"): void {
+		const el = explanationTextareaEl;
+		if (!el || clearExplanation) return;
+		const start = el.selectionStart;
+		const end = el.selectionEnd;
+		const selected = explanationText.slice(start, end) || placeholder;
+		explanationText = explanationText.slice(0, start) + before + selected + after + explanationText.slice(end);
+		queueMicrotask(() => {
+			el.focus();
+			el.setSelectionRange(start + before.length, start + before.length + selected.length);
+		});
+	}
+
+	function insertLinePrefix(prefix: string): void {
+		const el = explanationTextareaEl;
+		if (!el || clearExplanation) return;
+		const start = el.selectionStart;
+		const lineStart = explanationText.lastIndexOf("\n", start - 1) + 1;
+		explanationText = explanationText.slice(0, lineStart) + prefix + explanationText.slice(lineStart);
+		queueMicrotask(() => {
+			el.focus();
+			el.setSelectionRange(start + prefix.length, start + prefix.length);
+		});
+	}
+
+	function insertLink(): void {
+		const el = explanationTextareaEl;
+		if (!el || clearExplanation) return;
+		const start = el.selectionStart;
+		const end = el.selectionEnd;
+		const selected = explanationText.slice(start, end) || "link text";
+		const insertion = `[${selected}](https://)`;
+		explanationText = explanationText.slice(0, start) + insertion + explanationText.slice(end);
+		queueMicrotask(() => {
+			el.focus();
+			const urlStart = start + selected.length + 3; // "[" + selected + "]("
+			el.setSelectionRange(urlStart, urlStart + 8); // "https://"
+		});
+	}
 
 	// ── Clear/undo flags ──────────────────────────────────────────────────────
 	let clearExplanation = $state(false);
@@ -602,30 +647,137 @@
 					</span>
 				</summary>
 				<div class="mt-3">
-					<div class="relative">
-						<textarea
+					<!-- Mini markdown toolbar -->
+					<div class="mb-2 flex flex-wrap gap-0.5">
+						<Button
+							icon
+							useIcon
+							IconComponent={Bold}
+							preset="ghost"
+							color="surface"
+							size="sm"
 							disabled={clearExplanation}
-							id="explanation"
-							name="explanation"
-							bind:value={explanationText}
-							placeholder="Why is this the correct answer?"
-							maxlength={explanationMaxLength}
-							rows="3"
-							class="w-full resize-none rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
-						></textarea>
-						{#if explanationText || (mode === "edit" && exercise?.explanation)}
-							<Button
-								icon
-								IconComponent={X}
-								useIcon
-								preset="ghost"
-								color="surface"
-								class="absolute top-2 right-2"
+							title="Bold"
+							onclick={() => wrapTextareaSelection("**")}
+						/>
+						<Button
+							icon
+							useIcon
+							IconComponent={Italic}
+							preset="ghost"
+							color="surface"
+							size="sm"
+							disabled={clearExplanation}
+							title="Italic"
+							onclick={() => wrapTextareaSelection("*")}
+						/>
+						<Button
+							icon
+							useIcon
+							IconComponent={Code}
+							preset="ghost"
+							color="surface"
+							size="sm"
+							disabled={clearExplanation}
+							title="Inline code"
+							onclick={() => wrapTextareaSelection("`")}
+						/>
+						<Button
+							icon
+							useIcon
+							IconComponent={Link}
+							preset="ghost"
+							color="surface"
+							size="sm"
+							disabled={clearExplanation}
+							title="Link"
+							onclick={insertLink}
+						/>
+						<Button
+							icon
+							useIcon
+							IconComponent={Heading2}
+							preset="ghost"
+							color="surface"
+							size="sm"
+							disabled={clearExplanation}
+							title="Heading"
+							onclick={() => insertLinePrefix("## ")}
+						/>
+						<Button
+							icon
+							useIcon
+							IconComponent={List}
+							preset="ghost"
+							color="surface"
+							size="sm"
+							disabled={clearExplanation}
+							title="List item"
+							onclick={() => insertLinePrefix("- ")}
+						/>
+						<Button
+							icon
+							useIcon
+							IconComponent={Quote}
+							preset="ghost"
+							color="surface"
+							size="sm"
+							disabled={clearExplanation}
+							title="Quote"
+							onclick={() => insertLinePrefix("> ")}
+						/>
+					</div>
+
+					<div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+						<!-- Editor pane -->
+						<div class="relative">
+							<textarea
+								bind:this={explanationTextareaEl}
 								disabled={clearExplanation}
-								onclick={handleClearExplanation}
-								title="Clear explanation (set to null)"
-							></Button>
-						{/if}
+								id="explanation"
+								name="explanation"
+								bind:value={explanationText}
+								placeholder={"Why is this the correct answer?\nMarkdown supported: **bold**, *italic*, `code`, [link](url), ## heading, - list"}
+								maxlength={explanationMaxLength}
+								rows="6"
+								class="w-full resize-y rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:border-transparent focus:ring-2 focus:ring-primary-500 focus:outline-none"
+							></textarea>
+							{#if explanationText || (mode === "edit" && exercise?.explanation)}
+								<Button
+									icon
+									IconComponent={X}
+									useIcon
+									preset="ghost"
+									color="surface"
+									class="absolute top-2 right-2"
+									disabled={clearExplanation}
+									onclick={handleClearExplanation}
+									title="Clear explanation (set to null)"
+								></Button>
+							{/if}
+						</div>
+
+						<!-- Preview pane -->
+						<div>
+							<div class="mb-1 text-[10px] font-semibold tracking-wide text-surface-500 uppercase">
+								Preview
+							</div>
+							<div
+								class="max-h-64 min-h-40 overflow-y-auto rounded border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 p-3"
+							>
+								{#if explanationText.trim()}
+									<!-- prose styles all markdown elements (h1-h6, ul, ol,
+									     blockquote, code, pre, links, tables). Without it,
+									     Tailwind Preflight flattens every heading/list/quote
+									     to the base size. prose-sm scales to the panel. -->
+									<div class="prose prose-sm dark:prose-invert max-w-none break-words">
+										{@html explanationHtml}
+									</div>
+								{:else}
+									<p class="text-sm text-surface-500 italic">Nothing to preview yet.</p>
+								{/if}
+							</div>
+						</div>
 					</div>
 					{#if clearExplanation}
 						<p class="mt-1 text-xs text-warning-500">

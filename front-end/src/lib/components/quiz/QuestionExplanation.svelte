@@ -12,7 +12,7 @@
 
 <div class="explanation-card" bind:this={explanationEl} tabindex="-1" aria-live="polite">
 	<strong>Explanation:</strong>
-	<div class="content">
+	<div class="content prose prose-sm dark:prose-invert max-w-none">
 		{@html renderedText}
 	</div>
 </div>
