@@ -4,8 +4,13 @@
 	let { collections }: { collections: Collection.ResponseDto[] } = $props();
 
 	function open(id: string): void {
-		const query = router.page.url.search;
-		router.navigate(`/collections/view/${id}${query}`);
+		// Do not carry the list's query string: /collections uses sortBy=name|
+		// createdAt|updatedAt, /collections/view uses sortBy=question|
+		// totalAttempts|mostFailed. Leaking them caused 400 Validation failed
+		// on GET /exercises/by_collection/:id. The filter state survives via
+		// browser history (Back in the chrome) — the in-page Back button
+		// intentionally returns to the unfiltered list.
+		router.navigate(`/collections/view/${id}`);
 	}
 </script>
 

@@ -38,6 +38,9 @@
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 	$effect(() => {
 		const value = searchInput;
+		const currentInUrl = router.page.url.searchParams.get("search") ?? "";
+		// Skip on mount and on redundant refires — see CollectionViewPage.
+		if (value === currentInUrl) return;
 		clearTimeout(debounceTimer);
 		debounceTimer = setTimeout(() => {
 			const params = new URLSearchParams(router.page.url.search);
@@ -48,7 +51,7 @@
 		}, 300);
 		return (): void => clearTimeout(debounceTimer);
 	});
-
+	
 	// ── Saved filters ────────────────────────────────────────────────
 	const saved = makeSavedFilters("arete:collections:saved-filters");
 	let savingName = $state<string | null>(null);
