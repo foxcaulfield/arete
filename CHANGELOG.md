@@ -1,3 +1,10 @@
+# [2.2.0-rc.9](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.8...v2.2.0-rc.9) (2026-10-31)
+
+
+### Bug Fixes
+
+* collection list->detail navigation and search debounce ([#87](https://github.com/foxcaulfield/arete/issues/87)) ([86a4527](https://github.com/foxcaulfield/arete/commit/86a4527efc3f1998fda7c2a079e554906226b341))
+
 # [2.2.0-rc.8](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.7...v2.2.0-rc.8) (2026-10-30)
 
 
