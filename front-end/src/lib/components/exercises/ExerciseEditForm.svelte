@@ -770,7 +770,7 @@
 									     blockquote, code, pre, links, tables). Without it,
 									     Tailwind Preflight flattens every heading/list/quote
 									     to the base size. prose-sm scales to the panel. -->
-									<div class="prose prose-sm dark:prose-invert max-w-none break-words">
+									<div class="prose prose-sm dark:prose-invert max-w-none wrap-break-word">
 										{@html explanationHtml}
 									</div>
 								{:else}

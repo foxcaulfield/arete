@@ -90,8 +90,20 @@ class BackendClient {
 				const r = await this.request("GET", `/collections/list?${qs.toString()}`);
 				return (await r.json()) as PaginatedResponse<Collection.ResponseDto>;
 			},
-			all: async (page = 1, limit = 10): Promise<PaginatedResponse<Collection.ResponseDto>> => {
-				const r = await this.request("GET", `/collections/all?page=${page}&limit=${limit}`);
+			all: async (
+				page = 1,
+				limit = 10,
+				filters?: {
+					search?: string;
+					sortBy?: "name" | "createdAt" | "updatedAt";
+					sortOrder?: "asc" | "desc";
+				}
+			): Promise<PaginatedResponse<Collection.ResponseDto>> => {
+				const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+				if (filters?.search) qs.set("search", filters.search);
+				if (filters?.sortBy) qs.set("sortBy", filters.sortBy);
+				if (filters?.sortOrder) qs.set("sortOrder", filters.sortOrder);
+				const r = await this.request("GET", `/collections/all?${qs.toString()}`);
 				return (await r.json()) as PaginatedResponse<Collection.ResponseDto>;
 			},
 			shared: async (

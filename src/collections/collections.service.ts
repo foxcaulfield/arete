@@ -93,20 +93,60 @@ export class CollectionsService extends BaseService {
 	}
 
 	public async getAllCollections(
-		page = 1,
-		limit = 10,
-		currentUserId?: string
+		filter: FilterCollectionDto,
+		currentUserId: string
 	): Promise<PaginatedResponseDto<ResponseCollectionDto>> {
+		const {
+			page = 1,
+			limit = 10,
+			search,
+			sortBy = CollectionSortBy.UPDATED_AT,
+			sortOrder = SortOrder.DESC,
+		} = filter;
 		const skip = this.paginationService.calculateSkip(page, limit);
+
+		// Search hits the four fields an admin actually scans for when looking
+		// up a collection they don't own: name, description, owner name, owner
+		// email. Prisma nested `user: { ... }` builds an EXISTS subquery.
+		const searchTerm = search?.trim() || undefined;
+		const where: Prisma.CollectionWhereInput = searchTerm
+			? {
+					OR: [
+						{ name: caseInsensitiveContains(searchTerm) },
+						{ description: caseInsensitiveContains(searchTerm) },
+						{ user: { name: caseInsensitiveContains(searchTerm) } },
+						{ user: { email: caseInsensitiveContains(searchTerm) } },
+					],
+				}
+			: {};
+
+		const orderBy: Prisma.CollectionOrderByWithRelationInput = { [sortBy]: sortOrder };
+
 		const [collections, total] = await Promise.all([
-			this.prismaService.collection.findMany({ skip, take: limit, include: this.withUser }),
-			this.prismaService.collection.count(),
+			this.prismaService.collection.findMany({
+				where,
+				skip,
+				take: limit,
+				orderBy,
+				include: {
+					// Inline include (not this.withUser) — only the admin view
+					// needs owner email. Keeping the shared withUser without
+					// email means non-admin endpoints don't start leaking it
+					// (e.g. a shared-collection viewer would otherwise start
+					// seeing the owner's email in the DTO).
+					user: { select: { id: true, name: true, email: true } },
+					_count: { select: { exercises: true } },
+				},
+			}),
+			this.prismaService.collection.count({ where }),
 		]);
 
 		const dtos = this.toResponseDto(ResponseCollectionDto, collections);
-		// Endpoint is @Roles(UserRole.ADMIN) gated — every caller is admin
-		for (const dto of dtos) dto.myAccessLevel = dto.user?.id === currentUserId ? "OWNER" : "ADMIN";
-		// for (const dto of dtos) dto.myAccessLevel = "ADMIN";
+		for (let i = 0; i < dtos.length; i++) {
+			const raw = collections[i]!;
+			dtos[i]!.exerciseCount = raw._count.exercises;
+			dtos[i]!.myAccessLevel = raw.userId === currentUserId ? "OWNER" : "ADMIN";
+		}
 
 		return this.paginationService.buildPaginatedResponse(dtos, total, page, limit);
 	}
