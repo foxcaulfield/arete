@@ -4,7 +4,7 @@ import {
 	Delete,
 	Get,
 	Param,
-	ParseIntPipe as AsInt,
+	// ParseIntPipe as AsInt,
 	Patch,
 	Post,
 	Query,
@@ -57,11 +57,10 @@ export class CollectionsController {
 	@Roles(UserRole.ADMIN)
 	@Get("all")
 	public getAllCollections(
-		@Query("page", AsInt) page: number = 1,
-		@Query("limit", AsInt) limit: number = 5,
+		@Query() filter: FilterCollectionDto,
 		@Session() session: UserSession
 	): Promise<Paginated<ResponseCollectionDto>> {
-		return this.service.getAllCollections(page, limit, session.user.id);
+		return this.service.getAllCollections(filter, session.user.id);
 	}
 
 	@Patch("update/:id")

@@ -34,7 +34,8 @@ declare global {
 			description: string;
 			user: {
 				id: string;
-				name?: string;
+				name?: string | null;
+				email?: string | null;
 			};
 			createdAt: Date;
 			updatedAt: Date;

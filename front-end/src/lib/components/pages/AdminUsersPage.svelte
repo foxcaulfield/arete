@@ -324,7 +324,15 @@
 								{:else}
 									<ul class="space-y-1">
 										{#each userAccess.owned as c (c.id)}
-											<li class="rounded bg-black/10 p-2 text-xs">{c.name}</li>
+											<li>
+												<button
+													type="button"
+													class="w-full cursor-pointer rounded bg-black/10 p-2 text-left text-xs hover:preset-tonal-primary"
+													onclick={() => router.navigate(`/collections/view/${c.id}`)}
+												>
+													{c.name}
+												</button>
+											</li>
 										{/each}
 									</ul>
 								{/if}
@@ -339,11 +347,18 @@
 								{:else}
 									<ul class="space-y-1">
 										{#each userAccess.shared as s (s.collectionId)}
-											<li class="rounded bg-black/10 p-2 text-xs">
-												<div class="font-medium">{s.name}</div>
-												<div class="text-surface-400">
-													by {s.ownerName ?? s.ownerId} · {s.accessLevel}
-												</div>
+											<li>
+												<button
+													type="button"
+													class="w-full cursor-pointer rounded bg-black/10 p-2 text-left text-xs hover:preset-tonal-primary"
+													onclick={() =>
+														router.navigate(`/collections/view/${s.collectionId}`)}
+												>
+													<div class="font-medium">{s.name}</div>
+													<div class="text-surface-400">
+														by {s.ownerName ?? s.ownerId} · {s.accessLevel}
+													</div>
+												</button>
 											</li>
 										{/each}
 									</ul>
