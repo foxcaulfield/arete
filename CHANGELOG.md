@@ -1,3 +1,10 @@
+# [2.2.0-rc.12](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.11...v2.2.0-rc.12) (2026-11-01)
+
+
+### Features
+
+* admin all-collections search + click-through from admin users ([#90](https://github.com/foxcaulfield/arete/issues/90)) ([b7bdceb](https://github.com/foxcaulfield/arete/commit/b7bdceb799bb2f5b1bf4e961263d09d4d4d5efff))
+
 # [2.2.0-rc.11](https://github.com/foxcaulfield/arete/compare/v2.2.0-rc.10...v2.2.0-rc.11) (2026-10-31)
 
 
